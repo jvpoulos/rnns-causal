@@ -7,10 +7,10 @@ from utils import set_trace
 history = np.genfromtxt(sys.argv[-2], names=True, delimiter=",")
 
 # Summarize history for accuracy
-plt.plot(history['mean_absolute_error'])
-plt.plot(history['val_mean_absolute_error'])
+plt.plot(history['mean_absolute_percentage_error'])
+plt.plot(history['val_mean_absolute_percentage_error'])
 plt.title(sys.argv[-1])
-plt.ylabel('Mean absolute error (MAE)')
+plt.ylabel('Mean absolute percentage error (MAPE)')
 plt.xlabel('Epoch')
 plt.legend(['Training', 'Validation'], loc='upper right')
 plt.show()

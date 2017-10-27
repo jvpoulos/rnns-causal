@@ -22,10 +22,10 @@ votediff_y_test = pd.read_csv("data/elections/{}/votediff-y-test.csv".format(fol
 print('Saving data in data/elections/{}'.format(folder))
 
 # elections
-pkl.dump(votediff_x_train, open('data/votediff_x_train.np', 'wb')) 
-pkl.dump(votediff_x_val, open('data/votediff_x_val.np', 'wb'))
-pkl.dump(votediff_x_test, open('data/votediff_x_test.np', 'wb'))
+pkl.dump(votediff_x_train, open('data/votediff_x_train_treated.np', 'wb')) 
+pkl.dump(votediff_x_val, open('data/votediff_x_val_treated.np', 'wb'))
+pkl.dump(votediff_x_test, open('data/votediff_x_test_treated.np', 'wb'))
 
-pkl.dump(votediff_y_train, open('data/votediff_y_train.np', 'wb'))
-pkl.dump(votediff_y_val, open('data/votediff_y_val.np', 'wb'))
-pkl.dump(votediff_y_test, open('data/votediff_y_test.np', 'wb'))
+pkl.dump(votediff_y_train, open('data/votediff_y_train_treated.np', 'wb'))
+pkl.dump(votediff_y_val, open('data/votediff_y_val_treated.np', 'wb'))
+pkl.dump(votediff_y_test, open('data/votediff_y_test_treated.np', 'wb'))
