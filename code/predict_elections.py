@@ -112,7 +112,7 @@ model.load_weights(filename)
 
 # Configure learning process
 
-model.compile(optimizer=Adam(lr=0.001, clipnorm=5.), # Clip parameter gradients to a maximum norm of 5
+model.compile(optimizer=Adam(lr=0.0005), 
               loss='mean_absolute_percentage_error',
               metrics=['mean_absolute_percentage_error'])
 
@@ -143,7 +143,7 @@ np.savetxt("{}-{}-val.csv".format(filename,dataname), y_pred_val, delimiter=",")
 # Get attention weights on validation features
 attention_vector = get_activations(model, X_val, print_shape_only=True, layer_name='attention_vec')[0]
 
-attention_vector = np.mean(attention_vector, axis=0).squeeze() # mean across # val samples
+attention_vector = np.mean(attention_vector, axis=1).squeeze() # mean across # val samples
 
 print('attention =', attention_vector)
 print('attention shape =', attention_vector.shape)

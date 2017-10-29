@@ -19,9 +19,15 @@ results.directory <-"~/Dropbox/github/rnns-causal/results/"
 
 # Assemble elections data
 source(paste0(code.directory,'elections.R')) 
+#source(paste0(code.directory,'descriptive.R')) 
 
-# Descriptive plots
-source(paste0(code.directory,'descriptive.R')) 
+# Causal impact estimates
 
-# Experimental estimates replicating P&G 2008
-source(paste0(code.directory,'pgrep.R')) 
+source(paste0(code.directory,'attention-plot-elections.R')) 
+source(paste0(code.directory,'impact-plots-elections.R')) 
+
+# DD estimates
+source(paste0(code.directory,'dd-elections.R')) 
+
+# Experimental estimates
+source(paste0(code.directory,'exp-elections.R')) 

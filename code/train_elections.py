@@ -53,7 +53,7 @@ output_dim = 1
 
 # Define model parameters
 
-dropout = 0.5
+dropout = 0.7
 penalty = 0.01
 batch_size = 11
 nb_hidden = 256
@@ -92,29 +92,28 @@ a = Reshape((nb_features, nb_timesteps))(a)
 a = Dense(nb_timesteps, activation='sigmoid')(a)
 a_probs = Permute((2, 1), name='attention_vec')(a)
 output_attention_mul = merge([inputs, a_probs], name='attention_mul', mode='mul')
-dropout_1 = Dropout(dropout)(output_attention_mul)
-lstm_1 = LSTM(nb_hidden, kernel_initializer=initialization, return_sequences=True)(dropout_1) 
-dropout_2 = Dropout(dropout)(lstm_1)
-lstm_2 = LSTM(nb_hidden, kernel_initializer=initialization, return_sequences=True)(dropout_2)
-dropout_3 = Dropout(dropout)(lstm_2)
-lstm_3 = LSTM(nb_hidden, kernel_initializer=initialization, return_sequences=False)(dropout_3)
-dropout_4 = Dropout(dropout)(lstm_3)
+lstm_1 = LSTM(nb_hidden, kernel_initializer=initialization, return_sequences=True)(output_attention_mul) 
+lstm_2 = LSTM(nb_hidden, kernel_initializer=initialization, return_sequences=True)(lstm_1)
+dropout_1 = Dropout(dropout)(lstm_2)
+lstm_3 = LSTM(nb_hidden, kernel_initializer=initialization, return_sequences=False)(dropout_1)
 output = Dense(output_dim, 
       activation=activation,
-      kernel_regularizer=regularizers.l2(penalty))(dropout_4)
+      kernel_regularizer=regularizers.l2(penalty))(lstm_3)
 model = Model(input=[inputs], output=output)
 
 print(model.summary())
 
+model.load_weights("results/elections/{}".format(dataname) + "/weights-0.28.hdf5", by_name=True) # load weights
+
 # Configure learning process
 
-model.compile(optimizer=Adam(lr=0.001, clipnorm=5.), # Clip parameter gradients to a maximum norm of 5
+model.compile(optimizer=Adam(lr=0.0001), 
               loss='mean_absolute_percentage_error',
               metrics=['mean_absolute_percentage_error'])
 
 # Prepare model checkpoints and callbacks
 
-filepath="results/elections/{}".format(dataname) + "/weights-{val_mean_absolute_percentage_error:.1f}.hdf5"
+filepath="results/elections/{}".format(dataname) + "/weights-{val_mean_absolute_percentage_error:.2f}.hdf5"
 checkpointer = ModelCheckpoint(filepath=filepath, verbose=0, save_best_only=False)
 
 # Train model

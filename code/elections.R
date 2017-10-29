@@ -131,7 +131,7 @@ fg.ads <- fg.ads[!is.na(fg.ads$votediff),]
 
 fg.ads <- fg.ads[with(fg.ads, order(state, city, year)), ] # sort
 
-# Treatment strata 
+# Price strata 
 fg.ads$strata <- NA
 fg.ads$strata[fg.ads$strata70==1] <- 70
 fg.ads$strata[fg.ads$strata90==1] <- 90
@@ -168,7 +168,7 @@ votediff.y <- votediff.y[!is.na(votediff.y$votediff.1),]
 votediff.years <- sort(intersect(votediff$year,votediff.y$year)) # common years in treated and control
 
 votediff.x.train <- votediff[votediff$year %in% votediff.years & votediff$year < 2002,]
-votediff.x.val <- votediff[votediff$year %in% votediff.years & (votediff$year >= 2002 & votediff$year < 2005),] # 2002-2005 for validation
+votediff.x.val <- votediff[votediff$year %in% votediff.years & (votediff$year >= 2002 & votediff$year < 2005),] # 2002-2004 for validation
 votediff.x.test <- votediff[votediff$year %in% votediff.years & votediff$year >= 2005,]
 
 votediff.y.train <- votediff.y[votediff.y$year %in% votediff.years & votediff.y$year < 2002,]
