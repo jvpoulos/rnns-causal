@@ -48,11 +48,11 @@ TsPlotElections <- function(df, main = "") {
   
   ticks <- scale_x_datetime(date_breaks="10 years",labels=date_format("%Y"), 
                      time_trans(tz="UTC"),
-                     limits = c(as.POSIXct("1945-12-31 19:03:58"), as.POSIXct("2010-12-31 19:00:00")))
+                     limits = c(as.POSIXct("1948-12-30 19:00:00"), as.POSIXct("2007-12-30 19:00:00")))
  
 # annotation text
   
-  ann_text <- data.frame(year = c(as.POSIXlt("1980-01-01 EST"), as.POSIXlt("2010-12-31 EST")), value=80, 
+  ann_text <- data.frame(year = c(as.POSIXlt("1980-01-01 EST"), as.POSIXlt("2006-12-31 EST")), value=80, 
                            series = factor("Winner margin time-series", levels = c("Winner margin time-series","Pointwise impact","Cumulative impact")),
                            lab = c("pre-period \n (training/validation)", "post-period \n (test)"))
 
@@ -72,7 +72,7 @@ TsPlotElections <- function(df, main = "") {
          , axis.ticks.y=element_blank()
          , legend.text=element_text(size=12, family = "serif")
          , legend.box = "horizontal" # not working?)
-  ) + geom_text(data = ann_text,aes(y = value, label =lab), family="serif", fontface="italic",  size=5) +
+  ) + #geom_text(data = ann_text,aes(y = value, label =lab), family="serif", fontface="italic",  size=5) +
     scale_y_continuous(name="Winner margin (%)") +
     scale_colour_manual(name="", values = c("Observed votediff" = wes_palette("Darjeeling")[5], "Predicted votediff" = wes_palette("Darjeeling")[5]),
                         labels=c("Observed winner margin", "Predicted winner margin")) +

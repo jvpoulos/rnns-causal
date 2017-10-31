@@ -47,14 +47,14 @@ y_val = pkl.load(open('data/{}_y_val_{}.np'.format(dataname,analysis), 'rb'))
 # Define network structure
 
 epochs = int(sys.argv[-3])
-nb_timesteps = 1
+nb_timesteps = 3
 nb_features = X_train.shape[1]
 output_dim = 1
 
 # Define model parameters
 
-dropout = 0.7
-penalty = 0.01
+dropout = 0.95
+penalty = 2
 batch_size = 11
 nb_hidden = 256
 activation = 'linear'
@@ -93,9 +93,10 @@ a = Dense(nb_timesteps, activation='sigmoid')(a)
 a_probs = Permute((2, 1), name='attention_vec')(a)
 output_attention_mul = merge([inputs, a_probs], name='attention_mul', mode='mul')
 lstm_1 = LSTM(nb_hidden, kernel_initializer=initialization, return_sequences=True)(output_attention_mul) 
-lstm_2 = LSTM(nb_hidden, kernel_initializer=initialization, return_sequences=True)(lstm_1)
-dropout_1 = Dropout(dropout)(lstm_2)
-lstm_3 = LSTM(nb_hidden, kernel_initializer=initialization, return_sequences=False)(dropout_1)
+dropout_1 = Dropout(dropout)(lstm_1)
+lstm_2 = LSTM(nb_hidden, kernel_initializer=initialization, return_sequences=True)(dropout_1)
+dropout_2 = Dropout(dropout)(lstm_2)
+lstm_3 = LSTM(nb_hidden, kernel_initializer=initialization, return_sequences=False)(dropout_2)
 output = Dense(output_dim, 
       activation=activation,
       kernel_regularizer=regularizers.l2(penalty))(lstm_3)
@@ -103,17 +104,17 @@ model = Model(input=[inputs], output=output)
 
 print(model.summary())
 
-model.load_weights("results/elections/{}".format(dataname) + "/weights-0.28.hdf5", by_name=True) # load weights
+#model.load_weights("results/elections/{}".format(dataname) + "/weights-16.8.hdf5", by_name=True) # load weights
 
 # Configure learning process
 
-model.compile(optimizer=Adam(lr=0.0001), 
+model.compile(optimizer=Adam(lr=0.0001, clipnorm=5), 
               loss='mean_absolute_percentage_error',
               metrics=['mean_absolute_percentage_error'])
 
 # Prepare model checkpoints and callbacks
 
-filepath="results/elections/{}".format(dataname) + "/weights-{val_mean_absolute_percentage_error:.2f}.hdf5"
+filepath="results/elections/{}".format(dataname) + "/weights-{val_mean_absolute_percentage_error:.1f}.hdf5"
 checkpointer = ModelCheckpoint(filepath=filepath, verbose=0, save_best_only=False)
 
 # Train model

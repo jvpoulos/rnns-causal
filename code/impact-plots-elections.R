@@ -6,6 +6,7 @@ require(dplyr)
 require(zoo)
 require(matrixStats)
 require(tseries)
+library(boot)
 
 source(paste0(code.directory,"ts-plot-elections.R"))
 source(paste0(code.directory,"PolitisWhite.R"))
@@ -65,7 +66,7 @@ votediff.boot <- tsboot(ts(votediff.bind), GetPointwise, R = 1000, l = votediff.
 ## Create time series data
 setwd(code.directory)
 
-ts.dat <- cbind(votediff.bind, summary(votediff.boot)$original, summary(votediff.boot)$bootSE)
+ts.dat <- cbind(votediff.bind, data.frame(votediff.boot$t0), apply(votediff.boot$t, 2, sd))
 
 colnames(ts.dat)[4:5] <- c("pointwise.votediff","votediff.se")
 
@@ -142,14 +143,20 @@ ts.means$pointwise.votediff[ts.means$year%in%c(2006)]
 se$pointwise.votediff.min[se$year%in%c(2006)]
 se$pointwise.votediff.max[se$year%in%c(2006)]
 
+# 2007
+ts.means$pointwise.votediff[ts.means$year%in%c(2007)]
+
+se$pointwise.votediff.min[se$year%in%c(2007)]
+se$pointwise.votediff.max[se$year%in%c(2007)]
+
 # 2005 & 2006 (pooled)
 mean(ts.means$pointwise.votediff[ts.means$year%in%c(2005,2006)])
 
 mean(se$pointwise.votediff.min[se$year%in%c(2005,2006)])
 mean(se$pointwise.votediff.max[se$year%in%c(2005,2006)])
 
-# 2005-2010 (pooled)
-mean(ts.means$pointwise.votediff[ts.means$year%in%c(2005:2010)])
+# 2005-2007 (pooled)
+mean(ts.means$pointwise.votediff[ts.means$year%in%c(2005:2007)])
 
-mean(se$pointwise.votediff.min[se$year%in%c(2005:2010)])
-mean(se$pointwise.votediff.max[se$year%in%c(2005:2010)])
+mean(se$pointwise.votediff.min[se$year%in%c(2005:2007)])
+mean(se$pointwise.votediff.max[se$year%in%c(2005:2007)])

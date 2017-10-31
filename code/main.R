@@ -26,6 +26,8 @@ source(paste0(code.directory,'elections.R'))
 source(paste0(code.directory,'attention-plot-elections.R')) 
 source(paste0(code.directory,'impact-plots-elections.R')) 
 
+source(paste0(code.directory,'bsts-elections.R')) 
+
 # DD estimates
 source(paste0(code.directory,'dd-elections.R')) 
 

@@ -47,14 +47,14 @@ y_test = pkl.load(open('data/{}_y_test_{}.np'.format(dataname,analysis), 'rb'))
 
 # Define network structure
 
-nb_timesteps = 1
+nb_timesteps = 3
 nb_features = X_train.shape[1]
 output_dim = 1
 
 # Define model parameters
 
-dropout = 0.5
-penalty = 0.01
+dropout = 0.8
+penalty = 1
 batch_size = 11
 nb_hidden = 256
 activation = 'linear'
@@ -84,16 +84,14 @@ a = Reshape((nb_features, nb_timesteps))(a)
 a = Dense(nb_timesteps, activation='sigmoid')(a)
 a_probs = Permute((2, 1), name='attention_vec')(a)
 output_attention_mul = merge([inputs, a_probs], name='attention_mul', mode='mul')
-dropout_1 = Dropout(dropout)(output_attention_mul)
-lstm_1 = LSTM(nb_hidden, kernel_initializer=initialization, return_sequences=True)(dropout_1) 
-dropout_2 = Dropout(dropout)(lstm_1)
-lstm_2 = LSTM(nb_hidden, kernel_initializer=initialization, return_sequences=True)(dropout_2)
-dropout_3 = Dropout(dropout)(lstm_2)
-lstm_3 = LSTM(nb_hidden, kernel_initializer=initialization, return_sequences=False)(dropout_3)
-dropout_4 = Dropout(dropout)(lstm_3)
+lstm_1 = LSTM(nb_hidden, kernel_initializer=initialization, return_sequences=True)(output_attention_mul) 
+dropout_1 = Dropout(dropout)(lstm_1)
+lstm_2 = LSTM(nb_hidden, kernel_initializer=initialization, return_sequences=True)(dropout_1)
+dropout_2 = Dropout(dropout)(lstm_2)
+lstm_3 = LSTM(nb_hidden, kernel_initializer=initialization, return_sequences=False)(dropout_2)
 output = Dense(output_dim, 
       activation=activation,
-      kernel_regularizer=regularizers.l2(penalty))(dropout_4)
+      kernel_regularizer=regularizers.l2(penalty))(lstm_3)
 model = Model(input=[inputs], output=output)
 
 print(model.summary())
@@ -112,7 +110,7 @@ model.load_weights(filename)
 
 # Configure learning process
 
-model.compile(optimizer=Adam(lr=0.0005), 
+model.compile(optimizer=Adam(lr=0.0001), 
               loss='mean_absolute_percentage_error',
               metrics=['mean_absolute_percentage_error'])
 

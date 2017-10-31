@@ -125,6 +125,9 @@ fg.ads <- fg.ads  %>% group_by(city, state) %>% fill(treat,year_exp, grp_buy, st
 fg.ads <- fg.ads[!colnames(fg.ads) %in% c("votediff.y")]
 colnames(fg.ads)[colnames(fg.ads)%in%"votediff.x"] <-"votediff"
 
+fg.ads$city <- gsub("[^[:alnum:] ]", "",fg.ads$city) # clean name 
+fg.ads$city <- gsub(" ", "",fg.ads$city)  
+
 # Remove if missing votediff
 
 fg.ads <- fg.ads[!is.na(fg.ads$votediff),]
@@ -137,9 +140,29 @@ fg.ads$strata[fg.ads$strata70==1] <- 70
 fg.ads$strata[fg.ads$strata90==1] <- 90
 fg.ads$strata[fg.ads$strata70==0 & fg.ads$strata90==0] <- 50
 
+#fg.ads$strata[!is.na(fg.ads$strata)] <- scale(fg.ads$strata[!is.na(fg.ads$strata)]) # center and scale
+
+# Create balanced sample pre/post
+
+fg.ads$time <- NA
+fg.ads$time <- 0
+fg.ads$time[(fg.ads$year >= 2005)] <- 1
+
+fg.ads$id <- paste(fg.ads$city, fg.ads$state, sep=",")
+
+fg.ads.means <- fg.ads %>% # take city pre/post means
+  group_by(id,time) %>% 
+  summarise_all(funs(mean(., na.rm = TRUE)))  %>%
+  select(id,votediff, time) 
+
+counts <- fg.ads.means %>% 
+  group_by(id) %>% 
+  summarise(n = n())
+
+fg.ads <- fg.ads[fg.ads$id %in% counts$id[counts$n==2],]
+
 # Create means by treatment status
 fg.ads.treat <- fg.ads %>% 
-#  filter(!is.na(treat)) %>% # keep experimental cities
   group_by(year,treat) %>% 
   summarise_each(funs(mean(., na.rm = TRUE))) %>%
   select(year, treat, votediff)
@@ -155,6 +178,9 @@ fg.ads.treat <- reshape(data.frame(fg.ads.treat)[c("year","treat","votediff")], 
 votediff <- reshape(data.frame(fg.ads.control)[c("year","id","votediff")], idvar = "year", timevar = "id", direction = "wide")
 votediff <- votediff[with(votediff, order(year)), ] # sort
 
+votediff <- votediff  %>%  fill(-year, .direction="down") # fill missing forwards
+votediff <- votediff  %>%  fill(-year, .direction="up") # fill missing backwards
+
 #votediff.names <- grep("votediff", names(votediff), value = TRUE)
 #binary.names <- colnames(votediff)[!colnames(votediff)%in%votediff.names]
 
@@ -169,17 +195,16 @@ votediff.years <- sort(intersect(votediff$year,votediff.y$year)) # common years 
 
 votediff.x.train <- votediff[votediff$year %in% votediff.years & votediff$year < 2002,]
 votediff.x.val <- votediff[votediff$year %in% votediff.years & (votediff$year >= 2002 & votediff$year < 2005),] # 2002-2004 for validation
-votediff.x.test <- votediff[votediff$year %in% votediff.years & votediff$year >= 2005,]
+votediff.x.test <- votediff[votediff$year %in% votediff.years & votediff$year >= 2005 & votediff$year <= 2007,]
 
 votediff.y.train <- votediff.y[votediff.y$year %in% votediff.years & votediff.y$year < 2002,]
 votediff.y.val <- votediff.y[votediff.y$year %in% votediff.years & (votediff.y$year >= 2002 & votediff.y$year < 2005),]
-votediff.y.test <- votediff.y[votediff.y$year %in% votediff.years &votediff.y$year >= 2005,]
+votediff.y.test <- votediff.y[votediff.y$year %in% votediff.years &votediff.y$year >= 2005 & votediff.y$year <= 2007,]
 
-# Preprocess (only votediff)
+# Preprocess predictors
 #binary.names <- gsub(" ", ".",binary.names) # fix
 
-votediff.x.train <- data.frame(sapply(votediff.x.train, as.numeric))
-votediff.pre.train <- preProcess(votediff.x.train[!colnames(votediff.x.train) %in% c("year")], method = c("medianImpute","center","scale"))
+votediff.pre.train <- preProcess(votediff.x.train[!colnames(votediff.x.train) %in% c("year")], method = c("center","scale"))
 votediff.x.train[!colnames(votediff.x.train) %in% c("year")] <- predict(votediff.pre.train, votediff.x.train[!colnames(votediff.x.train) %in% c("year")] )
 
 votediff.x.val <- data.frame(sapply(votediff.x.val, as.numeric))
