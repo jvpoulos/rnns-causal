@@ -9,6 +9,7 @@ library(tseries)
 library(boot)
 
 source(paste0(code.directory,"PolitisWhite.R"))
+source(paste0(code.directory,"Run2Stage.R"))
 
 data.votediff <- cbind(rbind(votediff.y.train,votediff.y.val,votediff.y.test),rbind(votediff.x.train,votediff.x.val,votediff.x.test)[-1])
 
@@ -17,7 +18,7 @@ data.votediff$year <-as.Date(as.yearmon(data.votediff$year) + 11/12, frac = 1) #
 data.votediff <- zoo(data.votediff[-1],data.votediff$year)
 
 pre.period <- as.Date(c("1948-12-31", "2004-12-31"))
-post.period <- as.Date(c("2005-12-31", "2007-12-31"))
+post.period <- as.Date(c("2005-12-31", "2006-12-31"))
 
 # Regularize ts
 
@@ -33,7 +34,7 @@ ts.regularized <- na.locf(ts.regularized, na.rm = FALSE, fromLast=TRUE)  # fill 
 impact.votediff <- CausalImpact(ts.regularized, 
                        pre.period, 
                        post.period, 
-                       model.args = list(niter = 5000, standardize.data=FALSE)) 
+                       model.args = list(niter = 10000, standardize.data=FALSE)) 
 
 
 summary(impact.votediff)
@@ -68,7 +69,7 @@ se <- ts.dat  %>%
          cumulative.votediff.max = cumsum(pointwise.votediff.max))
 
 se <- se[with(se, order(year)), ] # sort by year
-# Calculate avg. pointwise impact during post-period: >= 2005
+
 
 # 2005
 ts.dat$pointwise.votediff[ts.dat$year=="2005-12-31"]
@@ -82,20 +83,9 @@ ts.dat$pointwise.votediff[ts.dat$year=="2006-12-31"]
 se$pointwise.votediff.min[se$year=="2006-12-31"]
 se$pointwise.votediff.max[se$year=="2006-12-31"]
 
-# 2007
-ts.dat$pointwise.votediff[ts.dat$year=="2007-12-31"]
-
-se$pointwise.votediff.min[se$year=="2007-12-31"]
-se$pointwise.votediff.max[se$year=="2007-12-31"]
-
 # 2005 & 2006 (pooled)
 mean(ts.dat$pointwise.votediff[ts.dat$year=="2005-12-31" | ts.dat$year=="2006-12-31"])
 
 mean(se$pointwise.votediff.min[se$year=="2005-12-31" | se$year=="2006-12-31"])
 mean(se$pointwise.votediff.max[se$year=="2005-12-31" | se$year=="2006-12-31"])
 
-# 2005-2007 (pooled)
-mean(ts.dat$pointwise.votediff[ts.dat$year%in%c("2005-12-31","2006-12-31","2007-12-31")])
-
-mean(se$pointwise.votediff.min[se$year%in%c("2005-12-31","2006-12-31","2007-12-31")])
-mean(se$pointwise.votediff.max[se$year%in%c("2005-12-31","2006-12-31","2007-12-31")])

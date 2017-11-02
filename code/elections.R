@@ -6,6 +6,8 @@ library(tidyr)
 library(dplyr)
 library(caret)
 library(weights)
+library(stringr)
+library(foreign)
 
 data.directory <- "~/Dropbox/github/rnns-causal/data/"
 
@@ -69,7 +71,7 @@ fg$incumbentshare <- (fg$mayor_votes)/fg$vote_total # incumbent vote share
 fg <- fg %>% 
   filter(!is.na(votediff)) %>% 
   group_by(state, city, year) %>% 
-  summarise_each(funs(mean(., na.rm = TRUE)))  %>%
+  summarise_all(funs(mean(., na.rm = TRUE)))  %>%
   select(state, city, year,votediff)
 
 fg <- data.frame(fg)
@@ -128,9 +130,9 @@ colnames(fg.ads)[colnames(fg.ads)%in%"votediff.x"] <-"votediff"
 fg.ads$city <- gsub("[^[:alnum:] ]", "",fg.ads$city) # clean name 
 fg.ads$city <- gsub(" ", "",fg.ads$city)  
 
-# Remove if missing votediff
+# Subset to experimental cities with non-missing vote difference, 1948-2006
 
-fg.ads <- fg.ads[!is.na(fg.ads$votediff),]
+fg.ads <- fg.ads[!is.na(fg.ads$votediff) & !is.na(fg.ads$treat) & fg.ads$year %in% c(1948:2006),]
 
 fg.ads <- fg.ads[with(fg.ads, order(state, city, year)), ] # sort
 
@@ -140,20 +142,18 @@ fg.ads$strata[fg.ads$strata70==1] <- 70
 fg.ads$strata[fg.ads$strata90==1] <- 90
 fg.ads$strata[fg.ads$strata70==0 & fg.ads$strata90==0] <- 50
 
-#fg.ads$strata[!is.na(fg.ads$strata)] <- scale(fg.ads$strata[!is.na(fg.ads$strata)]) # center and scale
-
 # Create balanced sample pre/post
 
 fg.ads$time <- NA
 fg.ads$time <- 0
-fg.ads$time[(fg.ads$year >= 2005)] <- 1
+fg.ads$time[(fg.ads$year >= fg.ads$year_exp)] <- 1
 
 fg.ads$id <- paste(fg.ads$city, fg.ads$state, sep=",")
 
 fg.ads.means <- fg.ads %>% # take city pre/post means
   group_by(id,time) %>% 
   summarise_all(funs(mean(., na.rm = TRUE)))  %>%
-  select(id,votediff, time) 
+  select(id,votediff, time, year_exp) 
 
 counts <- fg.ads.means %>% 
   group_by(id) %>% 
@@ -162,18 +162,22 @@ counts <- fg.ads.means %>%
 fg.ads <- fg.ads[fg.ads$id %in% counts$id[counts$n==2],]
 
 # Create means by treatment status
-fg.ads.treat <- fg.ads %>% 
-  group_by(year,treat) %>% 
-  summarise_each(funs(mean(., na.rm = TRUE))) %>%
-  select(year, treat, votediff)
 
-fg.ads.control <- fg.ads[fg.ads$treat%in% c(NA,0),][c("year","city","state","votediff")] # discard treated since we have treated time-series
+fg.ads$time <- fg.ads$time* fg.ads$year_exp
+
+fg.ads.treat <- spread(fg.ads, key = time, value = votediff)
+
+fg.ads.treat <- fg.ads.treat %>% # take year means for treated
+  filter(treat==1) %>% 
+  group_by(year) %>% 
+  summarise_all(funs(mean(., na.rm = TRUE)))  %>%
+  select(year,'0', '2005', '2006')
+
+fg.ads.control <- fg.ads[fg.ads$treat==0,][c("year","city","state","votediff")] # discard treated since we have treated time-series
 
 fg.ads.control$id <- paste(fg.ads.control$city, fg.ads.control$state,sep=".")
 
-## Reshape
-
-fg.ads.treat <- reshape(data.frame(fg.ads.treat)[c("year","treat","votediff")], idvar = "year", timevar = "treat", direction = "wide")
+# Reshape
 
 votediff <- reshape(data.frame(fg.ads.control)[c("year","id","votediff")], idvar = "year", timevar = "id", direction = "wide")
 votediff <- votediff[with(votediff, order(year)), ] # sort
@@ -181,43 +185,39 @@ votediff <- votediff[with(votediff, order(year)), ] # sort
 votediff <- votediff  %>%  fill(-year, .direction="down") # fill missing forwards
 votediff <- votediff  %>%  fill(-year, .direction="up") # fill missing backwards
 
-#votediff.names <- grep("votediff", names(votediff), value = TRUE)
-#binary.names <- colnames(votediff)[!colnames(votediff)%in%votediff.names]
-
 #Labels
 
-votediff.y <- fg.ads.treat[c("year", "votediff.1")]
-votediff.y <- votediff.y[!is.na(votediff.y$votediff.1),]
-
+votediff.y <- data.frame("year"=fg.ads.treat$year,
+                            "votediff"= c(fg.ads.treat$'0'[!is.na(fg.ads.treat$'0')],
+                                          fg.ads.treat$'2005'[!is.na(fg.ads.treat$'2005')],
+                                          fg.ads.treat$'2006'[!is.na(fg.ads.treat$'2006')]))
+                       
 # Splits
 
 votediff.years <- sort(intersect(votediff$year,votediff.y$year)) # common years in treated and control
 
 votediff.x.train <- votediff[votediff$year %in% votediff.years & votediff$year < 2002,]
 votediff.x.val <- votediff[votediff$year %in% votediff.years & (votediff$year >= 2002 & votediff$year < 2005),] # 2002-2004 for validation
-votediff.x.test <- votediff[votediff$year %in% votediff.years & votediff$year >= 2005 & votediff$year <= 2007,]
+votediff.x.test <- votediff[votediff$year %in% votediff.years & votediff$year >= 2005,]
 
 votediff.y.train <- votediff.y[votediff.y$year %in% votediff.years & votediff.y$year < 2002,]
 votediff.y.val <- votediff.y[votediff.y$year %in% votediff.years & (votediff.y$year >= 2002 & votediff.y$year < 2005),]
-votediff.y.test <- votediff.y[votediff.y$year %in% votediff.years &votediff.y$year >= 2005 & votediff.y$year <= 2007,]
+votediff.y.test <- votediff.y[votediff.y$year %in% votediff.years &votediff.y$year >= 2005,]
 
 # Preprocess predictors
-#binary.names <- gsub(" ", ".",binary.names) # fix
 
 votediff.pre.train <- preProcess(votediff.x.train[!colnames(votediff.x.train) %in% c("year")], method = c("center","scale"))
 votediff.x.train[!colnames(votediff.x.train) %in% c("year")] <- predict(votediff.pre.train, votediff.x.train[!colnames(votediff.x.train) %in% c("year")] )
 
-votediff.x.val <- data.frame(sapply(votediff.x.val, as.numeric))
 votediff.x.val[!colnames(votediff.x.val) %in% c("year")] <- predict(votediff.pre.train, votediff.x.val[!colnames(votediff.x.val) %in% c("year")] ) # use training values for val set 
 
-votediff.x.test <- data.frame(sapply(votediff.x.test, as.numeric))
 votediff.x.test[!colnames(votediff.x.test) %in% c("year")] <- predict(votediff.pre.train, votediff.x.test[!colnames(votediff.x.test) %in% c("year")] ) # use training values for test set 
 
 # Export each as csv (labels, features)
 
-write.csv(votediff.x.train[!colnames(votediff.x.train) %in% c("year")], paste0(data.directory,"elections/treated/votediff-x-train.csv"), row.names=FALSE) 
-write.csv(votediff.x.val[!colnames(votediff.x.val) %in% c("year")] , paste0(data.directory,"elections/treated/votediff-x-val.csv"), row.names=FALSE) 
-write.csv(votediff.x.test[!colnames(votediff.x.test) %in% c("year")] , paste0(data.directory,"elections/treated/votediff-x-test.csv"), row.names=FALSE) 
-write.csv(votediff.y.train[!colnames(votediff.y.train) %in% c("year")], paste0(data.directory,"elections/treated/votediff-y-train.csv"), row.names=FALSE) 
-write.csv(votediff.y.val[!colnames(votediff.y.val) %in% c("year")], paste0(data.directory,"elections/treated/votediff-y-val.csv"), row.names=FALSE) 
-write.csv(votediff.y.test[!colnames(votediff.y.test) %in% c("year")], paste0(data.directory,"elections/treated/votediff-y-test.csv"), row.names=FALSE) 
+write.csv(votediff.x.train[!colnames(votediff.x.train) %in% c("year")], paste0(data.directory,"elections/votediff-x-train.csv"), row.names=FALSE) 
+write.csv(votediff.x.val[!colnames(votediff.x.val) %in% c("year")] , paste0(data.directory,"elections/votediff-x-val.csv"), row.names=FALSE) 
+write.csv(votediff.x.test[!colnames(votediff.x.test) %in% c("year")] , paste0(data.directory,"elections/votediff-x-test.csv"), row.names=FALSE) 
+write.csv(votediff.y.train[!colnames(votediff.y.train) %in% c("year")], paste0(data.directory,"elections/votediff-y-train.csv"), row.names=FALSE) 
+write.csv(votediff.y.val[!colnames(votediff.y.val) %in% c("year")], paste0(data.directory,"elections/votediff-y-val.csv"), row.names=FALSE) 
+write.csv(votediff.y.test[!colnames(votediff.y.test) %in% c("year")], paste0(data.directory,"elections/votediff-y-test.csv"), row.names=FALSE) 
