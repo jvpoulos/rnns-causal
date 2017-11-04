@@ -11,6 +11,21 @@ ads.did$time <- NA
 ads.did$time <- 0
 ads.did$time[(ads.did$year >= ads.did$year_exp)] <- 1
 
+# Ensure balanced pre-post sample
+
+ads.did$id <- paste(ads.did$city, ads.did$state, sep=".")
+
+ads.did.means <- ads.did %>% # take city pre/post means
+  group_by(id,time) %>% 
+  summarise_all(funs(mean(., na.rm = TRUE)))  %>%
+  select(id, votediff, time, year_exp) 
+
+counts <- ads.did.means %>% 
+  group_by(id) %>% 
+  summarise(n = n())
+
+ads.did <- ads.did[ads.did$id %in% counts$id[counts$n==2],]
+
 # Create did interaction term
 
 ads.did$did <- NA

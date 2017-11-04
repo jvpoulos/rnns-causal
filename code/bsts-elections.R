@@ -9,9 +9,17 @@ library(tseries)
 library(boot)
 
 source(paste0(code.directory,"PolitisWhite.R"))
-source(paste0(code.directory,"Run2Stage.R"))
 
-data.votediff <- cbind(rbind(votediff.y.train,votediff.y.val,votediff.y.test),rbind(votediff.x.train,votediff.x.val,votediff.x.test)[-1])
+# Take treated means
+
+bsts.votediff.y <- votediff.y
+bsts.votediff.y[bsts.votediff.y==-1] <- NA #replace -1 with NA
+
+bsts.votediff.y <- data.frame("year"=bsts.votediff.y$year,
+                              "votediff" = rowMeans(bsts.votediff.y[!colnames(bsts.votediff.y) %in% c("year")],na.rm = TRUE))
+
+
+data.votediff <- cbind(bsts.votediff.y,rbind(votediff.x.train,votediff.x.val,votediff.x.test)[-1])
 
 data.votediff$year <-as.Date(as.yearmon(data.votediff$year) + 11/12, frac = 1) # end of year
 
@@ -38,6 +46,8 @@ impact.votediff <- CausalImpact(ts.regularized,
 
 
 summary(impact.votediff)
+
+saveRDS(impact.votediff, paste0(data.directory,"impact.votediff.rds") ) #save
 
 # Bootstrap estimate for prediction
 

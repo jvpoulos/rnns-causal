@@ -17,7 +17,7 @@ ads.exp$time[(ads.exp$year == ads.exp$year_exp)] <- 1
 
 # Ensure balanced pre-post sample
 
-ads.exp$id <- paste(ads.exp$city, ads.exp$state, sep=", ")
+ads.exp$id <- paste(ads.exp$city, ads.exp$state, sep=".")
 
 ads.exp.means <- ads.exp %>% # take city pre/post means
   group_by(id,time) %>% 

@@ -49,14 +49,15 @@ y_val = pkl.load(open('data/{}_y_val_{}.np'.format(dataname,analysis), 'rb'))
 epochs = int(sys.argv[-3])
 nb_timesteps = 1
 nb_features = X_train.shape[1]
-output_dim = 1
+output_dim = 39
 
 # Define model parameters
 
-dropout = 0.95
-penalty = 0.05
-batch_size = 42
-nb_hidden = 256
+dropout = 0.4
+hidden_dropout = 0.2
+penalty = 0
+batch_size = 11
+nb_hidden = 512
 activation = 'linear'
 initialization = 'glorot_normal'
 
@@ -92,30 +93,29 @@ a = Reshape((nb_features, nb_timesteps))(a)
 a = Dense(nb_timesteps, activation='sigmoid')(a)
 a_probs = Permute((2, 1), name='attention_vec')(a)
 output_attention_mul = merge([inputs, a_probs], name='attention_mul', mode='mul')
-dropout_0 = Dropout(dropout)(output_attention_mul)
-lstm_1 = LSTM(nb_hidden, kernel_initializer=initialization, return_sequences=True)(dropout_0) 
+lstm_1 = LSTM(nb_hidden, kernel_initializer=initialization, dropout=hidden_dropout, return_sequences=True)(output_attention_mul) 
 dropout_1 = Dropout(dropout)(lstm_1)
-lstm_2 = LSTM(nb_hidden, kernel_initializer=initialization, return_sequences=True)(dropout_1) 
+lstm_2 = LSTM(nb_hidden, kernel_initializer=initialization, dropout=hidden_dropout, return_sequences=True)(dropout_1) 
 dropout_2 = Dropout(dropout)(lstm_2)
-lstm_3 = LSTM(nb_hidden, kernel_initializer=initialization, return_sequences=False)(dropout_2)
+lstm_3 = LSTM(nb_hidden, kernel_initializer=initialization, dropout=hidden_dropout, return_sequences=False)(dropout_2)
+dropout_3 = Dropout(dropout)(lstm_3)
 output = Dense(output_dim, 
       activation=activation,
-      kernel_regularizer=regularizers.l2(penalty))(lstm_3)
+      kernel_regularizer=regularizers.l2(penalty))(dropout_3)
 model = Model(input=[inputs], output=output)
 
 print(model.summary())
 
-#model.load_weights("results/elections/{}".format(dataname) + "/weights-0.14.hdf5", by_name=True) # load weights
+#model.load_weights("results/elections/{}".format(dataname) + "/weights-14.6.hdf5") # load weights
 
 # Configure learning process
 
-model.compile(optimizer=Adam(lr=0.0005), 
-              loss='mean_absolute_percentage_error',
-              metrics=['mean_absolute_percentage_error'])
+model.compile(optimizer=Adam(lr=0.01, clipnorm=5), 
+              loss='mean_absolute_percentage_error')
 
 # Prepare model checkpoints and callbacks
 
-filepath="results/elections/{}".format(dataname) + "/weights-{val_mean_absolute_percentage_error:.1f}.hdf5"
+filepath="results/elections/{}".format(dataname) + "/weights-{val_loss:.1f}.hdf5"
 checkpointer = ModelCheckpoint(filepath=filepath, verbose=0, save_best_only=False)
 
 # Train model

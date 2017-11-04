@@ -130,9 +130,9 @@ colnames(fg.ads)[colnames(fg.ads)%in%"votediff.x"] <-"votediff"
 fg.ads$city <- gsub("[^[:alnum:] ]", "",fg.ads$city) # clean name 
 fg.ads$city <- gsub(" ", "",fg.ads$city)  
 
-# Subset to experimental cities with non-missing vote difference, 1948-2006
+# Subset to cities with non-missing vote difference
 
-fg.ads <- fg.ads[!is.na(fg.ads$votediff) & !is.na(fg.ads$treat) & fg.ads$year %in% c(1948:2006),]
+fg.ads <- fg.ads[!is.na(fg.ads$votediff),]
 
 fg.ads <- fg.ads[with(fg.ads, order(state, city, year)), ] # sort
 
@@ -142,40 +142,30 @@ fg.ads$strata[fg.ads$strata70==1] <- 70
 fg.ads$strata[fg.ads$strata90==1] <- 90
 fg.ads$strata[fg.ads$strata70==0 & fg.ads$strata90==0] <- 50
 
-# Create balanced sample pre/post
-
-fg.ads$time <- NA
-fg.ads$time <- 0
-fg.ads$time[(fg.ads$year >= fg.ads$year_exp)] <- 1
-
-fg.ads$id <- paste(fg.ads$city, fg.ads$state, sep=",")
-
-fg.ads.means <- fg.ads %>% # take city pre/post means
-  group_by(id,time) %>% 
-  summarise_all(funs(mean(., na.rm = TRUE)))  %>%
-  select(id,votediff, time, year_exp) 
-
-counts <- fg.ads.means %>% 
-  group_by(id) %>% 
-  summarise(n = n())
-
-fg.ads <- fg.ads[fg.ads$id %in% counts$id[counts$n==2],]
+# # Create balanced sample pre/post
+# 
+# fg.ads$time <- NA
+# fg.ads$time <- 0
+# fg.ads$time[(fg.ads$year >= fg.ads$year_exp)] <- 1
+# 
+fg.ads$id <- paste(fg.ads$city, fg.ads$state,sep=".")
+# 
+# fg.ads.means <- fg.ads %>% # take city pre/post means
+#   group_by(id,time) %>%
+#   summarise_all(funs(mean(., na.rm = TRUE)))  %>%
+#   select(id,votediff, time, year_exp)
+# 
+# counts <- fg.ads.means %>%
+#   group_by(id) %>%
+#   summarise(n = n())
+# 
+# fg.ads <- fg.ads[fg.ads$id %in% counts$id[counts$n==2],]
 
 # Create means by treatment status
 
-fg.ads$time <- fg.ads$time* fg.ads$year_exp
+fg.ads.treat <- spread(subset(fg.ads, treat==1, select=c("id","year","votediff")), key = id, value = votediff)
 
-fg.ads.treat <- spread(fg.ads, key = time, value = votediff)
-
-fg.ads.treat <- fg.ads.treat %>% # take year means for treated
-  filter(treat==1) %>% 
-  group_by(year) %>% 
-  summarise_all(funs(mean(., na.rm = TRUE)))  %>%
-  select(year,'0', '2005', '2006')
-
-fg.ads.control <- fg.ads[fg.ads$treat==0,][c("year","city","state","votediff")] # discard treated since we have treated time-series
-
-fg.ads.control$id <- paste(fg.ads.control$city, fg.ads.control$state,sep=".")
+fg.ads.control <- subset(fg.ads, treat %in% c(0,NA), select=c("id","year","votediff")) # discard treated since we have treated time-series
 
 # Reshape
 
@@ -187,10 +177,8 @@ votediff <- votediff  %>%  fill(-year, .direction="up") # fill missing backwards
 
 #Labels
 
-votediff.y <- data.frame("year"=fg.ads.treat$year,
-                            "votediff"= c(fg.ads.treat$'0'[!is.na(fg.ads.treat$'0')],
-                                          fg.ads.treat$'2005'[!is.na(fg.ads.treat$'2005')],
-                                          fg.ads.treat$'2006'[!is.na(fg.ads.treat$'2006')]))
+votediff.y <- data.frame(fg.ads.treat)
+votediff.y[is.na(votediff.y)] <- -1 # missing are -1
                        
 # Splits
 
