@@ -30,13 +30,17 @@ levels(votediff.attn$Category) <- c("Vote margin")
 votediff.attn <- reshape(votediff.attn[!colnames(votediff.attn)%in% c("Category"),], direction="long", varying=list(names(votediff.attn)[1:3]), v.names="value", 
           idvar=c("City","State"), timevar="year", times=2002:2004)
 
-votediff.attn$id <- factor(paste(votediff.attn$City,votediff.attn$State,sep=", "))
+votediff.attn$id <- paste(votediff.attn$City,votediff.attn$State,sep=", ")
+
+votediff.attn$id <- factor(gsub("([a-z])([A-Z])", "\\1 \\2", votediff.attn$id)) # put spaces back into labels
 
 # Normalize attn and subset
 
 votediff.attn$value <- Range01(votediff.attn$value)
 
 # Subset to experimental controls
+fg.ads$city <- factor(gsub("([a-z])([A-Z])", "\\1 \\2", fg.ads$city)) # put spaces back into labels
+
 votediff.attn <- votediff.attn[votediff.attn$id %in% unique(paste(fg.ads$city[fg.ads$treat==0],fg.ads$state[fg.ads$treat==0],sep=", "))[-1],]
 
 votediff.attn$id <- droplevels(votediff.attn$id )

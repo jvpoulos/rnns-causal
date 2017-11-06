@@ -18,7 +18,7 @@ from keras.models import Sequential, Model
 from keras.layers import LSTM, Dense, Masking, Dropout, Activation, Permute, Reshape, Input, Flatten, merge
 from keras.callbacks import ModelCheckpoint, CSVLogger, TensorBoard
 from keras import regularizers
-from keras.optimizers import Adam
+from keras.optimizers import Adam, Adamax
 
 from attention_utils import get_activations
 
@@ -45,6 +45,8 @@ y_train = pkl.load(open('data/{}_y_train_{}.np'.format(dataname,analysis), 'rb')
 y_val = pkl.load(open('data/{}_y_val_{}.np'.format(dataname,analysis), 'rb')) 
 y_test = pkl.load(open('data/{}_y_test_{}.np'.format(dataname,analysis), 'rb')) 
 
+mask = -1 # mask value
+
 # Define network structure
 
 nb_timesteps = 1
@@ -54,18 +56,19 @@ output_dim = 39
 # Define model parameters
 
 dropout = 0.8
-penalty = 0.05
+hidden_dropout = 0.3
+penalty = 0
 batch_size = 11
-nb_hidden = 256
+nb_hidden = 640
 activation = 'linear'
 initialization = 'glorot_normal'
 
 # # Reshape X to three dimensions
 # # Should have shape (batch_size, nb_timesteps, nb_features)
 
-X_train = np.resize(X_train, (X_train.shape[0], nb_timesteps, X_train.shape[1]))
-X_val = np.resize(X_val, (X_val.shape[0], nb_timesteps, X_val.shape[1]))
-X_test= np.resize(X_test, (X_test.shape[0], nb_timesteps, X_test.shape[1]))
+X_train = np.array(np.resize(X_train, (X_train.shape[0], nb_timesteps, X_train.shape[1])))
+X_val = np.array(np.resize(X_val, (X_val.shape[0], nb_timesteps, X_val.shape[1])))
+X_test= np.array(np.resize(X_test, (X_test.shape[0], nb_timesteps, X_test.shape[1])))
 
 # Reshape y to two dimensions
 # Should have shape (batch_size, output_dim)
@@ -76,44 +79,58 @@ y_test = np.resize(y_test, (y_test.shape[0], output_dim))
 
 # Initiate sequential model
 
+def build_masked_loss(loss_function, mask_value=mask):
+    """Builds a loss function that masks based on targets
+
+    Args:
+        loss_function: The loss function to mask
+        mask_value: The value to mask in the targets
+
+    Returns:
+        function: a loss function that acts like loss_function with masked inputs
+    """
+
+    def masked_loss_function(y_true, y_pred):
+        mask = K.cast(K.not_equal(y_true, mask_value), K.floatx())
+        return loss_function(y_true * mask, y_pred * mask)
+
+    return masked_loss_function
+
 print('Initializing model')
 
 inputs = Input(shape=(nb_timesteps, nb_features,))
+
 a = Permute((2, 1))(inputs)
 a = Reshape((nb_features, nb_timesteps))(a)
 a = Dense(nb_timesteps, activation='sigmoid')(a)
 a_probs = Permute((2, 1), name='attention_vec')(a)
 output_attention_mul = merge([inputs, a_probs], name='attention_mul', mode='mul')
-dropout_0 = Dropout(dropout)(output_attention_mul)
-lstm_1 = LSTM(nb_hidden, kernel_initializer=initialization, return_sequences=True)(dropout_0) 
+mask_layer = Masking(mask_value=mask)(output_attention_mul)
+lstm_1 = LSTM(nb_hidden, kernel_initializer=initialization, dropout=hidden_dropout, return_sequences=True)(mask_layer)
 dropout_1 = Dropout(dropout)(lstm_1)
-lstm_2 = LSTM(nb_hidden, kernel_initializer=initialization, return_sequences=True)(dropout_1) 
+lstm_2 = LSTM(nb_hidden, kernel_initializer=initialization, dropout=hidden_dropout, return_sequences=True)(dropout_1) 
 dropout_2 = Dropout(dropout)(lstm_2)
-lstm_3 = LSTM(nb_hidden, kernel_initializer=initialization, return_sequences=False)(dropout_2)
-output = Dense(output_dim, 
-      activation=activation,
-      kernel_regularizer=regularizers.l2(penalty))(lstm_3)
-model = Model(input=[inputs], output=output)
+lstm_3 = LSTM(nb_hidden, kernel_initializer=initialization, dropout=hidden_dropout, return_sequences=False)(dropout_2)
+output= Dense(output_dim, activation=activation, kernel_regularizer=regularizers.l2(penalty))(lstm_3)
+
+model = Model(inputs=inputs, output=output)
+
+model.compile(optimizer=Adamax(lr=0.0001, clipnorm=5), 
+              loss=build_masked_loss(mean_absolute_percentage_error))
 
 print(model.summary())
 
 # Visualize model
 
-# plot_model(model, to_file='results/elections/{}/model.png'.format(dataname), # Plot graph of model
-#   show_shapes = False,
-#   show_layer_names = False)
+plot_model(model, to_file='results/elections/{}/model.png'.format(dataname), # Plot graph of model
+  show_shapes = False,
+  show_layer_names = False)
 
 #model_to_dot(model,show_shapes=True,show_layer_names = False).write('results/elections/{}/model.dot'.format(dataname), format='raw', prog='dot') # write to dot file
 
 # Load weights
 filename = sys.argv[-3]
 model.load_weights(filename)
-
-# Configure learning process
-
-model.compile(optimizer=Adam(lr=0.001), 
-              loss='mean_absolute_percentage_error',
-              metrics=['mean_absolute_percentage_error'])
 
 print("Created model and loaded weights from file")
 

@@ -56,16 +56,6 @@ fg$votediff <- ((fg$mayor_votes - fg$runnerup_votes)/fg$vote_total)*100 # vote m
 
 fg$incumbentshare <- (fg$mayor_votes)/fg$vote_total # incumbent vote share
 
-# # Create covariates
-# 
-# fg.covars <- cbind(fg[c("city","state","year")], dummify(factor(fg$mayor_party, labels=c("Mayor.NA","Mayor.D","Mayor.I","Mayor.O","Mayor.R"))))
-# 
-# fg.covars <- cbind(fg.covars, dummify(factor(fg$runnerup_party, labels=c("Runnerup.NA","Runnerup.D","Runnerup.I","Runnerup.O","Runnerup.R"))))
-# 
-# fg.covars <- cbind(fg.covars, dummify(factor(fg$commclass, labels=c("CC.1","CC.2","CC.3","CC.4","CC.5"))))
-# 
-# fg.covars.names <- colnames(fg.covars)[!colnames(fg.covars) %in% c("city","state","year")]
-
 # Take means for multiple elections in same year
 
 fg <- fg %>% 
@@ -83,8 +73,6 @@ fg.hopkins <- rbind(fg, hopkins[paste(hopkins$city,hopkins$state,hopkins$year) %
                                         paste(fg$city,fg$state,fg$year)),])
 
 fg.hopkins <- fg.hopkins[with(fg.hopkins, order(state, city, year)), ] # sort
-
-#fg.hopkins <- merge(fg.hopkins, fg.covars, by=c("state","city","year"), all.x=TRUE)
 
 ## Load P&G (2008) data
 
@@ -130,9 +118,9 @@ colnames(fg.ads)[colnames(fg.ads)%in%"votediff.x"] <-"votediff"
 fg.ads$city <- gsub("[^[:alnum:] ]", "",fg.ads$city) # clean name 
 fg.ads$city <- gsub(" ", "",fg.ads$city)  
 
-# Subset to cities with non-missing vote difference
+# Subset to cities with positive, non-missing vote difference
 
-fg.ads <- fg.ads[!is.na(fg.ads$votediff),]
+fg.ads <- fg.ads[!is.na(fg.ads$votediff) & fg.ads$votediff>0,]
 
 fg.ads <- fg.ads[with(fg.ads, order(state, city, year)), ] # sort
 
@@ -142,24 +130,7 @@ fg.ads$strata[fg.ads$strata70==1] <- 70
 fg.ads$strata[fg.ads$strata90==1] <- 90
 fg.ads$strata[fg.ads$strata70==0 & fg.ads$strata90==0] <- 50
 
-# # Create balanced sample pre/post
-# 
-# fg.ads$time <- NA
-# fg.ads$time <- 0
-# fg.ads$time[(fg.ads$year >= fg.ads$year_exp)] <- 1
-# 
 fg.ads$id <- paste(fg.ads$city, fg.ads$state,sep=".")
-# 
-# fg.ads.means <- fg.ads %>% # take city pre/post means
-#   group_by(id,time) %>%
-#   summarise_all(funs(mean(., na.rm = TRUE)))  %>%
-#   select(id,votediff, time, year_exp)
-# 
-# counts <- fg.ads.means %>%
-#   group_by(id) %>%
-#   summarise(n = n())
-# 
-# fg.ads <- fg.ads[fg.ads$id %in% counts$id[counts$n==2],]
 
 # Create means by treatment status
 
@@ -171,15 +142,13 @@ fg.ads.control <- subset(fg.ads, treat %in% c(0,NA), select=c("id","year","voted
 
 votediff <- reshape(data.frame(fg.ads.control)[c("year","id","votediff")], idvar = "year", timevar = "id", direction = "wide")
 votediff <- votediff[with(votediff, order(year)), ] # sort
+votediff[is.na(votediff)] <- -1 # masked value for features
 
-votediff <- votediff  %>%  fill(-year, .direction="down") # fill missing forwards
-votediff <- votediff  %>%  fill(-year, .direction="up") # fill missing backwards
-
-#Labels
+# Labels
 
 votediff.y <- data.frame(fg.ads.treat)
-votediff.y[is.na(votediff.y)] <- -1 # missing are -1
-                       
+votediff.y[is.na(votediff.y)] <- -1 # masked value for labels
+
 # Splits
 
 votediff.years <- sort(intersect(votediff$year,votediff.y$year)) # common years in treated and control
@@ -192,20 +161,13 @@ votediff.y.train <- votediff.y[votediff.y$year %in% votediff.years & votediff.y$
 votediff.y.val <- votediff.y[votediff.y$year %in% votediff.years & (votediff.y$year >= 2002 & votediff.y$year < 2005),]
 votediff.y.test <- votediff.y[votediff.y$year %in% votediff.years &votediff.y$year >= 2005,]
 
-# Preprocess predictors
-
-votediff.pre.train <- preProcess(votediff.x.train[!colnames(votediff.x.train) %in% c("year")], method = c("center","scale"))
-votediff.x.train[!colnames(votediff.x.train) %in% c("year")] <- predict(votediff.pre.train, votediff.x.train[!colnames(votediff.x.train) %in% c("year")] )
-
-votediff.x.val[!colnames(votediff.x.val) %in% c("year")] <- predict(votediff.pre.train, votediff.x.val[!colnames(votediff.x.val) %in% c("year")] ) # use training values for val set 
-
-votediff.x.test[!colnames(votediff.x.test) %in% c("year")] <- predict(votediff.pre.train, votediff.x.test[!colnames(votediff.x.test) %in% c("year")] ) # use training values for test set 
 
 # Export each as csv (labels, features)
 
 write.csv(votediff.x.train[!colnames(votediff.x.train) %in% c("year")], paste0(data.directory,"elections/votediff-x-train.csv"), row.names=FALSE) 
 write.csv(votediff.x.val[!colnames(votediff.x.val) %in% c("year")] , paste0(data.directory,"elections/votediff-x-val.csv"), row.names=FALSE) 
 write.csv(votediff.x.test[!colnames(votediff.x.test) %in% c("year")] , paste0(data.directory,"elections/votediff-x-test.csv"), row.names=FALSE) 
+
 write.csv(votediff.y.train[!colnames(votediff.y.train) %in% c("year")], paste0(data.directory,"elections/votediff-y-train.csv"), row.names=FALSE) 
 write.csv(votediff.y.val[!colnames(votediff.y.val) %in% c("year")], paste0(data.directory,"elections/votediff-y-val.csv"), row.names=FALSE) 
 write.csv(votediff.y.test[!colnames(votediff.y.test) %in% c("year")], paste0(data.directory,"elections/votediff-y-test.csv"), row.names=FALSE) 
