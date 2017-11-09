@@ -142,32 +142,49 @@ fg.ads.control <- subset(fg.ads, treat %in% c(0,NA), select=c("id","year","voted
 
 votediff <- reshape(data.frame(fg.ads.control)[c("year","id","votediff")], idvar = "year", timevar = "id", direction = "wide")
 votediff <- votediff[with(votediff, order(year)), ] # sort
-votediff[is.na(votediff)] <- -1 # masked value for features
 
 # Labels
 
 votediff.y <- data.frame(fg.ads.treat)
-votediff.y[is.na(votediff.y)] <- -1 # masked value for labels
+votediff.y <- votediff.y[with(votediff.y, order(year)), ] # sort
+
+votediff.y <- cbind(votediff.y['year'],"y.true"=rowMeans(votediff.y[-1], na.rm=TRUE)) # take treated mean
 
 # Splits
 
 votediff.years <- sort(intersect(votediff$year,votediff.y$year)) # common years in treated and control
 
-votediff.x.train <- votediff[votediff$year %in% votediff.years & votediff$year < 2002,]
-votediff.x.val <- votediff[votediff$year %in% votediff.years & (votediff$year >= 2002 & votediff$year < 2005),] # 2002-2004 for validation
+votediff.x.train <- votediff[votediff$year %in% votediff.years & votediff$year < 2005,]
 votediff.x.test <- votediff[votediff$year %in% votediff.years & votediff$year >= 2005,]
 
-votediff.y.train <- votediff.y[votediff.y$year %in% votediff.years & votediff.y$year < 2002,]
-votediff.y.val <- votediff.y[votediff.y$year %in% votediff.years & (votediff.y$year >= 2002 & votediff.y$year < 2005),]
+votediff.y.train <- votediff.y[votediff.y$year %in% votediff.years & votediff.y$year < 2005,]
 votediff.y.test <- votediff.y[votediff.y$year %in% votediff.years &votediff.y$year >= 2005,]
 
+# Center and scale features
+
+# votediff.pre.train <- preProcess(votediff.x.train[!colnames(votediff.x.train) %in% c("year")], method = c("center","scale"))
+# votediff.x.train[!colnames(votediff.x.train) %in% c("year")] <- predict(votediff.pre.train, votediff.x.train[!colnames(votediff.x.train) %in% c("year")])
+# 
+# votediff.x.test[!colnames(votediff.x.test) %in% c("year")] <- predict(votediff.pre.train, votediff.x.test[!colnames(votediff.x.test) %in% c("year")]) # use training values for test set
+
+# Remove features with all NA or 0 (no variance)
+
+votediff.x.train <-  votediff.x.train [, colSums(votediff.x.train  != 0, na.rm = TRUE) > 0]
+votediff.x.train <- votediff.x.train[colSums(!is.na(votediff.x.train)) > 0]
+
+votediff.x.test <-  votediff.x.test [, colSums(votediff.x.test  != 0, na.rm = TRUE) > 0]
+votediff.x.test <- votediff.x.test[colSums(!is.na(votediff.x.test)) > 0]
+
+votediff.x.test <- votediff.x.test[colnames(votediff.x.test)%in%colnames(votediff.x.train)]
+votediff.x.train <- votediff.x.train[colnames(votediff.x.train)%in%colnames(votediff.x.test)]
+
+votediff.x.train[is.na(votediff.x.train)] <- -1 # masked value for features
+votediff.x.test[is.na(votediff.x.test)] <- -1
 
 # Export each as csv (labels, features)
 
 write.csv(votediff.x.train[!colnames(votediff.x.train) %in% c("year")], paste0(data.directory,"elections/votediff-x-train.csv"), row.names=FALSE) 
-write.csv(votediff.x.val[!colnames(votediff.x.val) %in% c("year")] , paste0(data.directory,"elections/votediff-x-val.csv"), row.names=FALSE) 
 write.csv(votediff.x.test[!colnames(votediff.x.test) %in% c("year")] , paste0(data.directory,"elections/votediff-x-test.csv"), row.names=FALSE) 
 
 write.csv(votediff.y.train[!colnames(votediff.y.train) %in% c("year")], paste0(data.directory,"elections/votediff-y-train.csv"), row.names=FALSE) 
-write.csv(votediff.y.val[!colnames(votediff.y.val) %in% c("year")], paste0(data.directory,"elections/votediff-y-val.csv"), row.names=FALSE) 
 write.csv(votediff.y.test[!colnames(votediff.y.test) %in% c("year")], paste0(data.directory,"elections/votediff-y-test.csv"), row.names=FALSE) 

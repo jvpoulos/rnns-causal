@@ -93,7 +93,7 @@ b.star <- function(data,
     
     num.insignificant <- sapply(1:(mmax-Kn+1),
                                 function(j){
-                                  sum((abs(rho.k) < rho.k.crit)[j:(j+Kn-1)])
+                                  sum((abs(rho.k) < rho.k.crit)[j:(j+Kn-1)], na.rm=TRUE) # added na.rm here
                                 })
     
     ## If there are any values of rho(k) for which the Kn proceeding

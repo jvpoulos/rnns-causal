@@ -16,11 +16,10 @@ import pandas as pd
 
 from keras import backend as K
 from keras.models import Model
-from keras.layers import LSTM, Dense, Dropout, Permute, Reshape, Input, merge, Masking, Merge
+from keras.layers import LSTM, Dense, Permute, Reshape, Input, merge, Masking, RepeatVector, TimeDistributed, Dropout
 from keras.callbacks import ModelCheckpoint, CSVLogger
 from keras import regularizers
-from keras.optimizers import Adam, Adamax
-from keras.losses import mean_absolute_percentage_error
+from keras.optimizers import Adam
 
 from attention_utils import get_activations
 
@@ -40,112 +39,83 @@ dataname = sys.argv[-2]
 print('Load saved {} data for analysis on {}'.format(dataname, analysis))
 
 X_train = pkl.load(open('data/{}_x_train_{}.np'.format(dataname,analysis), 'rb')) 
-X_val = pkl.load(open('data/{}_x_val_{}.np'.format(dataname,analysis), 'rb'))
 
-y_train = pkl.load(open('data/{}_y_train_{}.np'.format(dataname,analysis), 'rb')) 
-y_val = pkl.load(open('data/{}_y_val_{}.np'.format(dataname,analysis), 'rb')) 
+y_test = pkl.load(open('data/{}_y_test_{}.np'.format(dataname,analysis), 'rb')) 
 
-mask = -1 # mask value
+mask = -1 # mask value for inputs
 
 # Define network structure
 
 epochs = int(sys.argv[-3])
-nb_timesteps = 1
 nb_features = X_train.shape[1]
-output_dim = 39
+output_dim = 1
+
+n_pre = 47 # pre: 1948:2004 (NI)
+n_post  = 5 # post: 2005:2010 (NI)
 
 # Define model parameters
 
-dropout = 0.7
-hidden_dropout = 0.2
+dropout = 0.2
+hidden_dropout = 0
 penalty = 0
-batch_size = 11
-nb_hidden = 640
+batch_size = 1
 activation = 'linear'
 initialization = 'glorot_normal'
 
-# # Reshape X to three dimensions
-# # Should have shape (batch_size, nb_timesteps, nb_features)
+# Reshape X to three dimensions
+# Should have shape (nb_samples, nb_timesteps, nb_features)
 
-X_train = np.array(np.resize(X_train, (X_train.shape[0], nb_timesteps, X_train.shape[1])))
+X_train = np.array(np.resize(X_train, (n_pre, n_pre, nb_features )))
 
 print('X_train shape:', X_train.shape)
 
-X_val = np.array(np.resize(X_val, (X_val.shape[0], nb_timesteps, X_val.shape[1])))
+# Reshape y to three dimensions
+# Should have shape (nb_samples, nb_timesteps, nb_features)
 
-print('X_val shape:', X_val.shape)
+y_test = np.resize(y_test,  (n_pre, n_post, output_dim))
 
-# Reshape y to two dimensions
-# Should have shape (batch_size, output_dim)
-
-y_train = np.resize(y_train, (y_train.shape[0], output_dim))
-
-print('y_train shape:', y_train.shape)
-
-y_val = np.resize(y_val, (y_val.shape[0], output_dim))
-
-print('y_val shape:', y_val.shape)
+print('y_test shape:', y_test.shape)
 
 # Initiate sequential model
 
-def build_masked_loss(loss_function, mask_value=mask):
-    """Builds a loss function that masks based on targets
-
-    Args:
-        loss_function: The loss function to mask
-        mask_value: The value to mask in the targets
-
-    Returns:
-        function: a loss function that acts like loss_function with masked inputs
-    """
-
-    def masked_loss_function(y_true, y_pred):
-        mask = K.cast(K.not_equal(y_true, mask_value), K.floatx())
-        return loss_function(y_true * mask, y_pred * mask)
-
-    return masked_loss_function
-
-
 print('Initializing model')
 
-inputs = Input(shape=(nb_timesteps, nb_features,))
+inputs = Input(shape=(n_pre, nb_features,))
 
 a = Permute((2, 1))(inputs)
-a = Reshape((nb_features, nb_timesteps))(a)
-a = Dense(nb_timesteps, activation='sigmoid')(a)
+a = Reshape((nb_features, n_pre))(a)
+a = Dense(n_pre, activation='softmax')(a)
 a_probs = Permute((2, 1), name='attention_vec')(a)
 output_attention_mul = merge([inputs, a_probs], name='attention_mul', mode='mul')
 mask_layer = Masking(mask_value=mask)(output_attention_mul)
-lstm_1 = LSTM(nb_hidden, kernel_initializer=initialization, dropout=hidden_dropout, return_sequences=True)(mask_layer)
-dropout_1 = Dropout(dropout)(lstm_1)
-lstm_2 = LSTM(nb_hidden, kernel_initializer=initialization, dropout=hidden_dropout, return_sequences=True)(dropout_1) 
-dropout_2 = Dropout(dropout)(lstm_2)
-lstm_3 = LSTM(nb_hidden, kernel_initializer=initialization, dropout=hidden_dropout, return_sequences=False)(dropout_2)
-output= Dense(output_dim, activation=activation, kernel_regularizer=regularizers.l2(penalty))(lstm_3)
+dropout_1 = Dropout(dropout)(mask_layer)
+lstm_1 = LSTM(640, kernel_initializer=initialization, dropout=hidden_dropout, return_sequences=False)(dropout_1) # Encoder
+repeat = RepeatVector(n_post)(lstm_1) # get the last output of the LSTM and repeats it
+lstm_2 = LSTM(256, kernel_initializer=initialization, return_sequences=True)(repeat)  # Decoder
+output= TimeDistributed(Dense(output_dim, activation=activation, kernel_regularizer=regularizers.l2(penalty)))(lstm_2)
 
 model = Model(inputs=inputs, output=output)
 
-model.compile(optimizer=Adamax(lr=0.001, clipnorm=5), 
-              loss=build_masked_loss(mean_absolute_percentage_error))
+model.compile(loss="mean_absolute_percentage_error", optimizer=Adam(lr=0.002))
 
 print(model.summary())
 
-model.load_weights("results/elections/{}".format(dataname) + "/weights-7.22.hdf5") # load weights
+#model.load_weights("results/elections/{}".format(dataname) + "/weights.189-0.12.hdf5") # load weights
 
 # Prepare model checkpoints and callbacks
 
-filepath="results/elections/{}".format(dataname) + "/weights-{val_loss:.2f}.hdf5"
-checkpointer = ModelCheckpoint(filepath=filepath, verbose=0, save_best_only=True)
+filepath="results/elections/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.2f}.hdf5"
+checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=10, save_best_only=True)
 
 # Train model
 print('Training')
 csv_logger = CSVLogger('results/elections/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=True)
 
 model.fit(X_train,
-  y_train,
+  y_test,
   batch_size=batch_size,
   verbose=1,
+  shuffle=False, 
   epochs=epochs,
-  shuffle=True, 
   callbacks=[checkpointer,csv_logger],
-  validation_data=(X_val,y_val))
+  validation_split= 0.05) 

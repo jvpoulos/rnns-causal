@@ -10,16 +10,21 @@ library(boot)
 
 source(paste0(code.directory,"PolitisWhite.R"))
 
+# Impute missing features
+
+votediff.x.train[votediff.x.train ==-1] <- NA # revert mask to NA
+votediff.x.test[votediff.x.test ==-1] <- NA # revert mask to NA
+
+votediff.pre.train <- preProcess(votediff.x.train[!colnames(votediff.x.train) %in% c("year")], method = c("medianImpute"))
+votediff.x.train[!colnames(votediff.x.train) %in% c("year")] <- predict(votediff.pre.train, votediff.x.train[!colnames(votediff.x.train) %in% c("year")] )
+
+votediff.x.test[!colnames(votediff.x.test) %in% c("year")] <- predict(votediff.pre.train, votediff.x.test[!colnames(votediff.x.test) %in% c("year")] ) # use training values for test set 
+
 # Take treated means
 
 bsts.votediff.y <- votediff.y
-bsts.votediff.y[bsts.votediff.y==-1] <- NA #replace -1 with NA
 
-bsts.votediff.y <- data.frame("year"=bsts.votediff.y$year,
-                              "votediff" = rowMeans(bsts.votediff.y[!colnames(bsts.votediff.y) %in% c("year")],na.rm = TRUE))
-
-
-data.votediff <- cbind(bsts.votediff.y,rbind(votediff.x.train,votediff.x.val,votediff.x.test)[-1])
+data.votediff <- cbind(bsts.votediff.y,rbind(votediff.x.train,votediff.x.test)[-1])
 
 data.votediff$year <-as.Date(as.yearmon(data.votediff$year) + 11/12, frac = 1) # end of year
 
@@ -42,7 +47,7 @@ ts.regularized <- na.locf(ts.regularized, na.rm = FALSE, fromLast=TRUE)  # fill 
 impact.votediff <- CausalImpact(ts.regularized, 
                        pre.period, 
                        post.period, 
-                       model.args = list(niter = 10000, standardize.data=FALSE)) 
+                       model.args = list(niter = 10000, standardize.data=TRUE)) 
 
 
 summary(impact.votediff)
