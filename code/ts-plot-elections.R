@@ -7,26 +7,22 @@ TsPlotElections <- function(df, main = "") {
   gg.xts <- ggplot(df, aes(x = year)) +
   
   # panel layout
-  facet_grid(series~., scales = "free_y", space = "fixed", shrink = TRUE, drop = TRUE, labeller = label_value) + # label_value is default
+  #facet_grid(series~., scales = "free_y", space = "fixed", shrink = TRUE, drop = TRUE, labeller = label_value) + # label_value is default
     
-  theme(strip.text= element_text(size = 12, family = "serif", face='bold')) +
+  #theme(strip.text= element_text(size = 12, family = "serif", face='bold')) +
   
   # line colours
-    geom_line(data = subset(df, variable == "Observed votediff"), aes(y = value, colour = "Observed votediff", linetype="Observed votediff"), show.legend = TRUE, size=0.5) +
+    geom_line(data = subset(df, variable == "Observed votediff"), aes(y = value, colour = "Observed votediff", linetype="Observed votediff"), show.legend = TRUE, size=0.75) +
    
-    geom_line(data = subset(df, variable == "Predicted votediff"), aes(y = value, colour = "Predicted votediff", linetype="Predicted votediff"), show.legend = FALSE, size=0.5) +
+    geom_line(data = subset(df, variable == "Predicted votediff"), aes(y = value, colour = "Predicted votediff", linetype="Predicted votediff"), show.legend = TRUE, size=1.5) +
    
-    geom_line(data = subset(df, variable == "Pointwise votediff"), aes(y = value, colour = "Predicted votediff", linetype="Predicted votediff"), show.legend = FALSE, size=0.5) +
+  #  geom_line(data = subset(df, variable == "Pointwise votediff"), aes(y = value, colour = "Predicted votediff", linetype="Predicted votediff"), show.legend = FALSE, size=0.5) +
    
-   #  geom_line(data = subset(df, variable == "Cumulative votediff"), aes(y = value ,colour = "Predicted votediff", linetype="Predicted votediff"), show.legend = FALSE, size=1) +
-    
   # intervals
-  #  geom_ribbon(data = subset(df, variable == "Predicted votediff"), aes(ymin = pred.votediff.min, ymax=pred.votediff.max, colour="Predicted votediff"), alpha=.2, size=1, show.legend = FALSE) +
+    geom_ribbon(data = subset(df, variable == "Predicted votediff"), aes(ymin = pred.votediff.min, ymax=pred.votediff.max, colour="Predicted votediff"), alpha=.2, size=0.75, show.legend = FALSE) +
     
-    geom_ribbon(data = subset(df, variable == "Pointwise votediff"), aes(ymin = pointwise.votediff.min, ymax=pointwise.votediff.max, colour="Predicted votediff"), alpha=.2, size=1, show.legend = FALSE) +
+    #geom_ribbon(data = subset(df, variable == "Pointwise votediff"), aes(ymin = pointwise.votediff.min, ymax=pointwise.votediff.max, colour="Predicted votediff"), alpha=.2, size=1, show.legend = FALSE) +
     
-  #   geom_ribbon(data = subset(df, variable == "Cumulative votediff"), aes(ymin = cumulative.votediff.min, ymax=cumulative.votediff.max, colour="Predicted votediff"), alpha=.2, size=1, show.legend = FALSE) +   
-     
   # horizontal line to indicate zero values
   geom_hline(yintercept = 0, size = 0.5, colour = "black") +
   
@@ -48,7 +44,7 @@ TsPlotElections <- function(df, main = "") {
   
   ticks <- scale_x_datetime(date_breaks="10 years",labels=date_format("%Y"), 
                      time_trans(tz="UTC"),
-                     limits = c(as.POSIXct("1948-12-30 19:00:00"), as.POSIXct("2007-12-30 19:00:00")))
+                     limits = c(as.POSIXct("1948-12-30 19:00:00"), as.POSIXct("2010-12-30 19:00:00")))
  
 # annotation text
   

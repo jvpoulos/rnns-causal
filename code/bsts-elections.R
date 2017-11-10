@@ -5,10 +5,6 @@
 library(CausalImpact)
 library(dplyr)
 library(tidyr)
-library(tseries)
-library(boot)
-
-source(paste0(code.directory,"PolitisWhite.R"))
 
 # Impute missing features
 
@@ -54,53 +50,11 @@ summary(impact.votediff)
 
 saveRDS(impact.votediff, paste0(data.directory,"impact.votediff.rds") ) #save
 
-# Bootstrap estimate for prediction
+ts.plot.bsts <- plot(impact.votediff, c("original")) + theme(axis.text=element_text(size=12)
+                                                              , axis.title.x=element_blank()
+                                                              , axis.ticks.x=element_blank()
+                                                              , axis.ticks.y=element_blank())
 
-votediff.bind <- cbind("year"=row.names(data.frame(impact.votediff$series)), data.frame(impact.votediff$series)[c("response","point.pred")])
+ggsave(paste0(results.directory,"plots/impact-votediff-bsts.png"), ts.plot.bsts, width=11, height=8.5)
 
-votediff.bopt <- b.star(votediff.bind$point.pred,round=TRUE)[[1]]  # get optimal bootstrap lengths
-
-GetPointwise <- function(x){ 
-  # Calculate pointwise impact
-  # Actual-Predicted
-  return(x[,2]-x[,3])
-}
-
-votediff.boot <- tsboot(ts(votediff.bind), GetPointwise, R = 1000, l = votediff.bopt, 
-                        sim = "geom") # block resampling with block lengths having a geometric distribution with mean bopt
-
-ts.dat <- cbind(votediff.bind, data.frame(votediff.boot$t0), apply(votediff.boot$t, 2, sd))
-
-colnames(ts.dat)[4:5] <- c("pointwise.votediff","votediff.se")
-
-# SE
-
-se <- ts.dat  %>%
-  mutate(pred.votediff.min = point.pred - votediff.se*1.96,
-         pred.votediff.max = point.pred + votediff.se*1.96,
-         pointwise.votediff.min = response-pred.votediff.max,
-         pointwise.votediff.max = response-pred.votediff.min,
-         cumulative.votediff.min = cumsum(pointwise.votediff.min),
-         cumulative.votediff.max = cumsum(pointwise.votediff.max))
-
-se <- se[with(se, order(year)), ] # sort by year
-
-
-# 2005
-ts.dat$pointwise.votediff[ts.dat$year=="2005-12-31"]
-
-se$pointwise.votediff.min[se$year=="2005-12-31"]
-se$pointwise.votediff.max[se$year=="2005-12-31"]
-
-# 2006
-ts.dat$pointwise.votediff[ts.dat$year=="2006-12-31"]
-
-se$pointwise.votediff.min[se$year=="2006-12-31"]
-se$pointwise.votediff.max[se$year=="2006-12-31"]
-
-# 2005 & 2006 (pooled)
-mean(ts.dat$pointwise.votediff[ts.dat$year=="2005-12-31" | ts.dat$year=="2006-12-31"])
-
-mean(se$pointwise.votediff.min[se$year=="2005-12-31" | se$year=="2006-12-31"])
-mean(se$pointwise.votediff.max[se$year=="2005-12-31" | se$year=="2006-12-31"])
-
+impact.votediff$series

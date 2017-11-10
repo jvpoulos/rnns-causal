@@ -37,8 +37,8 @@ colnames(votediff.bind) <- c("year","y.true","y.pred","y.sd")
 votediff.bind$pointwise.votediff <- votediff.bind$y.true - votediff.bind$y.pred
 
 votediff.bind <- votediff.bind  %>%
-  mutate(pred.votediff.min = y.pred - y.sd*1.96,
-         pred.votediff.max = y.pred + y.sd*1.96,
+  mutate(pred.votediff.min = y.pred - y.sd,
+         pred.votediff.max = y.pred + y.sd,
          pointwise.votediff.min = y.true-pred.votediff.max,
          pointwise.votediff.max = y.true-pred.votediff.min)
 
@@ -48,9 +48,14 @@ setwd(code.directory)
 
 ## Plot time series 
 
-ts.dat <- cbind(votediff.y, rbind(votediff.bind[!colnames(votediff.bind) %in% c("year","y.true")])
+ts.dat <- cbind(votediff.y, "y.pred"=c(rep(NA, 47), votediff.bind$y.pred), 
+                "pointwise.votediff"=c(rep(NA, 47), votediff.bind$pointwise.votediff))
+#                "pred.votediff.min"=c(rep(NA, 47), votediff.bind$pred.votediff.min),
+ #               "pred.votediff.max"=c(rep(NA, 47), votediff.bind$pred.votediff.max),
+ #               "pointwise.votediff.min"=c(rep(NA, 47), votediff.bind$pointwise.votediff.min),
+ #               "pointwise.votediff.max"=c(rep(NA, 47), votediff.bind$pointwise.votediff.max))
 
-ts.means.m <- melt(as.data.frame(votediff.bind)[!colnames(votediff.bind) %in% c("votediff.se")], id.var=c("year"))
+ts.means.m <- melt(as.data.frame(ts.dat), id.var=c("year"))
 
 # # Adjust year for plot
 ts.means.m$year <- as.Date(as.yearmon(ts.means.m$year) + 11/12, frac = 1) # end of year
@@ -60,20 +65,19 @@ ts.means.m$year <- as.POSIXct(ts.means.m$year, tz="UTC")
 # Labels
 
 ts.means.m$series <- NA
-ts.means.m$series[ts.means.m$variable=="votediff.1" | ts.means.m$variable=="votediff.pred"] <- "Winner margin time-series"
+ts.means.m$series[ts.means.m$variable=="y.true" | ts.means.m$variable=="y.pred"] <- "Winner margin time-series"
 ts.means.m$series[ts.means.m$variable=="pointwise.votediff"] <- "Pointwise impact"
-ts.means.m$series[ts.means.m$variable=="cumulative.votediff"] <- "Cumulative impact"
 
-ts.means.m$series<- factor(ts.means.m$series, levels=c("Winner margin time-series", "Pointwise impact", "Cumulative impact")) # reverse order
+ts.means.m$series<- factor(ts.means.m$series, levels=c("Winner margin time-series", "Pointwise impact")) # reverse order
 
 levels(ts.means.m$variable) <- c("Observed votediff","Predicted votediff", 
-                                 "Pointwise votediff", "Cumulative votediff")
+                                 "Pointwise votediff")
 
-pred.vars <- c("votediff.pred", "votediff.se", "pred.votediff.min", "pred.votediff.max", "pointwise.votediff.min", "pointwise.votediff.max", "cumulative.votediff.min", "cumulative.votediff.max")
-ts.means.m <- cbind(ts.means.m, se[pred.vars])
-ts.means.m[pred.vars][ts.means.m$variable=="Observed",] <- NA
+pred.vars <- c("y.pred", "y.sd", "pred.votediff.min", "pred.votediff.max", "pointwise.votediff.min", "pointwise.votediff.max")
+ts.means.m <- cbind(ts.means.m, rbind(matrix(data = NA, nrow = 47, ncol = length(pred.vars)), as.matrix(votediff.bind[pred.vars])))
+ts.means.m[pred.vars][ts.means.m$variable=="Observed votediff",] <- NA
 
-ts.plot <- TsPlotElections(ts.means.m[ts.means.m$series != "Cumulative impact",])
+ts.plot <- TsPlotElections(ts.means.m)
 ggsave(paste0(results.directory,"plots/impact-votediff.png"), ts.plot, width=11, height=8.5)
 
 # Calculate avg. pointwise impact during post-period: >= 2005
