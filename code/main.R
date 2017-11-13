@@ -31,5 +31,6 @@ source(paste0(code.directory,'bsts-elections.R'))
 # DD estimates
 source(paste0(code.directory,'dd-elections.R')) 
 
-# Experimental estimates
-source(paste0(code.directory,'exp-elections.R')) 
+# GBR / TBR estimates
+source(paste0(code.directory,'gbr-elections.R')) 
+source(paste0(code.directory,'tbr-elections.R')) 

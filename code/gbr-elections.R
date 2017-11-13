@@ -1,13 +1,19 @@
 ###################################
-# Two-stage experimental estimates  #
+# GBR estimates                       #
 ###################################
 
+library(devtools)
+
+install_github("google/GeoexperimentsResearch")
+
+library(GeoexperimentsResearch)
 library(boot)
 library(tidyr)
+library(zoo)
 
 source(paste0(code.directory,"Run2Stage.R"))
 
-ads.exp<- fg.ads[!is.na(fg.ads$treat),] # subset to experimental cities
+ads.exp <- fg.ads[!is.na(fg.ads$treat),] # subset to experimental cities
 
 # Create var for when treatment started
 
@@ -21,8 +27,9 @@ ads.exp$id <- paste(ads.exp$city, ads.exp$state, sep=".")
 
 ads.exp.means <- ads.exp %>% # take city pre/post means
   group_by(id,time) %>% 
-  summarise_all(funs(mean(., na.rm = TRUE)))  %>%
-  select(id, votediff, time, year_exp) 
+  summarise_all(funs(mean(., na.rm = TRUE))) 
+
+ads.exp.means <- ads.exp.means[c("id","votediff","year_exp","time")]
 
 counts <- ads.exp.means %>% 
   group_by(id) %>% 
