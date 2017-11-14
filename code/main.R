@@ -27,10 +27,10 @@ source(paste0(code.directory,'attention-plot-elections.R'))
 source(paste0(code.directory,'impact-plots-elections.R')) 
 
 source(paste0(code.directory,'bsts-elections.R')) 
+ource(paste0(code.directory,'lasso-elections.R')) # run bsts-elections.R first
 
 # DD estimates
 source(paste0(code.directory,'dd-elections.R')) 
 
-# GBR / TBR estimates
+# GBR estimates
 source(paste0(code.directory,'gbr-elections.R')) 
-source(paste0(code.directory,'tbr-elections.R')) 

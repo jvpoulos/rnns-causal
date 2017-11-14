@@ -160,13 +160,6 @@ votediff.x.test <- votediff[votediff$year %in% votediff.years & votediff$year >=
 votediff.y.train <- votediff.y[votediff.y$year %in% votediff.years & votediff.y$year < 2005,]
 votediff.y.test <- votediff.y[votediff.y$year %in% votediff.years &votediff.y$year >= 2005,]
 
-# Center and scale features
-
-# votediff.pre.train <- preProcess(votediff.x.train[!colnames(votediff.x.train) %in% c("year")], method = c("center","scale"))
-# votediff.x.train[!colnames(votediff.x.train) %in% c("year")] <- predict(votediff.pre.train, votediff.x.train[!colnames(votediff.x.train) %in% c("year")])
-# 
-# votediff.x.test[!colnames(votediff.x.test) %in% c("year")] <- predict(votediff.pre.train, votediff.x.test[!colnames(votediff.x.test) %in% c("year")]) # use training values for test set
-
 # Remove features with all NA or 0 (no variance)
 
 votediff.x.train <-  votediff.x.train [, colSums(votediff.x.train  != 0, na.rm = TRUE) > 0]

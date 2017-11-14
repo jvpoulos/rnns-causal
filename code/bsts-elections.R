@@ -93,9 +93,11 @@ inclusion.plot <- ggplot(data=inclusionprobs[inclusionprobs$value>0,], aes(x=Var
 ggsave(paste0(results.directory,"plots/bsts-inclusion-plot.png"), inclusion.plot, width=11, height=8.5)
 
 # Predict
+time.steps <- 5 # predict 5 time-steps in the future
+
 p <- predict.bsts(bsts.reg, 
                   newdata = rbind(votediff.x.train[-1][val.indices,], votediff.x.test[-1]), 
-                  horizon = 5, # predict n steps into the future
+                  horizon = time.steps,
                   burn = burn, 
                   quantiles = c(.025, .975))
 
@@ -109,8 +111,8 @@ d2 <- data.frame(
 names(d2) <- c("Fitted", "Date", "Actual")
 
 # MAPE (mean absolute percentage error) on validation set
-MAPE <- filter(d2, Date %in% c(2002,2003,2004)) %>% summarise(MAPE=mean(abs(Actual-Fitted)/Actual))
-MAPE
+bsts.MAPE <- filter(d2, Date %in% c(2002,2003,2004)) %>% summarise(MAPE=mean(abs(Actual-Fitted)/Actual))
+bsts.MAPE*100
 
 # 95% forecast credible interval
 posterior.interval <- cbind.data.frame(
@@ -129,7 +131,7 @@ bsts.plot <- ggplot(data=d3, aes(x=Date)) +
   theme_bw() + theme(legend.title = element_blank()) + ylab("") + xlab("") +
   geom_vline(xintercept=2005, linetype=2) + 
   geom_ribbon(aes(ymin=LL, ymax=UL), fill="grey", alpha=0.5) +
-  ggtitle(paste0("BSTS model -- Holdout MAPE = ", round(100*MAPE,2), "%")) +
+  ggtitle(paste0("BSTS model: Validation MAPE = ", round(100*bsts.MAPE,2), "%")) +
   theme.blank 
 
 ggsave(paste0(results.directory,"plots/bsts-plot.png"), bsts.plot, width=11, height=8.5)

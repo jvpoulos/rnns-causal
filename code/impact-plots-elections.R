@@ -27,6 +27,7 @@ row.names(votediff.preds) <- test.files
 votediff.preds.sd <- matrixStats::colSds(as.matrix(votediff.preds))
 
 votediff.preds <- votediff.preds[row.names(votediff.preds) %in% c("weights.12469-0.03.hdf5-votediff-test.csv"),] # keep best validated model
+#votediff.preds <- colMeans(as.matrix(votediff.preds)) # mean predictions
 
 # Bind predictions
 
