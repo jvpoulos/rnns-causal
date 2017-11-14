@@ -8,6 +8,7 @@ library(caret)
 library(weights)
 library(stringr)
 library(foreign)
+library(imputeTS)
 
 data.directory <- "~/Dropbox/github/rnns-causal/data/"
 
@@ -61,10 +62,9 @@ fg$incumbentshare <- (fg$mayor_votes)/fg$vote_total # incumbent vote share
 fg <- fg %>% 
   filter(!is.na(votediff)) %>% 
   group_by(state, city, year) %>% 
-  summarise_all(funs(mean(., na.rm = TRUE)))  %>%
-  select(state, city, year,votediff)
+  summarise_all(funs(mean(., na.rm = TRUE)))
 
-fg <- data.frame(fg)
+fg <- data.frame(fg[c("state", "city", "year","votediff")])
 
 ## Append mayoral elections
 
@@ -160,19 +160,22 @@ votediff.x.test <- votediff[votediff$year %in% votediff.years & votediff$year >=
 votediff.y.train <- votediff.y[votediff.y$year %in% votediff.years & votediff.y$year < 2005,]
 votediff.y.test <- votediff.y[votediff.y$year %in% votediff.years &votediff.y$year >= 2005,]
 
-# Remove features with all NA or 0 (no variance)
+# Impute missing feature values via linear interpolation 
 
-votediff.x.train <-  votediff.x.train [, colSums(votediff.x.train  != 0, na.rm = TRUE) > 0]
-votediff.x.train <- votediff.x.train[colSums(!is.na(votediff.x.train)) > 0]
+votediff.x.train[-1] <- na.interpolation(votediff.x.train[-1], option = "linear")
+votediff.x.test[-1] <- na.interpolation(votediff.x.test[-1], option = "linear")
 
-votediff.x.test <-  votediff.x.test [, colSums(votediff.x.test  != 0, na.rm = TRUE) > 0]
-votediff.x.test <- votediff.x.test[colSums(!is.na(votediff.x.test)) > 0]
+# Remove features with NA
 
-votediff.x.test <- votediff.x.test[colnames(votediff.x.test)%in%colnames(votediff.x.train)]
-votediff.x.train <- votediff.x.train[colnames(votediff.x.train)%in%colnames(votediff.x.test)]
+votediff.x.train <-  votediff.x.train[ , colSums(is.na(votediff.x.train)) == 0]
 
-votediff.x.train[is.na(votediff.x.train)] <- -1 # masked value for features
-votediff.x.test[is.na(votediff.x.test)] <- -1
+votediff.x.test<-  votediff.x.test[ , colSums(is.na(votediff.x.test)) == 0]
+
+# votediff.x.test <- votediff.x.test[colnames(votediff.x.test)%in%colnames(votediff.x.train)]
+# votediff.x.train <- votediff.x.train[colnames(votediff.x.train)%in%colnames(votediff.x.test)]
+
+#votediff.x.train[is.na(votediff.x.train)] <- -1 # masked value for features
+#votediff.x.test[is.na(votediff.x.test)] <- -1
 
 # Export each as csv (labels, features)
 
