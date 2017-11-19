@@ -1,3 +1,21 @@
+
+def build_masked_loss(loss_function, mask_value=-1):
+    """Builds a loss function that masks based on targets
+
+    Args:
+        loss_function: The loss function to mask
+        mask_value: The value to mask in the targets
+
+    Returns:
+        function: a loss function that acts like loss_function with masked inputs
+    """
+
+    def masked_loss_function(y_true, y_pred):
+        mask = K.cast(K.not_equal(y_true, mask_value), K.floatx())
+        return loss_function(y_true * mask, y_pred * mask)
+
+    return masked_loss_function
+
 def set_trace():
     from IPython.core.debugger import Pdb
     import sys

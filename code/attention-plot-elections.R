@@ -9,11 +9,10 @@ results.directory <-"~/Dropbox/github/rnns-causal/results/"
 
 votediff.names <- colnames(votediff.x.train)[-1]
 
-votediff.attn  <- read_csv(paste0(results.directory, "elections/votediff/attention.csv"), col_names = FALSE)
+# votediff.attn  <- read_csv(paste0(results.directory, "elections/votediff-validation/attention.csv"), col_names = FALSE)
+votediff.attn  <- read_csv(paste0(results.directory, "elections/votediff-test/attention.csv"), col_names = FALSE)
 
 colnames(votediff.attn) <- votediff.names 
-
-rownames(votediff.attn) <- votediff.x.train$year
 
 votediff.attn <- t(votediff.attn)
 
@@ -37,7 +36,6 @@ exp.cities <- sort(unique(paste(fg.ads$city[fg.ads$treat==0],fg.ads$state[fg.ads
 
 votediff.attn <- votediff.attn[votediff.attn$id %in% exp.cities,]
 
-
 # Plot
 
 f2 <- list(
@@ -57,13 +55,14 @@ a <- list(
 
 votediff.attn.plot <- plot_ly(
   x = votediff.x.train$year, y = votediff.attn$id,
-  z = as.matrix(votediff.attn[1:47]), type = "heatmap", name="Attention",
+ # z = as.matrix(votediff.attn[1:42]), type = "heatmap", name="Attention",
+ z = as.matrix(votediff.attn[1:47]), type = "heatmap", name="Attention",
   height = 800, width=600
 ) %>%
-  layout(title = '',
+  layout(title = 'Test model',
          yaxis = a,
-       #  xaxis = list(title = 'Time-step'),
-      #   yaxis = list(title = 'Predictor'),
+         xaxis = list(title = 'Time-step'),
+         yaxis = list(title = 'Predictor'),
          margin = list(l = 100, r = 50, b = 50, t = 50, pad = 2)) %>% 
   colorbar(title = "Attention") 
 htmlwidgets::saveWidget(votediff.attn.plot, file = paste0(results.directory, "plots/votediff-attn.html"))

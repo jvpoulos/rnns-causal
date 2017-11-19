@@ -37,25 +37,26 @@ analysis = sys.argv[-1] # 'treated' or 'control'
 dataname = sys.argv[-2]
 print('Load saved {} data for analysis on {}'.format(dataname, analysis))
 
-X_train = pkl.load(open('data/{}_x_train_{}.np'.format(dataname,analysis), 'rb')) 
+n_post  = 5 
+n_pre = 47
+# n_pre = 47 - n_post 
 
-X_test = pkl.load(open('data/{}_x_test_{}.np'.format(dataname,analysis), 'rb')) 
+# X_train = np.array(pkl.load(open('data/{}_x_train_{}.np'.format(dataname,analysis), 'rb')))[:-n_post] # training sequence all but last 5 time-steps
 
-y_test = pkl.load(open('data/{}_y_test_{}.np'.format(dataname,analysis), 'rb')) 
+# print('X_train shape:', X_train.shape)
 
-mask = -1 # mask value
+X_test = np.array(pkl.load(open('data/{}_x_train_{}.np'.format(dataname,analysis), 'rb'))) # entire training sequence
+
+print('X_test shape:', X_test.shape)
 
 # Define network structure
-
-nb_features = X_train.shape[1]
+#nb_features = X_train.shape[1]
+nb_features = X_test.shape[1]
 output_dim = 1
-
-n_pre = 47 # pre: 1948:2004 (NI)
-n_post  = 5 # post: 2005:2010 (NI)
 
 # Define model parameters
 
-dropout = 0.2
+dropout = 0.5
 hidden_dropout = 0
 penalty = 0
 batch_size = 1
@@ -65,18 +66,13 @@ initialization = 'glorot_normal'
 # Reshape X to three dimensions
 # Should have shape (nb_samples, nb_timesteps, nb_features)
 
-X_train = np.array(np.resize(X_train, (n_pre, n_pre, nb_features )))
+# X_train = np.array(np.resize(X_train, (n_pre, n_pre, nb_features ))) 
 
-print('X_train shape:', X_train.shape)
+# print('X_train reshape:', X_train.shape)
 
 X_test = np.array(np.resize(X_test, (n_pre, n_pre, nb_features )))
 
-# Reshape y to three dimensions
-# Should have shape (nb_samples, nb_timesteps, nb_features)
-
-y_test = np.resize(y_test,  (n_pre, n_post, output_dim))
-
-print('y_test shape:', y_test.shape)
+print('X_test reshape:', X_test.shape)
 
 # Initiate sequential model
 
@@ -89,8 +85,7 @@ a = Reshape((nb_features, n_pre))(a)
 a = Dense(n_pre, activation='softmax')(a)
 a_probs = Permute((2, 1), name='attention_vec')(a)
 output_attention_mul = merge([inputs, a_probs], name='attention_mul', mode='mul')
-mask_layer = Masking(mask_value=mask)(output_attention_mul)
-dropout_1 = Dropout(dropout)(mask_layer)
+dropout_1 = Dropout(dropout)(output_attention_mul)
 lstm_1 = LSTM(640, kernel_initializer=initialization, dropout=hidden_dropout, return_sequences=False)(dropout_1) # Encoder
 repeat = RepeatVector(n_post)(lstm_1) # get the last output of the LSTM and repeats it
 lstm_2 = LSTM(256, kernel_initializer=initialization, return_sequences=True)(repeat)  # Decoder
@@ -98,15 +93,15 @@ output= TimeDistributed(Dense(output_dim, activation=activation, kernel_regulari
 
 model = Model(inputs=inputs, output=output)
 
-model.compile(loss="mean_absolute_percentage_error", optimizer=Adam(lr=0.002))
+model.compile(loss="mean_absolute_percentage_error", optimizer=Adam(lr=0.001))
 
 print(model.summary())
 
 # Visualize model
 
-plot_model(model, to_file='results/elections/{}/model.png'.format(dataname), # Plot graph of model
-  show_shapes = False,
-  show_layer_names = False)
+# plot_model(model, to_file='results/elections/{}/model.png'.format(dataname), # Plot graph of model
+#   show_shapes = False,
+#   show_layer_names = False)
 
 #model_to_dot(model,show_shapes=True,show_layer_names = False).write('results/elections/{}/model.dot'.format(dataname), format='raw', prog='dot') # write to dot file
 
@@ -120,12 +115,20 @@ print("Created model and loaded weights from file")
 
 print('Generate predictions')
 
-y_pred_test = model.predict(X_train, batch_size=batch_size, verbose=1) # generate output predictions
+# y_pred_train = model.predict(X_train, batch_size=batch_size, verbose=1) # generate training predictions
+
+# np.savetxt("{}-{}-train.csv".format(filename,dataname), y_pred_train, delimiter=",")
+
+y_pred_test = model.predict(X_test, batch_size=batch_size, verbose=1) # generate test predictions
 
 np.savetxt("{}-{}-test.csv".format(filename,dataname), y_pred_test, delimiter=",")
 
 # Get attention weights 
-attention_vector = get_activations(model, X_train, print_shape_only=True, layer_name='attention_vec')[0]   
+#attention_vector = get_activations(model, X_train, print_shape_only=True, layer_name='attention_vec')[0] # validation set  
+
+attention_vector = get_activations(model, X_test, print_shape_only=True, layer_name='attention_vec')[0] # validation set  
+
+#attention_vector = np.mean(attention_vector, axis=0).squeeze() # mean across # val samples
 
 attention_vector = np.array(np.resize(attention_vector, (n_pre, nb_features )))
 

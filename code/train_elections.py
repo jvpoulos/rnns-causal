@@ -38,9 +38,16 @@ analysis = sys.argv[-1] # 'treated' or 'control'
 dataname = sys.argv[-2]
 print('Load saved {} data for analysis on {}'.format(dataname, analysis))
 
-X_train = pkl.load(open('data/{}_x_train_{}.np'.format(dataname,analysis), 'rb')) 
+n_post  = 5 
+n_pre = 47
 
-y_train = pkl.load(open('data/{}_y_train_{}.np'.format(dataname,analysis), 'rb')) 
+X_train = np.array(pkl.load(open('data/{}_x_train_{}.np'.format(dataname,analysis), 'rb')))
+
+print('X_train shape:', X_train.shape)
+
+y_test = np.array(pkl.load(open('data/{}_y_test_{}.np'.format(dataname,analysis), 'rb')))
+
+print('y_test shape:', y_test.shape)
 
 # Define network structure
 
@@ -48,34 +55,28 @@ epochs = int(sys.argv[-3])
 nb_features = X_train.shape[1]
 output_dim = 1
 
-# n_pre = 47 # pre: 1948:2004 (NI)
-# n_post  = 5 # post: 2005:2010 (NI)
-
-n_post  = 5 
-n_pre = X_train.shape[0]-n_post
-
 # Define model parameters
 
-dropout = 0.9
+dropout = 0.5
 hidden_dropout = 0
-penalty = 0.001
-batch_size = 32
+penalty = 0
+batch_size = 1
 activation = 'linear'
 initialization = 'glorot_normal'
 
 # Reshape X to three dimensions
 # Should have shape (nb_samples, nb_timesteps, nb_features)
 
-X_train = np.array(np.resize(X_train, (batch_size, n_pre, nb_features )))
+X_train = np.array(np.resize(X_train, (n_pre, n_pre, nb_features ))) 
 
-print('X_train shape:', X_train.shape)
+print('X_train reshape:', X_train.shape)
 
 # Reshape y to three dimensions
 # Should have shape (nb_samples, nb_timesteps, nb_features)
 
-y_train = np.resize(y_train,  (batch_size, n_post, output_dim))
+y_test = np.resize(y_test,  (n_pre, n_post, output_dim)) 
 
-print('y_train shape:', y_train.shape)
+print('y_test reshape:', y_test.shape)
 
 # Initiate sequential model
 
@@ -96,26 +97,26 @@ output= TimeDistributed(Dense(output_dim, activation=activation, kernel_regulari
 
 model = Model(inputs=inputs, output=output)
 
-model.compile(loss="mean_absolute_percentage_error", optimizer=Adam(lr=0.002))
+model.compile(loss="mean_absolute_percentage_error", optimizer=Adam(lr=0.001))
 
 print(model.summary())
 
-#model.load_weights("results/elections/{}".format(dataname) + "/weights.189-0.12.hdf5") # load weights
+#model.load_weights("results/elections/{}".format(dataname) + "/weights.2199-3.78.hdf5") # load weights
 
 # Prepare model checkpoints and callbacks
 
-filepath="results/elections/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.2f}.hdf5"
+filepath="results/elections/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
 checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=100, save_best_only=True)
 
 # Train model
 print('Training')
 csv_logger = CSVLogger('results/elections/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=True)
 
-model.fit(X_train,
-  y_train,
+model.fit(X_train, 
+  y_test,
   batch_size=batch_size,
   verbose=1,
-  shuffle=False, 
+  shuffle=True, 
   epochs=epochs,
   callbacks=[checkpointer,csv_logger],
-  validation_split= 0.1) 
+  validation_split= 0.10) 
