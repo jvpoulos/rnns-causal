@@ -33,7 +33,7 @@ print(device_lib.list_local_devices())
 
 # Load saved data
 
-analysis = sys.argv[-1] # 'treated' or 'control'
+analysis = sys.argv[-1] # 'sim'
 dataname = sys.argv[-2]
 print('Load saved {} data for analysis on {}'.format(dataname, analysis))
 
@@ -48,7 +48,7 @@ print('X_train shape:', X_train.shape)
 X_test = np.array(pkl.load(open('data/{}_x_test_{}.np'.format(dataname,analysis), 'rb')))
 
 X = np.concatenate((X_train, X_test), axis=0)
- 
+
 dX = []
 for i in range(seq_len-n_pre-n_post):
 	dX.append(X[i:i+n_pre])
@@ -58,14 +58,13 @@ dataX = np.array(dX)
 print('dataX shape:', dataX.shape)
 
 # Define network structure
-
 nb_features = dataX.shape[2]
 
 # Define model parameters
 
-dropout = 0.5
+dropout = 0.8
 hidden_dropout = 0.5
-penalty = 1
+penalty = 5
 batch_size = 2
 activation = 'linear'
 initialization = 'glorot_normal'
@@ -91,17 +90,9 @@ model = Model(inputs=inputs, output=output)
 
 model.compile(loss="mean_absolute_percentage_error", optimizer=Adam(lr=0.001, clipnorm=2))
 
-# Visualize model
-
-# plot_model(model, to_file='results/elections/{}/model.png'.format(dataname), # Plot graph of model
-#   show_shapes = False,
-#   show_layer_names = False)
-
-#model_to_dot(model,show_shapes=True,show_layer_names = False).write('results/elections/{}/model.dot'.format(dataname), format='raw', prog='dot') # write to dot file
-
 # Load weights
 filename = sys.argv[-3]
-model.load_weights(filename, by_name=True)
+model.load_weights(filename)
 
 print("Created model and loaded weights from file")
 
@@ -121,4 +112,4 @@ attention_vector = np.mean(attention_vector, axis=0).squeeze() # mean across # s
 
 print('attention shape =', attention_vector.shape)
 
-np.savetxt('results/elections/{}/attention.csv'.format(dataname), attention_vector, delimiter=',') # save attentions to file
+np.savetxt('results/elections_sim/{}/attention.csv'.format(dataname), attention_vector, delimiter=',') # save attentions to file

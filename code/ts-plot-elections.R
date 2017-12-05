@@ -37,26 +37,26 @@ TsPlotElections <- function(df, main = "") {
   
   # vertical line to indicate intervention
   
-  intervention <- geom_vline(xintercept=c(as.numeric(as.POSIXct("2000-12-31 00:00:00",tz="UTC")),
-                                          as.numeric(as.POSIXct("2005-12-31 00:00:00",tz="UTC"))), linetype=c(3,2))
+  intervention <- geom_vline(xintercept=c(as.numeric(as.POSIXct("2005-12-31 00:00:00",tz="UTC")),
+                                          as.numeric(as.POSIXct("2006-12-31 00:00:00",tz="UTC"))), linetype=c(2,3))
 
   # horizontal ticks
   
-  ticks <- scale_x_datetime(date_breaks="10 years",labels=date_format("%Y"), 
-                     time_trans(tz="UTC"),
-                     limits = c(as.POSIXct("1948-12-30 19:00:00"), as.POSIXct("2010-12-30 19:00:00")))
+  # ticks <- scale_x_datetime(date_breaks="10 years",labels=date_format("%Y"), 
+  #                    time_trans(tz="UTC"),
+  #                    limits = c(as.POSIXct("1948-12-30 19:00:00"), as.POSIXct("2010-12-30 19:00:00")))
  
 # annotation text
   
-  ann_text <- data.frame(year = c(as.POSIXlt("1980-01-01 EST"), as.POSIXlt("2003-04-01 EST"), as.POSIXlt("2009-12-31 EST")), value=90, 
+  ann_text <- data.frame(year = c(as.POSIXlt("1985-01-01 EST"), as.POSIXlt("2010-01-01 EST")), value=90, 
                            series = factor("Winner margin time-series", levels = c("Winner margin time-series","Pointwise impact","Cumulative impact")),
-                           lab = c("pre-period \n (training)", "pre-\n period \n (val.)", "post-period \n (test)"))
+                           lab = c("pre-period \n (training)", "post-period \n (test)"))
 
 # legend 
 
   gg.xts <- gg.xts +
     intervention +
-    ticks +
+   # ticks +
     theme( legend.title = element_blank()
          , legend.position = c(0.35,0.93)
          , legend.justification = c(1,0)

@@ -25,7 +25,7 @@ def get_activations(model, inputs, print_shape_only=False, layer_name=None):
     return activations
 
 
-def get_data(n, input_dim, attention_column=1):
+def get_data(n, input_dim, attention_column=10):
     """
     Data generation. x is purely random except that it's first value equals the target y.
     In practice, the network should learn that the target = x[attention_column].

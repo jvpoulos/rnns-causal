@@ -25,3 +25,5 @@ pkl.dump(votediff_x_test, open('data/votediff_x_test_treated.np', 'wb'))
 
 pkl.dump(votediff_y_train, open('data/votediff_y_train_treated.np', 'wb'))
 pkl.dump(votediff_y_test, open('data/votediff_y_test_treated.np', 'wb'))
+
+## Simulations

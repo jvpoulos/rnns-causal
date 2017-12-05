@@ -143,6 +143,10 @@ fg.ads.control <- subset(fg.ads, treat %in% c(0,NA), select=c("id","year","voted
 votediff <- reshape(data.frame(fg.ads.control)[c("year","id","votediff")], idvar = "year", timevar = "id", direction = "wide")
 votediff <- votediff[with(votediff, order(year)), ] # sort
 
+# Impute missing feature values via linear interpolation 
+
+votediff <- na.interpolation(votediff, option = "linear")
+
 # Labels
 
 votediff.y <- data.frame(fg.ads.treat)
@@ -160,22 +164,8 @@ votediff.x.test <- votediff[votediff$year %in% votediff.years & votediff$year >=
 votediff.y.train <- votediff.y[votediff.y$year %in% votediff.years & votediff.y$year < 2005,]
 votediff.y.test <- votediff.y[votediff.y$year %in% votediff.years &votediff.y$year >= 2005,]
 
-# Impute missing feature values via linear interpolation 
-
-votediff.x.train[-1] <- na.interpolation(votediff.x.train[-1], option = "linear")
-votediff.x.test[-1] <- na.interpolation(votediff.x.test[-1], option = "linear")
-
-# Remove features with NA
-
-votediff.x.train <-  votediff.x.train[ , colSums(is.na(votediff.x.train)) == 0]
-
-votediff.x.test<-  votediff.x.test[ , colSums(is.na(votediff.x.test)) == 0]
-
-# votediff.x.test <- votediff.x.test[colnames(votediff.x.test)%in%colnames(votediff.x.train)]
-# votediff.x.train <- votediff.x.train[colnames(votediff.x.train)%in%colnames(votediff.x.test)]
-
-#votediff.x.train[is.na(votediff.x.train)] <- -1 # masked value for features
-#votediff.x.test[is.na(votediff.x.test)] <- -1
+votediff.x.train <-  votediff.x.train[ , colSums(is.na(votediff.x.train)) == 0] # Remove training features with NA
+votediff.x.test <-  votediff.x.test[ , colSums(is.na(votediff.x.test)) == 0] # Remove test features with NA
 
 # Export each as csv (labels, features)
 

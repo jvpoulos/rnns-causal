@@ -11,13 +11,8 @@ library(tidyr)
 library(zoo)
 library(reshape2)
 
-## Impute missing features / standardize columns
-
 train.indices <- c(1:42)
 val.indices <- c(43:47)
-
-votediff.x.test <- votediff.x.test[colnames(votediff.x.test)%in%colnames(votediff.x.train)] # share same # columns
-votediff.x.train <- votediff.x.train[colnames(votediff.x.train)%in%colnames(votediff.x.test)]
 
 ### Set up the priors
 prior.val <- SpikeSlabPrior(x=model.matrix(y.true ~ ., data=cbind("y.true"=votediff.y.train$y.true[train.indices], votediff.x.train[-1][train.indices,])),

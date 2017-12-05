@@ -1,7 +1,3 @@
-# Softmax mask inside the network
-# Gives normalized distribution of the importance of each time step (or unit) regarding an input.
-# https://github.com/philipperemy/keras-attention-mechanism
-
 from __future__ import print_function
 
 import matplotlib
@@ -21,10 +17,12 @@ from keras.callbacks import ModelCheckpoint, CSVLogger
 from keras import regularizers
 from keras.optimizers import Adam
 
-from keras.models import Sequential
-from keras.layers import Dense, Activation, LSTM, Dropout, RepeatVector, TimeDistributed
-
 from attention_utils import get_activations
+
+import statsmodels.api as sm
+from statsmodels.tsa.arima_process import arma_generate_sample
+
+import itertools
 
 # Select gpu
 import os
@@ -35,24 +33,48 @@ os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
 from tensorflow.python.client import device_lib
 print(device_lib.list_local_devices())
 
-# Load saved data
+# Simulate time series using ARMA model 
 
 analysis = sys.argv[-1] # 'treated' or 'control'
 dataname = sys.argv[-2]
-print('Load saved {} data for analysis on {}'.format(dataname, analysis))
+print('Generating {} data for analysis on {}'.format(dataname, analysis))
 
 n_post  = 5
 n_pre = 42-(n_post*2)
 seq_len = 42
 
-X_train = np.array(pkl.load(open('data/{}_x_train_{}.np'.format(dataname,analysis), 'rb')))[:-n_post] # all but last n timesteps of training x
+nb_features = 778
+
+arparams = np.array([.75, -.25])
+maparams = np.array([.65, .35])
+arparams = np.r_[1, -arparams] # add zero-lag and negate
+maparam = np.r_[1, maparams] # add zero-lag
+
+x = arma_generate_sample(arparams, maparams, seq_len+n_post*2)
+
+for _ in itertools.repeat(None, nb_features-1):
+    x = np.c_[x, arma_generate_sample(arparams, maparams, seq_len+n_post*2)]
+
+X_train = x[:seq_len]
+
+X_test = x[seq_len:]
+
+y = arma_generate_sample(arparams, maparams, seq_len+n_post*2)
+
+y = y.reshape((y.shape[0], 1))
+
+y_train = y[:seq_len]
+
+y_test = y[seq_len:] - abs(y[seq_len:]*0.1) 
 
 print('X_train shape:', X_train.shape)
 
-y_train = np.array(pkl.load(open('data/{}_y_train_{}.np'.format(dataname,analysis), 'rb')))[:-n_post] # all but last n timesteps of training y
+print('X_test shape:', X_test.shape)
 
 print('y_train shape:', y_train.shape)
- 
+
+print('y_test shape:', y_test.shape)
+
 dX, dY = [], []
 for i in range(seq_len-n_pre-n_post):
 	dX.append(X_train[i:i+n_pre])
@@ -64,16 +86,29 @@ dataY = np.array(dY)
 print('dataX shape:', dataX.shape)
 print('dataY shape:', dataY.shape)
 
+## Save train and test sets to disk
+print('Saving simulation data')
+
+pkl.dump(X_train, open('data/votediff_x_train_sim.np', 'wb')) 
+pkl.dump(X_test, open('data/votediff_x_test_sim.np', 'wb'))
+
+pkl.dump(y_train, open('data/votediff_y_train_sim.np', 'wb'))
+pkl.dump(y_test, open('data/votediff_y_test_sim.np', 'wb'))
+
+np.savetxt('data/votediff_y_train_sim.csv', y_train, delimiter=",")
+np.savetxt('data/votediff_y_test_sim.csv', y_test, delimiter=",")
+
 # Define network structure
 
 epochs = int(sys.argv[-3])
-nb_features = dataX.shape[2]
+
+output_dim = 1
 
 # Define model parameters
 
-dropout = 0.5
+dropout = 0.8
 hidden_dropout = 0.5
-penalty = 1
+penalty = 5
 batch_size = 2
 activation = 'linear'
 initialization = 'glorot_normal'
@@ -105,12 +140,12 @@ print(model.summary())
 
 # Prepare model checkpoints and callbacks
 
-filepath="results/elections/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
-checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=10, save_best_only=True)
+filepath="results/elections_sim/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
+checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=1, save_best_only=True)
 
 # Train model
 print('Training')
-csv_logger = CSVLogger('results/elections/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=True)
+csv_logger = CSVLogger('results/elections_sim/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=True)
 
 model.fit(dataX, 
   dataY,
