@@ -35,7 +35,7 @@ exp.cities <- sort(unique(paste(fg.ads$city[fg.ads$treat==0],fg.ads$state[fg.ads
 
 # Subset to experimental cities
 
-votediff.attn <- votediff.attn[votediff.attn$id %in% exp.cities,]
+#votediff.attn <- votediff.attn[votediff.attn$id %in% exp.cities,]
 
 # Plot
 
@@ -49,7 +49,7 @@ a <- list(
   title = "Predictor",
   zeroline = FALSE,
   showline = FALSE,
-  showticklabels = TRUE,
+  showticklabels = FALSE,
   showgrid = FALSE,
   ticks= "",
   autorange = "reversed"

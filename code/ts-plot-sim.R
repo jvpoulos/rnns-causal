@@ -37,7 +37,7 @@ TsPlotSim <- function(df, main = "") {
   
   # vertical line to indicate intervention
   
-  intervention <- geom_vline(xintercept=c(as.numeric(as.POSIXct("2005-12-31 00:00:00",tz="UTC"))), linetype=c(2))
+  intervention <- geom_vline(xintercept=c(48), linetype=c(2))
   
   # horizontal ticks
   
@@ -47,7 +47,7 @@ TsPlotSim <- function(df, main = "") {
   
   # annotation text
   
-  ann_text <- data.frame(year = c(as.POSIXlt("1985-01-01 EST"), as.POSIXlt("2008-01-01 EST")), value=2.8, 
+  ann_text <- data.frame(year = c(45, 52), value=2.8, 
                          series = factor("Winner margin time-series", levels = c("Winner margin time-series","Pointwise impact","Cumulative impact")),
                          lab = c("pre-period \n (training)", "post-\n period \n (test)"))
   

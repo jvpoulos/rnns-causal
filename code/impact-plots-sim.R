@@ -60,9 +60,10 @@ setwd(code.directory)
 ## Plot time series 
 
 # # Adjust year for plot
-votediff.bind.sim$year <- as.Date(as.yearmon(c(votediff.y.train$year,votediff.y.test$year)) + 11/12, frac = 1) # end of year
-
-votediff.bind.sim$year <- as.POSIXct(votediff.bind.sim$year, tz="UTC")
+# votediff.bind.sim$year <- as.Date(as.yearmon(c(votediff.y.train$year,votediff.y.test$year)) + 11/12, frac = 1) # end of year
+# 
+# votediff.bind.sim$year <- as.POSIXct(votediff.bind.sim$year, tz="UTC")
+votediff.bind.sim$year <- 1:52
 
 ts.plot <- TsPlotSim(votediff.bind.sim)
 ggsave(paste0(results.directory,"plots/impact-sim.png"), ts.plot, width=11, height=8.5)
