@@ -67,3 +67,7 @@ votediff.bind.sim$year <- 1:52
 
 ts.plot <- TsPlotSim(votediff.bind.sim)
 ggsave(paste0(results.directory,"plots/impact-sim.png"), ts.plot, width=11, height=8.5)
+
+# Absolute percentage estimation error
+
+sim.APE <- filter(votediff.bind.sim, year %in% c(48:52)) %>% mutate(APE=abs(pointwise.votediff-(y.true-y.true.c))/abs(y.true-y.true.c))
