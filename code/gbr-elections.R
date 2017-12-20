@@ -2,11 +2,6 @@
 # GBR estimates                       #
 ###################################
 
-library(devtools)
-
-install_github("google/GeoexperimentsResearch")
-
-library(GeoexperimentsResearch)
 library(boot)
 library(tidyr)
 library(zoo)
@@ -46,52 +41,82 @@ ads.exp.means <- spread(ads.exp.means, key = time, value = votediff)
 ads.exp.means <- merge(ads.exp.means, ads.exp[c("id","strata","grp_buy")], by="id", all.x=TRUE)
 ads.exp.means <- ads.exp.means[!duplicated(ads.exp.means),]
 
+colnames(ads.exp.means) <- c("id","year_exp","pre","t05","t06","strata","grp_buy" )
+
+ads.exp.means$strata70 <- ifelse(ads.exp.means$strata==70, 1, 0)
+ads.exp.means$strata90 <- ifelse(ads.exp.means$strata==90, 1, 0)
+  
 ## 2005
 
-votediff.exp.05 <- data.frame(ads.exp.means[!is.na(ads.exp.means$'2005'),])[-5]
+f1 <- formula(t05 ~ pre + delta + strata70 + strata90, weights=1/pre) # eq. 1 in vaver 2011
+f2 <- formula(grp_buy ~ grp_buy)
 
-colnames(votediff.exp.05) <- c("id","year_exp","pre","post","strata","grp_buy" )
+votediff.est.05 <- boot(data=ads.exp.means,
+                 statistic=Run2Stage,
+                 f1=f1, f2=f2,
+                 first.test=TRUE, # no ad spending in j-1
+                 R=1000,
+                 strata=ads.exp.means$strata, 
+                 parallel="multicore", ncpus = cores)
 
-votediff.est.05 <- boot(votediff.exp.05,
-                          Run2Stage, 
-                          R=1000,
-                          strata=votediff.exp.05$strata, # stratify
-                          parallel="multicore", ncpus = cores)
+votediff.est.05.delta <- votediff.est.05$t0[['delta']]
+votediff.est.05.delta
 
-votediff.est.05$t0['grp_buy']
+votediff.est.05.CI <- boot.ci(votediff.est.05, conf=0.95, index=3, type="basic")$basic[4:5] # 95% nonparametric bootstrap CIs
+votediff.est.05.CI
 
-boot.ci(votediff.est.05, conf=0.95, index=3, type="basic") # nonparametric bootstrap CIs
+# sanity check
+
+summary(lm(t05 ~ pre + grp_buy + strata70 + strata90, ads.exp.means)) # N=31
+
 
 ## 2006
 
-votediff.exp.06 <- data.frame(ads.exp.means[!is.na(ads.exp.means$'2006'),])[-4]
+f1 <- formula(t06 ~ pre + delta + strata70 + strata90, weights=1/pre) # eq. 1 in vaver 2011
+f2 <- formula(grp_buy ~ grp_buy)
 
-colnames(votediff.exp.06) <- c("id","year_exp","pre","post","strata","grp_buy" )
-
-votediff.est.06 <- boot(votediff.exp.06,
-                        Run2Stage, 
+votediff.est.06 <- boot(data=ads.exp.means,
+                        statistic=Run2Stage,
+                        f1=f1, f2=f2,
+                        first.test=TRUE, # no ad spending in j-1
                         R=1000,
-                        strata=votediff.exp.06$strata, # stratify
+                        strata=ads.exp.means$strata, 
                         parallel="multicore", ncpus = cores)
 
-votediff.est.06$t0['grp_buy']
+votediff.est.06.delta <- votediff.est.06$t0[['delta']]
+votediff.est.06.delta
 
-boot.ci(votediff.est.06, conf=0.95, index=3, type="basic") # nonparametric bootstrap CIs
+votediff.est.06.CI <- boot.ci(votediff.est.06, conf=0.95, index=3, type="basic")$basic[4:5] # 95% nonparametric bootstrap CIs
+votediff.est.06.CI
+
+# sanity check
+
+summary(lm(t06 ~ pre + grp_buy + strata70 + strata90, ads.exp.means)) # N=17
 
 ## 2005-2006 (pooled)
 
-votediff.exp.0506 <- data.frame(ads.exp.means)
+ads.exp.means$post <- ads.exp.means$t05
+ads.exp.means$post[is.na(ads.exp.means$post)] <- ads.exp.means$t06[is.na(ads.exp.means$post)]
 
-votediff.exp.0506$post <- votediff.exp.0506$X2005
-votediff.exp.0506$post[is.na(votediff.exp.0506$post)] <- votediff.exp.0506$X2006[is.na(votediff.exp.0506$post)]
-votediff.exp.0506$pre <- votediff.exp.0506$X0
+ads.exp.means$year06 <- ifelse(ads.exp.means$year_exp==2006,1,0) # year dummy
 
-votediff.est.0506 <- boot(votediff.exp.0506,
-                        Run2Stage, 
+f1 <- formula(post ~ pre + delta + strata70 + strata90 + year06, weights=1/pre) # eq. 1 in vaver 2011
+f2 <- formula(grp_buy ~ grp_buy)
+
+votediff.est.0506 <- boot(data=ads.exp.means,
+                        statistic=Run2Stage,
+                        f1=f1, f2=f2,
+                        first.test=TRUE, # no ad spending in j-1
                         R=1000,
-                        strata=votediff.exp.0506$strata, # stratify
+                        strata=ads.exp.means$strata, 
                         parallel="multicore", ncpus = cores)
 
-votediff.est.0506$t0['grp_buy']
+votediff.est.0506.delta <- votediff.est.0506$t0[['delta']]
+votediff.est.0506.delta
 
-boot.ci(votediff.est.0506, conf=0.95, index=3, type="basic") # nonparametric bootstrap CIs
+votediff.est.0506.CI <- boot.ci(votediff.est.0506, conf=0.95, index=3, type="basic")$basic[4:5] # 95% nonparametric bootstrap CIs
+votediff.est.0506.CI
+
+# sanity check
+
+summary(lm(post ~ pre + grp_buy + strata70 + strata90 + year06, ads.exp.means)) # N=48
