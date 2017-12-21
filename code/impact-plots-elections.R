@@ -11,38 +11,32 @@ source(paste0(code.directory,"ts-plot-elections.R"))
 code.directory <-"~/Dropbox/github/rnns-causal/code/"
 results.directory <-"~/Dropbox/github/rnns-causal/results/"
 
+pre.period <- 47
+test.features <- ncol(votediff.y.test)-1
+
 # Import test results
 
 setwd(paste0(results.directory, "elections/votediff")) # prediction files loc
 
-test.files <- list.files(pattern = "*test.csv")
+burn.files <- c("weights.09-61.839.hdf5-votediff-test.csv","weights.19-51.706.hdf5-votediff-test.csv") #burn first 2
+test.files <- list.files(pattern = "*test.csv")[!list.files(pattern = "*test.csv") %in% burn.files]
 
-votediff.preds.test <- do.call(rbind,lapply(test.files,read.csv, 
-                                       header=FALSE))
+votediff.preds.test <- lapply(test.files,function(x){
+  m <- read.csv(x, header=FALSE)
+  return(as.matrix(m))})
 
-votediff.preds.test <- votediff.preds.test[seq(1, nrow(votediff.preds.test), 5), ] # get every 5th sample
+votediff.preds.test.sd <- apply(simplify2array(votediff.preds.test), 1:2, sd)
 
-rownames(votediff.preds.test) <- test.files
-
-votediff.preds.test.sd <- matrixStats::colSds(as.matrix(votediff.preds.test))
-
-votediff.preds.test <- colMeans(as.matrix(votediff.preds.test)) # mean across models
+votediff.preds.test.mean <- apply(simplify2array(votediff.preds.test), 1:2, mean) # element-wise mean
+colnames(votediff.preds.test.mean) <- colnames(votediff.y.test)[-1]
 
 # Bind predictions
 
-votediff.bind.elections <- data.frame(votediff.y, 
-                            y.pred=c(rep(NA, 47),votediff.preds.test),
-                            y.sd=c(rep(NA, 47), votediff.preds.test.sd))
+votediff.bind.preds <-  data.frame(y.pred=rbind(matrix(data=NA,pre.period,test.features),votediff.preds.test.mean))
 
-colnames(votediff.bind.elections) <- c("year","y.true","y.pred","y.sd")
+votediff.bind.sds <-  data.frame(y.sd=rbind(matrix(data=NA,pre.period,test.features),votediff.preds.test.sd))
 
-votediff.bind.elections$pointwise.votediff <- votediff.bind.elections$y.true - votediff.bind.elections$y.pred
-
-votediff.bind.elections <- votediff.bind.elections  %>%
-  mutate(pred.votediff.min = y.pred - y.sd*1.96,
-         pred.votediff.max = y.pred + y.sd*1.96,
-         pointwise.votediff.min = y.true-pred.votediff.max,
-         pointwise.votediff.max = y.true-pred.votediff.min)
+votediff.bind.true <-  data.frame(y.true=votediff.y[colnames(votediff.y) %in% colnames(votediff.y.test)][-1]) # nonimputed
 
 ## Create time series data
 setwd(code.directory)
@@ -50,9 +44,22 @@ setwd(code.directory)
 ## Plot time series 
 
 # # Adjust year for plot
-votediff.bind.elections$year <- as.Date(as.yearmon(votediff.bind.elections$year) + 11/12, frac = 1) # end of year
+votediff.bind.year <- as.Date(as.yearmon(votediff.y$year) + 11/12, frac = 1) # end of year
 
-votediff.bind.elections$year <- as.POSIXct(votediff.bind.elections$year, tz="UTC")
-                         
-ts.plot <- TsPlotElections(votediff.bind.elections)
+votediff.bind.year <- as.POSIXct(votediff.bind.year, tz="UTC")
+
+# Combine /take means across features
+
+votediff.bind.elections <- data.frame("year"=votediff.bind.year,
+                                "y.pred"=rowMeans(votediff.bind.preds), 
+                                "y.true"=rowMeans(votediff.bind.true, na.rm = TRUE),
+                                "y.sd"=rowMeans(votediff.bind.sds, na.rm = TRUE))
+
+votediff.bind.elections$pointwise.votediff <- votediff.bind.elections$y.true - votediff.bind.elections$y.pred
+
+votediff.bind.elections <- votediff.bind.elections  %>%
+  mutate(pred.votediff.min = y.pred - y.sd*1.96,
+         pred.votediff.max = y.pred + y.sd*1.96)
+
+ts.plot <- TsPlotElections(votediff.bind.elections, main="Supervised encoder-decoder trained on mayoral elections data")
 ggsave(paste0(results.directory,"plots/impact-votediff.png"), ts.plot, width=11, height=8.5)

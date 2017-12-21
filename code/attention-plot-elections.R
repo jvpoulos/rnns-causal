@@ -5,11 +5,11 @@ library(readr)
 
 results.directory <-"~/Dropbox/github/rnns-causal/results/"
 
-n.pre <- 32
+n.pre <- 37
 
 # votediff
 
-votediff.names <- colnames(votediff.x.train)[-1]
+votediff.names <- colnames(votediff.x.test)[-1]
 
 votediff.attn  <- read_csv(paste0(results.directory, "elections/votediff/attention.csv"), col_names = FALSE)
 
@@ -65,14 +65,14 @@ b <- list(
 )
 
 votediff.attn.plot <- plot_ly(
-  x = votediff.x.train$year[15:47], y = votediff.attn$id,
- z = as.matrix(votediff.attn[1:n.pre]), type = "heatmap", name="Attention",
+  x = votediff.y$year[11:47], y = votediff.attn$id,
+ z = as.matrix(votediff.attn[,1:n.pre]), type = "heatmap", name="Attention",
   height = 800, width=600
 ) %>%
-  layout(title = '',
+  layout(title = 'Attention weights from supervised encoder-decoder',
          yaxis = a,
          xaxis = b,
          yaxis = list(title = 'Predictor'),
-         margin = list(l = 150, r = 0, b = 50, t = 0, pad = 2)) %>% 
+         margin = list(l = 150, r = 0, b = 50, t = 50, pad = 2)) %>% 
   colorbar(title = "Attention") 
 htmlwidgets::saveWidget(votediff.attn.plot, file = paste0(results.directory, "plots/votediff-attn.html"))

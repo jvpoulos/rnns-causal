@@ -20,10 +20,9 @@ votediff_y_test = pd.read_csv("data/elections/{}/votediff-y-test.csv".format(fol
 print('Saving data in data/elections/{}'.format(folder))
 
 # elections
+
 pkl.dump(votediff_x_train, open('data/votediff_x_train_treated.np', 'wb')) 
 pkl.dump(votediff_x_test, open('data/votediff_x_test_treated.np', 'wb'))
 
 pkl.dump(votediff_y_train, open('data/votediff_y_train_treated.np', 'wb'))
 pkl.dump(votediff_y_test, open('data/votediff_y_test_treated.np', 'wb'))
-
-## Simulations

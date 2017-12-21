@@ -143,34 +143,37 @@ fg.ads.control <- subset(fg.ads, treat %in% c(0,NA), select=c("id","year","voted
 votediff <- reshape(data.frame(fg.ads.control)[c("year","id","votediff")], idvar = "year", timevar = "id", direction = "wide")
 votediff <- votediff[with(votediff, order(year)), ] # sort
 
-# Impute missing feature values via linear interpolation 
-
-votediff <- na.interpolation(votediff, option = "linear")
+votediff <- na.interpolation(votediff, option = "linear") # impute missing feature values via linear interpolation 
 
 # Labels
 
 votediff.y <- data.frame(fg.ads.treat)
 votediff.y <- votediff.y[with(votediff.y, order(year)), ] # sort
 
-votediff.y <- cbind(votediff.y['year'],"y.true"=rowMeans(votediff.y[-1], na.rm=TRUE)) # take treated mean
+votediff.y.imp <- na.interpolation(votediff.y, option = "linear") # impute missing labels via linear interpolation
+
+#votediff.y <- cbind(votediff.y['year'],"y.true"=rowMeans(votediff.y[-1], na.rm=TRUE)) # take treated mean
 
 # Splits
 
-votediff.years <- sort(intersect(votediff$year,votediff.y$year)) # common years in treated and control
+votediff.years <- sort(intersect(votediff$year,votediff.y.imp$year)) # common years in treated and control
 
 votediff.x.train <- votediff[votediff$year %in% votediff.years & votediff$year < 2005,]
 votediff.x.test <- votediff[votediff$year %in% votediff.years & votediff$year >= 2005,]
 
-votediff.y.train <- votediff.y[votediff.y$year %in% votediff.years & votediff.y$year < 2005,]
-votediff.y.test <- votediff.y[votediff.y$year %in% votediff.years &votediff.y$year >= 2005,]
+votediff.y.train <- votediff.y.imp[votediff.y.imp$year %in% votediff.years & votediff.y.imp$year < 2005,]
+votediff.y.test <- votediff.y.imp[votediff.y.imp$year %in% votediff.years & votediff.y.imp$year >= 2005,]
 
 votediff.x.train <-  votediff.x.train[ , colSums(is.na(votediff.x.train)) == 0] # Remove training features with NA
 votediff.x.test <-  votediff.x.test[ , colSums(is.na(votediff.x.test)) == 0] # Remove test features with NA
 
+votediff.y.train <-  votediff.y.train[ , colSums(is.na(votediff.y.train)) == 0] # Remove training labels with NA
+votediff.y.test <-  votediff.y.test[ , colSums(is.na(votediff.y.test)) == 0] # Remove test labels with NA
+
 # Export each as csv (labels, features)
 
-write.csv(votediff.x.train[!colnames(votediff.x.train) %in% c("year")], paste0(data.directory,"elections/votediff-x-train.csv"), row.names=FALSE) 
-write.csv(votediff.x.test[!colnames(votediff.x.test) %in% c("year")] , paste0(data.directory,"elections/votediff-x-test.csv"), row.names=FALSE) 
+write.csv(votediff.x.train[!colnames(votediff.x.train) %in% c("year")], paste0(data.directory,"elections/treated/votediff-x-train.csv"), row.names=FALSE) 
+write.csv(votediff.x.test[!colnames(votediff.x.test) %in% c("year")] , paste0(data.directory,"elections/treated/votediff-x-test.csv"), row.names=FALSE) 
 
-write.csv(votediff.y.train[!colnames(votediff.y.train) %in% c("year")], paste0(data.directory,"elections/votediff-y-train.csv"), row.names=FALSE) 
-write.csv(votediff.y.test[!colnames(votediff.y.test) %in% c("year")], paste0(data.directory,"elections/votediff-y-test.csv"), row.names=FALSE) 
+write.csv(votediff.y.train[!colnames(votediff.y.train) %in% c("year")], paste0(data.directory,"elections/treated/votediff-y-train.csv"), row.names=FALSE) 
+write.csv(votediff.y.test[!colnames(votediff.y.test) %in% c("year")], paste0(data.directory,"elections/treated/votediff-y-test.csv"), row.names=FALSE) 

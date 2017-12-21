@@ -42,14 +42,14 @@ dataname = sys.argv[-2]
 print('Load saved {} data for analysis on {}'.format(dataname, analysis))
 
 n_post  = 5
-n_pre = 47-(n_post*2)
-seq_len = 47
+n_pre = 42-(n_post*2)
+seq_len = 42
 
-X_train = np.array(pkl.load(open('data/{}_x_train_{}.np'.format(dataname,analysis), 'rb')))#[:-n_post] # all but last n timesteps of training x
+X_train = np.array(pkl.load(open('data/{}_x_train_{}.np'.format(dataname,analysis), 'rb')))[:-n_post] # all but last n timesteps of training x
 
 print('X_train shape:', X_train.shape)
 
-y_train = np.array(pkl.load(open('data/{}_y_train_{}.np'.format(dataname,analysis), 'rb')))#[:-n_post] # all but last n timesteps of training y
+y_train = np.array(pkl.load(open('data/{}_y_train_{}.np'.format(dataname,analysis), 'rb')))[:-n_post] # all but last n timesteps of training y
 
 print('y_train shape:', y_train.shape)
  
@@ -68,14 +68,13 @@ print('dataY shape:', dataY.shape)
 
 epochs = int(sys.argv[-3])
 nb_features = dataX.shape[2]
-output_dim = dataY.shape[2]
 
 # Define model parameters
 
-dropout = 0.8
+dropout = 0.5
 hidden_dropout = 0
-penalty = 0.01
-batch_size = 2
+penalty = 0
+batch_size = 8
 activation = 'linear'
 initialization = 'glorot_normal'
 
@@ -93,12 +92,11 @@ output_attention_mul = merge([inputs, a_probs], name='attention_mul', mode='mul'
 dropout_1 = Dropout(dropout)(output_attention_mul)
 lstm_1 = LSTM(1024, kernel_initializer=initialization, dropout=hidden_dropout, return_sequences=False)(dropout_1) # Encoder
 repeat = RepeatVector(n_post)(lstm_1) # get the last output of the LSTM and repeats it 
-lstm_2 = LSTM(640, kernel_initializer=initialization, return_sequences=True)(repeat)  # Decoder
-output= TimeDistributed(Dense(output_dim, activation=activation, kernel_regularizer=regularizers.l2(penalty)))(lstm_2)
+lstm_2 = LSTM(nb_features, kernel_initializer=initialization, return_sequences=True)(repeat)  # Decoder
 
-model = Model(inputs=inputs, output=output)
+model = Model(inputs=inputs, output=lstm_2)
 
-model.compile(loss="mean_absolute_percentage_error", optimizer=Adam(lr=0.001, clipnorm=5))
+model.compile(loss="mean_absolute_percentage_error", optimizer=Adam(lr=0.001))
 
 print(model.summary())
 
@@ -106,18 +104,18 @@ print(model.summary())
 
 # Prepare model checkpoints and callbacks
 
-filepath="results/elections/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
+filepath="results/elections_auto/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
 checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=10, save_best_only=True)
 
 # Train model
 print('Training')
-csv_logger = CSVLogger('results/elections/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=True)
+csv_logger = CSVLogger('results/elections_auto/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=True)
 
 model.fit(dataX, 
   dataY,
   batch_size=batch_size,
   verbose=1,
-  shuffle=False, 
+  shuffle=True, 
   epochs=epochs,
   callbacks=[checkpointer,csv_logger],
   validation_split= 0.1) 
