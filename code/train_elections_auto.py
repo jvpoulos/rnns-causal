@@ -42,14 +42,14 @@ dataname = sys.argv[-2]
 print('Load saved {} data for analysis on {}'.format(dataname, analysis))
 
 n_post  = 5
-n_pre = 42-(n_post*2)
-seq_len = 42
+n_pre = 47-(n_post*2)
+seq_len = 47
 
-X_train = np.array(pkl.load(open('data/{}_x_train_{}.np'.format(dataname,analysis), 'rb')))[:-n_post] # all but last n timesteps of training x
+X_train = np.array(pkl.load(open('data/{}_x_train_{}.np'.format(dataname,analysis), 'rb')))#[:-n_post] # all but last n timesteps of training x
 
 print('X_train shape:', X_train.shape)
 
-y_train = np.array(pkl.load(open('data/{}_y_train_{}.np'.format(dataname,analysis), 'rb')))[:-n_post] # all but last n timesteps of training y
+y_train = np.array(pkl.load(open('data/{}_y_train_{}.np'.format(dataname,analysis), 'rb')))#[:-n_post] # all but last n timesteps of training y
 
 print('y_train shape:', y_train.shape)
  
@@ -68,15 +68,15 @@ print('dataY shape:', dataY.shape)
 
 epochs = int(sys.argv[-3])
 nb_features = dataX.shape[2]
+output_dim = dataY.shape[2]
 
 # Define model parameters
 
-dropout = 0.5
-hidden_dropout = 0
-penalty = 0
-batch_size = 8
-activation = 'linear'
+dropout = 0.8
+penalty = 0.01
+batch_size = 2
 initialization = 'glorot_normal'
+activation = 'linear'
 
 # Initiate sequential model
 
@@ -90,13 +90,15 @@ a = Dense(n_pre, activation='softmax')(a)
 a_probs = Permute((2, 1), name='attention_vec')(a)
 output_attention_mul = merge([inputs, a_probs], name='attention_mul', mode='mul')
 dropout_1 = Dropout(dropout)(output_attention_mul)
-lstm_1 = LSTM(1024, kernel_initializer=initialization, dropout=hidden_dropout, return_sequences=False)(dropout_1) # Encoder
+lstm_1 = LSTM(1024, kernel_initializer=initialization, return_sequences=False)(dropout_1) # Encoder
 repeat = RepeatVector(n_post)(lstm_1) # get the last output of the LSTM and repeats it 
-lstm_2 = LSTM(nb_features, kernel_initializer=initialization, return_sequences=True)(repeat)  # Decoder
+lstm_2 = LSTM(output_dim, activation=activation, kernel_regularizer=regularizers.l2(penalty), kernel_initializer=initialization, return_sequences=True)(repeat)  # Decoder
 
 model = Model(inputs=inputs, output=lstm_2)
 
-model.compile(loss="mean_absolute_percentage_error", optimizer=Adam(lr=0.001))
+encoder = Model(inputs=inputs, output=lstm_1)
+
+model.compile(loss="mean_absolute_percentage_error", optimizer=Adam(lr=0.001, clipnorm=5))
 
 print(model.summary())
 
@@ -115,7 +117,7 @@ model.fit(dataX,
   dataY,
   batch_size=batch_size,
   verbose=1,
-  shuffle=True, 
+  shuffle=False, 
   epochs=epochs,
   callbacks=[checkpointer,csv_logger],
   validation_split= 0.1) 

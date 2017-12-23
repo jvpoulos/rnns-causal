@@ -38,16 +38,24 @@ dataname = sys.argv[-2]
 print('Load saved {} data for analysis on {}'.format(dataname, analysis))
 
 n_post  = 5
-n_pre = 42-(n_post*2)
-seq_len = 66-n_post
+n_pre = 47-(n_post*2)
+seq_len = 47
 
-X_train = np.array(pkl.load(open('data/{}_x_auto_{}.np'.format(dataname,analysis), 'rb')))[n_post:] # all but first n timesteps of training x
+X_train = np.array(pkl.load(open('data/{}_x_train_{}.np'.format(dataname,analysis), 'rb')))[n_post:] # all but first n timesteps of training x
 
 print('X_train shape:', X_train.shape)
 
+X_test = np.array(pkl.load(open('data/{}_x_test_{}.np'.format(dataname,analysis), 'rb')))
+
+print('X_test shape:', X_test.shape)
+
+X = np.concatenate((X_train, X_test), axis=0)
+
+print('X concatenated shape:', X.shape)
+ 
 dX = []
 for i in range(seq_len-n_pre-n_post):
-	dX.append(X_train[i:i+n_pre])
+	dX.append(X[i:i+n_pre])
 
 dataX = np.array(dX)
 
@@ -56,15 +64,16 @@ print('dataX shape:', dataX.shape)
 # Define network structure
 
 nb_features = dataX.shape[2]
+#output_dim = 24
+output_dim = 5
 
 # Define model parameters
 
 dropout = 0.8
-hidden_dropout = 0
-penalty = 0
-batch_size = 8
-activation = 'linear'
+penalty = 0.01
+batch_size = 2
 initialization = 'glorot_normal'
+activation = 'linear'
 
 # Initiate sequential model
 
@@ -78,13 +87,15 @@ a = Dense(n_pre, activation='softmax')(a)
 a_probs = Permute((2, 1), name='attention_vec')(a)
 output_attention_mul = merge([inputs, a_probs], name='attention_mul', mode='mul')
 dropout_1 = Dropout(dropout)(output_attention_mul)
-lstm_1 = LSTM(1024, kernel_initializer=initialization, dropout=hidden_dropout, return_sequences=False)(dropout_1) # Encoder
-repeat = RepeatVector(n_pre)(lstm_1) # get the last output of the LSTM and repeats it 
-lstm_2 = LSTM(nb_features, kernel_initializer=initialization, return_sequences=True)(repeat)  # Decoder
+lstm_1 = LSTM(1024, kernel_initializer=initialization, return_sequences=False)(dropout_1) # Encoder
+repeat = RepeatVector(n_post)(lstm_1) # get the last output of the LSTM and repeats it 
+lstm_2 = LSTM(output_dim, activation=activation, kernel_regularizer=regularizers.l2(penalty), kernel_initializer=initialization, return_sequences=True)(repeat)  # Decoder
 
 model = Model(inputs=inputs, output=lstm_2)
 
-model.compile(loss="mean_absolute_percentage_error", optimizer=Adam(lr=0.001))
+encoder = Model(inputs=inputs, output=lstm_1)
+
+model.compile(loss="mean_absolute_percentage_error", optimizer=Adam(lr=0.001, clipnorm=5))
 
 # Visualize model
 
@@ -114,10 +125,10 @@ np.savetxt("{}-{}-test.csv".format(filename,dataname), y_pred_test, delimiter=",
 
 # Get attention weights 
 
-attention_vector = get_activations(model, dataX, print_shape_only=True, layer_name='attention_vec')[0] # get the last sample
+attention_vector = get_activations(model, dataX, print_shape_only=True, layer_name='attention_vec')[0]
 
-attention_vector = np.mean(attention_vector, axis=1).squeeze() # mean across # samples
+attention_vector = np.mean(attention_vector, axis=0).squeeze() # mean across # samples
+
 print('attention shape =', attention_vector.shape)
-
 
 np.savetxt('results/elections_auto/{}/attention.csv'.format(dataname), attention_vector, delimiter=',') # save attentions to file

@@ -6,9 +6,6 @@ TsPlotSim <- function(df, main = "") {
   
   gg.xts <- ggplot(df, aes(x = year)) +
     
-    # panel layout
-    # facet_grid(series~., scales = "free_y", space = "fixed", shrink = TRUE, drop = TRUE, labeller = label_value) + # label_value is default
-    
     theme(strip.text= element_text(size = 12, family = "serif", face='bold')) +
     
     # line colours
@@ -20,8 +17,6 @@ TsPlotSim <- function(df, main = "") {
     
     # intervals
     geom_ribbon(data = df, aes(ymin = pred.votediff.min, ymax=pred.votediff.max, colour="Predicted votediff"), alpha=.3, size=0, show.legend = FALSE) +
-    
-    #  geom_ribbon(data = subset(df, variable == "Pointwise votediff"), aes(ymin = pointwise.votediff.min, ymax=pointwise.votediff.max, colour="Predicted votediff"), alpha=.2, size=1, show.legend = FALSE) +
     
     # horizontal line to indicate zero values
     geom_hline(yintercept = 0, size = 0.5, colour = "black") +
@@ -38,12 +33,6 @@ TsPlotSim <- function(df, main = "") {
   # vertical line to indicate intervention
   
   intervention <- geom_vline(xintercept=c(48), linetype=c(2))
-  
-  # horizontal ticks
-  
-  # ticks <- scale_x_datetime(date_breaks="10 years",labels=date_format("%Y"), 
-  #                           time_trans(tz="UTC"),
-  #                           limits = c(as.POSIXct("1951-12-30 19:00:00"), as.POSIXct("2010-12-30 19:00:00")))
   
   # annotation text
   
@@ -65,6 +54,7 @@ TsPlotSim <- function(df, main = "") {
            , axis.title.x=element_blank()
            , axis.ticks.x=element_blank()
            , axis.ticks.y=element_blank()
+           , plot.title = element_text(hjust = 0.5)
            , legend.text=element_text(size=12, family = "serif")
            , legend.box = "horizontal" # not working?)
     ) + geom_text(data = ann_text,aes(y = value, label =lab), family="serif", fontface="italic",  size=5) +

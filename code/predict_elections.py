@@ -60,7 +60,8 @@ print('dataX shape:', dataX.shape)
 # Define network structure
 
 nb_features = dataX.shape[2]
-output_dim = 24
+#output_dim = 24
+output_dim = 5
 
 # Define model parameters
 

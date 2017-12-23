@@ -12,14 +12,24 @@ code.directory <-"~/Dropbox/github/rnns-causal/code/"
 results.directory <-"~/Dropbox/github/rnns-causal/results/"
 
 pre.period <- 47
+
 test.features <- ncol(votediff.y.test)-1
+
+analysis <- "auto"
 
 # Import test results
 
-setwd(paste0(results.directory, "elections/votediff")) # prediction files loc
+if(analysis=="supervised"){
+  setwd(paste0(results.directory, "elections/votediff")) # prediction files loc
+  best.model <- 17
+  }
 
-burn.files <- c("weights.09-61.839.hdf5-votediff-test.csv","weights.19-51.706.hdf5-votediff-test.csv") #burn first 2
-test.files <- list.files(pattern = "*test.csv")[!list.files(pattern = "*test.csv") %in% burn.files]
+if(analysis=="auto"){
+  setwd(paste0(results.directory, "elections/votediff-auto")) # prediction files loc
+  best.model <- 11
+  }
+
+test.files <- list.files(pattern = "*test.csv")#[!list.files(pattern = "*test.csv") %in% burn.files]
 
 votediff.preds.test <- lapply(test.files,function(x){
   m <- read.csv(x, header=FALSE)
@@ -27,7 +37,9 @@ votediff.preds.test <- lapply(test.files,function(x){
 
 votediff.preds.test.sd <- apply(simplify2array(votediff.preds.test), 1:2, sd)
 
-votediff.preds.test.mean <- apply(simplify2array(votediff.preds.test), 1:2, mean) # element-wise mean
+#votediff.preds.test.mean <- apply(simplify2array(votediff.preds.test), 1:2, mean) # element-wise mean
+votediff.preds.test.mean <- votediff.preds.test[[best.model]] # best model
+
 colnames(votediff.preds.test.mean) <- colnames(votediff.y.test)[-1]
 
 # Bind predictions
@@ -55,11 +67,21 @@ votediff.bind.elections <- data.frame("year"=votediff.bind.year,
                                 "y.true"=rowMeans(votediff.bind.true, na.rm = TRUE),
                                 "y.sd"=rowMeans(votediff.bind.sds, na.rm = TRUE))
 
-votediff.bind.elections$pointwise.votediff <- votediff.bind.elections$y.true - votediff.bind.elections$y.pred
-
 votediff.bind.elections <- votediff.bind.elections  %>%
   mutate(pred.votediff.min = y.pred - y.sd*1.96,
-         pred.votediff.max = y.pred + y.sd*1.96)
+         pred.votediff.max = y.pred + y.sd*1.96,
+         pointwise.votediff = y.true - y.pred,
+         pointwise.votediff.min = y.true-pred.votediff.max,
+         pointwise.votediff.max = y.true-pred.votediff.min)
 
-ts.plot <- TsPlotElections(votediff.bind.elections, main="Supervised encoder-decoder trained on mayoral elections data")
-ggsave(paste0(results.directory,"plots/impact-votediff.png"), ts.plot, width=11, height=8.5)
+if(analysis=="supervised"){
+  main <- "Encoder-decoder (+ dense output)"
+  ts.plot <- TsPlotElections(votediff.bind.elections[votediff.bind.elections$year>="1979-12-30 19:00:00",], main=main)
+  ggsave(paste0(results.directory,"plots/impact-votediff.png"), ts.plot, width=11, height=8.5)
+}
+
+if(analysis=="auto"){
+  main <- "Encoder-decoder"
+  ts.plot <- TsPlotElections(votediff.bind.elections[votediff.bind.elections$year>="1979-12-30 19:00:00",], main=main)
+  ggsave(paste0(results.directory,"plots/impact-votediff-auto.png"), ts.plot, width=11, height=8.5)
+}

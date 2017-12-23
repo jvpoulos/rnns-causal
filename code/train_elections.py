@@ -38,7 +38,7 @@ print(device_lib.list_local_devices())
 # Load saved data
 
 analysis = sys.argv[-1] # 'treated' or 'control'
-dataname = sys.argv[-2]
+dataname = sys.argv[-2] # 'votediff' or 'sim'
 print('Load saved {} data for analysis on {}'.format(dataname, analysis))
 
 n_post  = 5
@@ -73,7 +73,6 @@ output_dim = dataY.shape[2]
 # Define model parameters
 
 dropout = 0.8
-hidden_dropout = 0
 penalty = 0.01
 batch_size = 2
 activation = 'linear'
@@ -91,7 +90,7 @@ a = Dense(n_pre, activation='softmax')(a)
 a_probs = Permute((2, 1), name='attention_vec')(a)
 output_attention_mul = merge([inputs, a_probs], name='attention_mul', mode='mul')
 dropout_1 = Dropout(dropout)(output_attention_mul)
-lstm_1 = LSTM(1024, kernel_initializer=initialization, dropout=hidden_dropout, return_sequences=False)(dropout_1) # Encoder
+lstm_1 = LSTM(1024, kernel_initializer=initialization, return_sequences=False)(dropout_1) # Encoder
 repeat = RepeatVector(n_post)(lstm_1) # get the last output of the LSTM and repeats it 
 lstm_2 = LSTM(640, kernel_initializer=initialization, return_sequences=True)(repeat)  # Decoder
 output= TimeDistributed(Dense(output_dim, activation=activation, kernel_regularizer=regularizers.l2(penalty)))(lstm_2)

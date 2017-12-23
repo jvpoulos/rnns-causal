@@ -11,55 +11,60 @@ library(tidyr)
 library(zoo)
 library(reshape2)
 
-train.indices <- c(1:42)
-val.indices <- c(43:47)
+votediff.y.bsts <- cbind(votediff.y['year'],"y.true"=rowMeans(votediff.y[-1], na.rm=TRUE)) # take treated mean
+
+votediff.y.bsts.train <- votediff.y.bsts[votediff.y.bsts$year %in% votediff.years & votediff.y.bsts$year < 2005,]
+votediff.y.bsts.test <- votediff.y.bsts[votediff.y.bsts$year %in% votediff.years & votediff.y.bsts$year >= 2005,]
+
+#train.indices <- c(1:42)
+# val.indices <- c(43:47)
 
 ### Set up the priors
-prior.val <- SpikeSlabPrior(x=model.matrix(y.true ~ ., data=cbind("y.true"=votediff.y.train$y.true[train.indices], votediff.x.train[-1][train.indices,])),
-                        y=votediff.y.train$y.true[train.indices],
-                        prior.information.weight = 0.01)
-
-prior.test <- SpikeSlabPrior(x=model.matrix(y.true ~ ., data=cbind("y.true"=votediff.y.train$y.true, votediff.x.train[-1])), 
-                        y=votediff.y.train$y.true, 
+# prior.val <- SpikeSlabPrior(x=model.matrix(y.true ~ ., data=cbind("y.true"=votediff.y.bsts.train$y.true[train.indices], votediff.x.train[-1][train.indices,])),
+#                         y=votediff.y.bsts.train$y.true[train.indices],
+#                         prior.information.weight = 0.01)
+# 
+prior.test <- SpikeSlabPrior(x=model.matrix(y.true ~ ., data=cbind("y.true"=votediff.y.bsts.train$y.true, votediff.x.train[-1])), 
+                        y=votediff.y.bsts.train$y.true, 
                         prior.information.weight = 0.01)
 
 ## Construct state components
 
-ss.val <- list()
-ss.val <- AddSemilocalLinearTrend(ss.val, votediff.y.train$y.true[train.indices]) # Semilocal Linear Trend
-ss.val <- AddSeasonal(ss.val,votediff.y.train$y.true[train.indices],
-                  nseasons = 52) # monthly seasonal component
+# ss.val <- list()
+# ss.val <- AddSemilocalLinearTrend(ss.val, votediff.y.bsts.train$y.true[train.indices]) # Semilocal Linear Trend
+# ss.val <- AddSeasonal(ss.val,votediff.y.bsts.train$y.true[train.indices],
+#                   nseasons = 52) # monthly seasonal component
 
 ss.test <- list()
-ss.test <- AddSemilocalLinearTrend(ss.test, votediff.y.train$y.true) # Semilocal Linear Trend
-ss.test <- AddSeasonal(ss.test,votediff.y.train$y.true,
+ss.test <- AddSemilocalLinearTrend(ss.test, votediff.y.bsts.train$y.true) # Semilocal Linear Trend
+ss.test <- AddSeasonal(ss.test,votediff.y.bsts.train$y.true,
                   nseasons = 52) # monthly seasonal component 
 
-#  Run the bsts model
-bsts.reg.val <- bsts(y.true ~ .,
-                 data = cbind("y.true"=votediff.y.train$y.true[train.indices], votediff.x.train[-1][train.indices,]),
-                 state.specification = ss.val,
-                 prior=prior.val,
-                 niter = 1000,
-                 ping = 0, seed = 2016)
-
-saveRDS(bsts.reg.val, paste0(data.directory, "bsts-reg-val.rds"))
+# #  Run the bsts model
+# bsts.reg.val <- bsts(y.true ~ .,
+#                  data = cbind("y.true"=votediff.y.bsts.train$y.true[train.indices], votediff.x.train[-1][train.indices,]),
+#                  state.specification = ss.val,
+#                  prior=prior.val,
+#                  niter = 1000,
+#                  ping = 0, seed = 2016)
+# 
+# saveRDS(bsts.reg.val, paste0(data.directory, "bsts-reg-val.rds"))
 
 #bsts.reg.val <- readRDS(paste0(data.directory, "bsts-reg-val.rds"))
 
-bsts.reg.test <- bsts(y.true ~ .,
-                     data = cbind("y.true"=votediff.y.train$y.true, votediff.x.train[-1]),
-                     state.specification = ss.test,
-                     prior=prior.test,
-                     niter = 1000,
-                     ping = 0, seed = 2016)
+# bsts.reg.test <- bsts(y.true ~ .,
+#                      data = cbind("y.true"=votediff.y.bsts.train$y.true, votediff.x.train[-1]),
+#                      state.specification = ss.test,
+#                      prior=prior.test,
+#                      niter = 1000,
+#                      ping = 0, seed = 2016)
+# 
+# saveRDS(bsts.reg.test, paste0(data.directory, "bsts-reg-test.rds"))
 
-saveRDS(bsts.reg.test, paste0(data.directory, "bsts-reg-test.rds"))
-
-#bsts.reg.test <- readRDS(paste0(data.directory, "bsts-reg-test.rds"))
+bsts.reg.test <- readRDS(paste0(data.directory, "bsts-reg-test.rds"))
 
 # Get a suggested number of burn-ins to discard
-burn.val <- SuggestBurn(0.1, bsts.reg.val) 
+# burn.val <- SuggestBurn(0.1, bsts.reg.val) 
 
 burn.test <- SuggestBurn(0.1, bsts.reg.test) 
 
@@ -86,7 +91,7 @@ theme.blank <- theme(axis.text=element_text(size=12)
 avg.coef.plot <- ggplot(data=coeff[coeff$value>0,], aes(x=Variable, y=value)) + 
   geom_bar(stat="identity", position="identity") + 
   theme(axis.text.x=element_text(angle = -90, hjust = 0)) +
-  xlab("") + ylab("Average coefficient") + ggtitle("Test model") + theme.blank
+  xlab("") + ylab("Average coefficient") + ggtitle("BSTS") + theme.blank
 
 ggsave(paste0(results.directory,"plots/bsts-coefficient-plot-test.png"), avg.coef.plot, width=11, height=8.5)
 
@@ -101,16 +106,16 @@ inclusionprobs$Variable <- gsub("([a-z])([A-Z])", "\\1 \\2", inclusionprobs$Vari
 inclusion.plot <- ggplot(data=inclusionprobs[inclusionprobs$value>0,], aes(x=Variable, y=value)) + 
   geom_bar(stat="identity", position="identity") + 
   theme(axis.text.x=element_text(angle = -90, hjust = 0)) + 
-  xlab("") + ylab("Inclusion probability") + ggtitle("Test model") + theme.blank
+  xlab("") + ylab("Inclusion probability") + ggtitle("BSTS") + theme.blank
 
 ggsave(paste0(results.directory,"plots/bsts-inclusion-plot-test.png"), inclusion.plot, width=11, height=8.5)
 
 # Predict
 
-p.val <- predict.bsts(bsts.reg.val, 
-                  newdata = votediff.x.train[val.indices,][-1],
-                  burn = burn.val, 
-                  quantiles = c(.025, .975))
+# p.val <- predict.bsts(bsts.reg.val, 
+#                   newdata = votediff.x.train[val.indices,][-1],
+#                   burn = burn.val, 
+#                   quantiles = c(.025, .975))
 
 p.test <- predict.bsts(bsts.reg.test, 
                   newdata = votediff.x.test[-1],
@@ -120,11 +125,10 @@ p.test <- predict.bsts(bsts.reg.test,
 # Actual versus predicted
 d2 <- data.frame(
   # fitted values and predictions
-  c(as.numeric(-colMeans(bsts.reg.test$one.step.prediction.errors[-(1:burn.test),])+votediff.y.train$y.true)[1:length(train.indices)],  
-    as.numeric(p.val$mean), #  posterior mean of the prediction
-    as.numeric(p.test$mean)), 
+  c(as.numeric(-colMeans(bsts.reg.test$one.step.prediction.errors[-(1:burn.test),])+votediff.y.bsts.train$y.true),  
+  as.numeric(p.test$mean)), #  posterior mean of the prediction
   # actual data and dates 
-  votediff.y)
+  votediff.y.bsts)
 names(d2) <- c("Fitted", "Date", "Actual")
 
 # MAPE (mean absolute percentage error) on validation set
@@ -133,8 +137,8 @@ bsts.MAPE*100
 
 # 95% forecast credible interval
 posterior.interval <- cbind.data.frame(
-  c(as.numeric(p.val$interval[1,]), as.numeric(p.test$interval[1,])),
-  c(as.numeric(p.val$interval[2,]), as.numeric(p.test$interval[2,])), 
+  as.numeric(p.test$interval[1,]),
+  as.numeric(p.test$interval[2,]), 
   subset(d2, Date>=2000)$Date)
 names(posterior.interval) <- c("LL", "UL", "Date")
 
@@ -149,7 +153,7 @@ bsts.plot <- ggplot(data=d3, aes(x=Date)) +
   geom_vline(xintercept=2000, linetype=3) + 
   geom_vline(xintercept=2005, linetype=2) + 
   geom_ribbon(aes(ymin=LL, ymax=UL), fill="grey", alpha=0.5) +
-  ggtitle(paste0("BSTS model (validation MAPE = ", round(100*bsts.MAPE,2), "%)")) +
+  ggtitle(paste0("BSTS (validation MAPE = ", round(100*bsts.MAPE,2), "%)")) +
   theme.blank 
 
 ggsave(paste0(results.directory,"plots/bsts-plot.png"), bsts.plot, width=11, height=8.5)
@@ -159,7 +163,7 @@ components <- cbind.data.frame(
   colMeans(bsts.reg.test$state.contributions[-(1:burn.test),"trend",]),                               
   colMeans(bsts.reg.test$state.contributions[-(1:burn.test),"seasonal.52.1",]),
   colMeans(bsts.reg.test$state.contributions[-(1:burn.test),"regression",]),
-  votediff.y.train$year)  
+  votediff.y.bsts.train$year)  
 names(components) <- c("Trend", "Seasonality", "Regression", "Date")
 components <- melt(components, id="Date")
 names(components) <- c("Date", "Component", "Value")

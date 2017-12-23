@@ -11,20 +11,25 @@ code.directory <-"~/Dropbox/github/rnns-causal/code/"
 results.directory <-"~/Dropbox/github/rnns-causal/results/"
 data.directory <-"~/Dropbox/github/rnns-causal/data/"
 
-n.pre <- 42
-n.post <- 5
+n.pre <- 47
+n.post <- 10
+output.dim <- 5
+
+best.model <-5
+
+analysis <- "supervised"
 
 # Get splits
 
-y.train <- read.csv(paste0(data.directory,"elections/sim/votediff_y_train_sim.csv"), header=FALSE, col.names = "y.true")
+y.train <- read.csv(paste0(data.directory,"elections/sim/sim_y_train_treated.csv"), header=FALSE)
 
-y.test <- read.csv(paste0(data.directory,"elections/sim/votediff_y_test_sim.csv"), header=FALSE)
+y.test <- read.csv(paste0(data.directory,"elections/sim/sim_y_test_treated.csv"), header=FALSE)
 
 y.test.c <- y.test + abs(y.test*0.1)  #true counterfactual
 
 # Import test results 
 
-setwd(paste0(results.directory, "elections/votediff-sim")) # prediction files loc
+setwd(paste0(results.directory, "elections/sim")) # prediction files loc
 
 test.files <- list.files(pattern = "*test.csv")
 
@@ -33,11 +38,54 @@ votediff.preds.test <- do.call(rbind,lapply(test.files,read.csv,
 
 votediff.preds.test <- votediff.preds.test[seq(1, nrow(votediff.preds.test), 5), ] # get every 5th sample
 
-row.names(votediff.preds.test) <- test.files
-
 votediff.preds.test.sd <- matrixStats::colSds(as.matrix(votediff.preds.test))
 
-votediff.preds.test <- colMeans(as.matrix(votediff.preds.test)) # mean predictions
+votediff.preds.test.mean <- votediff.preds.test[[best.model]] # best model
+
+# Bind predictions
+
+votediff.bind.sim <- data.frame("y.true"=rbind(y.train,y.test), 
+                                "y.true.c"=rbind(matrix(NA, nrow=n.pre, ncol=output.dim), y.test.c),
+                                "y.pred"=rbind(matrix(NA, nrow=n.pre, ncol=output.dim), votediff.preds.test),
+                                "y.sd"=rbind(matrix(NA, nrow=n.pre, ncol=output.dim), votediff.preds.test.sd))
+
+## Create time series data
+setwd(code.directory)
+
+## Plot time series 
+
+# # Adjust year for plot
+votediff.bind.year <- as.Date(as.yearmon(votediff.y$year) + 11/12, frac = 1) # end of year
+
+votediff.bind.year <- as.POSIXct(votediff.bind.year, tz="UTC")
+
+# Combine /take means across features
+
+votediff.bind.elections <- data.frame("year"=votediff.bind.year,
+                                      "y.pred"=rowMeans(votediff.bind.preds), 
+                                      "y.true"=rowMeans(votediff.bind.true, na.rm = TRUE),
+                                      "y.sd"=rowMeans(votediff.bind.sds, na.rm = TRUE))
+
+votediff.bind.elections <- votediff.bind.elections  %>%
+  mutate(pred.votediff.min = y.pred - y.sd*1.96,
+         pred.votediff.max = y.pred + y.sd*1.96,
+         pointwise.votediff = y.true - y.pred,
+         pointwise.votediff.min = y.true-pred.votediff.max,
+         pointwise.votediff.max = y.true-pred.votediff.min)
+
+if(analysis=="supervised"){
+  main <- "Encoder-decoder (+ dense output)"
+  ts.plot <- TsPlotElections(votediff.bind.elections[votediff.bind.elections$year>="1979-12-30 19:00:00",], main=main)
+  ggsave(paste0(results.directory,"plots/impact-votediff.png"), ts.plot, width=11, height=8.5)
+}
+
+if(analysis=="auto"){
+  main <- "Encoder-decoder"
+  ts.plot <- TsPlotElections(votediff.bind.elections[votediff.bind.elections$year>="1979-12-30 19:00:00",], main=main)
+  ggsave(paste0(results.directory,"plots/impact-votediff-auto.png"), ts.plot, width=11, height=8.5)
+}
+
+######
 
 # Bind predictions
 

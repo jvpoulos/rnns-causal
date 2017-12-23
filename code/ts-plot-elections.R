@@ -48,7 +48,7 @@ TsPlotElections <- function(df, main = "") {
  
 # annotation text
   
-  ann_text <- data.frame(year = c(as.POSIXlt("1985-01-01 EST"), as.POSIXlt("2010-01-01 EST")), value=90, 
+  ann_text <- data.frame(year = c(as.POSIXlt("2000-01-01 EST"), as.POSIXlt("2010-01-01 EST")), value=75, 
                            series = factor("Winner margin time-series", levels = c("Winner margin time-series","Pointwise impact","Cumulative impact")),
                            lab = c("pre-period \n (training)", "post-period \n (test)"))
 
@@ -58,7 +58,7 @@ TsPlotElections <- function(df, main = "") {
     intervention +
    # ticks +
     theme( legend.title = element_blank()
-         , legend.position = c(0.35,0.90)
+         , legend.position = c(0.25,0.90)
          , legend.justification = c(1,0)
        #  , legend.position = "top"
          , legend.background = element_rect()
