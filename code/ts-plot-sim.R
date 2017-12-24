@@ -1,4 +1,4 @@
-TsPlotSim <- function(df, main = "") {
+TsPlotSim <- function(df, main = "", n.pre, n.post) {
   library(ggplot2)
   library(zoo)
   library(scales)
@@ -9,14 +9,14 @@ TsPlotSim <- function(df, main = "") {
     theme(strip.text= element_text(size = 12, family = "serif", face='bold')) +
     
     # line colours
-    geom_line(data = df, aes(y = y.true, colour = "Observed votediff", linetype="Observed votediff"), show.legend = TRUE, size=0.75) +
+    geom_line(data = df, aes(y = y.true.V2, colour = "Observed votediff", linetype="Observed votediff"), show.legend = TRUE, size=0.75) +
     
-    geom_line(data = df, aes(y = y.pred, colour = "Predicted votediff", linetype="Predicted votediff"), show.legend = TRUE, size=1.5) +
+    geom_line(data = df, aes(y = y.pred.V2, colour = "Predicted votediff", linetype="Predicted votediff"), show.legend = TRUE, size=1.5) +
     
-    geom_line(data = df, aes(y = y.true.c, colour = "True counterfactual", linetype="True counterfactual"), show.legend = FALSE, size=1.5) +
+    geom_line(data = df, aes(y = y.true.c.V2, colour = "True counterfactual", linetype="True counterfactual"), show.legend = FALSE, size=1.5) +
     
     # intervals
-    geom_ribbon(data = df, aes(ymin = pred.votediff.min, ymax=pred.votediff.max, colour="Predicted votediff"), alpha=.3, size=0, show.legend = FALSE) +
+    geom_ribbon(data = df, aes(ymin =y.pred.V2 - y.sd.V2*1.96, ymax=y.pred.V2 + y.sd.V2*1.96, colour="Predicted votediff"), alpha=.3, size=0, show.legend = FALSE) +
     
     # horizontal line to indicate zero values
     geom_hline(yintercept = 0, size = 0.5, colour = "black") +
@@ -32,7 +32,7 @@ TsPlotSim <- function(df, main = "") {
   
   # vertical line to indicate intervention
   
-  intervention <- geom_vline(xintercept=c(48), linetype=c(2))
+  intervention <- geom_vline(xintercept=c(nrow(df)-n.post), linetype=c(2))
   
   # annotation text
   

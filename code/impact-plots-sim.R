@@ -12,7 +12,7 @@ results.directory <-"~/Dropbox/github/rnns-causal/results/"
 data.directory <-"~/Dropbox/github/rnns-causal/data/"
 
 n.pre <- 47
-n.post <- 10
+n.post <- 5
 output.dim <- 5
 
 best.model <-5
@@ -33,20 +33,20 @@ setwd(paste0(results.directory, "elections/sim")) # prediction files loc
 
 test.files <- list.files(pattern = "*test.csv")
 
-votediff.preds.test <- do.call(rbind,lapply(test.files,read.csv, 
-                                       header=FALSE))
+votediff.preds.test <- lapply(test.files,function(x){
+  m <- read.csv(x, header=FALSE)
+  return(as.matrix(m))})
 
-votediff.preds.test <- votediff.preds.test[seq(1, nrow(votediff.preds.test), 5), ] # get every 5th sample
+votediff.preds.test.sd <- apply(simplify2array(votediff.preds.test), 1:2, sd)
 
-votediff.preds.test.sd <- matrixStats::colSds(as.matrix(votediff.preds.test))
-
+#votediff.preds.test.mean <- apply(simplify2array(votediff.preds.test), 1:2, mean) # element-wise mean
 votediff.preds.test.mean <- votediff.preds.test[[best.model]] # best model
 
 # Bind predictions
 
-votediff.bind.sim <- data.frame("y.true"=rbind(y.train,y.test), 
-                                "y.true.c"=rbind(matrix(NA, nrow=n.pre, ncol=output.dim), y.test.c),
-                                "y.pred"=rbind(matrix(NA, nrow=n.pre, ncol=output.dim), votediff.preds.test),
+votediff.bind.sim <- data.frame("y.true"=rbind(y.train,y.test[6:10,]), 
+                                "y.true.c"=rbind(matrix(NA, nrow=n.pre, ncol=output.dim), y.test.c[6:10,]),
+                                "y.pred"=rbind(matrix(NA, nrow=n.pre, ncol=output.dim), votediff.preds.test.mean),
                                 "y.sd"=rbind(matrix(NA, nrow=n.pre, ncol=output.dim), votediff.preds.test.sd))
 
 ## Create time series data
@@ -54,67 +54,33 @@ setwd(code.directory)
 
 ## Plot time series 
 
-# # Adjust year for plot
-votediff.bind.year <- as.Date(as.yearmon(votediff.y$year) + 11/12, frac = 1) # end of year
-
-votediff.bind.year <- as.POSIXct(votediff.bind.year, tz="UTC")
+votediff.bind.sim$year <- 1:nrow(votediff.bind.sim)
 
 # Combine /take means across features
 
-votediff.bind.elections <- data.frame("year"=votediff.bind.year,
-                                      "y.pred"=rowMeans(votediff.bind.preds), 
-                                      "y.true"=rowMeans(votediff.bind.true, na.rm = TRUE),
-                                      "y.sd"=rowMeans(votediff.bind.sds, na.rm = TRUE))
-
-votediff.bind.elections <- votediff.bind.elections  %>%
-  mutate(pred.votediff.min = y.pred - y.sd*1.96,
-         pred.votediff.max = y.pred + y.sd*1.96,
-         pointwise.votediff = y.true - y.pred,
-         pointwise.votediff.min = y.true-pred.votediff.max,
-         pointwise.votediff.max = y.true-pred.votediff.min)
+# votediff.bind.sim <- data.frame("year"=votediff.bind.year,
+#                                       "y.pred"=rowMeans(votediff.bind.preds),
+#                                       "y.true"=rowMeans(votediff.bind.true, na.rm = TRUE),
+#                                       "y.sd"=rowMeans(votediff.bind.sds, na.rm = TRUE))
+# 
+# votediff.bind.sim <- votediff.bind.sim  %>%
+#   mutate(pred.votediff.min = y.pred - y.sd*1.96,
+#          pred.votediff.max = y.pred + y.sd*1.96,
+#          pointwise.votediff = y.true - y.pred,
+#          pointwise.votediff.min = y.true-pred.votediff.max,
+#          pointwise.votediff.max = y.true-pred.votediff.min)
 
 if(analysis=="supervised"){
   main <- "Encoder-decoder (+ dense output)"
-  ts.plot <- TsPlotElections(votediff.bind.elections[votediff.bind.elections$year>="1979-12-30 19:00:00",], main=main)
-  ggsave(paste0(results.directory,"plots/impact-votediff.png"), ts.plot, width=11, height=8.5)
+  ts.plot <- TsPlotSim(votediff.bind.sim, main, n.pre, n.post)
+  ggsave(paste0(results.directory,"plots/impact-sim.png"), ts.plot, width=11, height=8.5)
 }
 
 if(analysis=="auto"){
   main <- "Encoder-decoder"
-  ts.plot <- TsPlotElections(votediff.bind.elections[votediff.bind.elections$year>="1979-12-30 19:00:00",], main=main)
-  ggsave(paste0(results.directory,"plots/impact-votediff-auto.png"), ts.plot, width=11, height=8.5)
+  ts.plot <- TsPlotSim(votediff.bind.sim, main, n.pre, n.post)
+  ggsave(paste0(results.directory,"plots/impact-sim-auto.png"), ts.plot, width=11, height=8.5)
 }
-
-######
-
-# Bind predictions
-
-votediff.bind.sim <- data.frame("y.true"=c(y.train$y.true,y.test[[1]]), 
-                            "y.true.c" =c(rep(NA, n.pre+n.post), y.test.c[[1]][6:10]),
-                            "y.pred"=c(rep(NA, n.pre+n.post), votediff.preds.test),
-                            "y.sd"=c(rep(NA, n.pre+n.post), votediff.preds.test.sd))
-
-votediff.bind.sim$pointwise.votediff <- votediff.bind.sim$y.true - votediff.bind.sim$y.pred
-
-votediff.bind.sim <- votediff.bind.sim  %>%
-  mutate(pred.votediff.min = y.pred - y.sd*1.96,
-         pred.votediff.max = y.pred + y.sd*1.96,
-         pointwise.votediff.min = y.true-pred.votediff.max,
-         pointwise.votediff.max = y.true-pred.votediff.min)
-
-## Create time series data
-setwd(code.directory)
-
-## Plot time series 
-
-# # Adjust year for plot
-# votediff.bind.sim$year <- as.Date(as.yearmon(c(votediff.y.train$year,votediff.y.test$year)) + 11/12, frac = 1) # end of year
-# 
-# votediff.bind.sim$year <- as.POSIXct(votediff.bind.sim$year, tz="UTC")
-votediff.bind.sim$year <- 1:52
-
-ts.plot <- TsPlotSim(votediff.bind.sim)
-ggsave(paste0(results.directory,"plots/impact-sim.png"), ts.plot, width=11, height=8.5)
 
 # Absolute percentage estimation error
 

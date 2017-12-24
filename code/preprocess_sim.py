@@ -29,19 +29,19 @@ maparams = np.array([.65, .35])
 arparams = np.r_[1, -arparams] # add zero-lag and negate
 maparam = np.r_[1, maparams] # add zero-lag
 
-x = arma_generate_sample(arparams, maparams, seq_len+n_post*2)
+x = arma_generate_sample(arparams, maparams, seq_len+n_post)
 
 for _ in itertools.repeat(None, nb_features-1):
-    x = np.c_[x, arma_generate_sample(arparams, maparams, seq_len+n_post*2)]
+    x = np.c_[x, arma_generate_sample(arparams, maparams, seq_len+n_post)]
 
 X_train = x[:seq_len]
 
 X_test = x[seq_len:]
 
-y = arma_generate_sample(arparams, maparams, seq_len+n_post*2)
+y = arma_generate_sample(arparams, maparams, seq_len+n_post)
 
 for _ in itertools.repeat(None, output_dim-1):
-    y = np.c_[y, arma_generate_sample(arparams, maparams, seq_len+n_post*2)]
+    y = np.c_[y, arma_generate_sample(arparams, maparams, seq_len+n_post)]
 
 y_train = y[:seq_len]
 

@@ -29,7 +29,7 @@ if(analysis=="auto"){
   best.model <- 11
   }
 
-test.files <- list.files(pattern = "*test.csv")#[!list.files(pattern = "*test.csv") %in% burn.files]
+test.files <- list.files(pattern = "*test.csv")
 
 votediff.preds.test <- lapply(test.files,function(x){
   m <- read.csv(x, header=FALSE)
