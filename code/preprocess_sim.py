@@ -47,6 +47,8 @@ y_train = y[:seq_len]
 
 y_test = y[seq_len:] - abs(y[seq_len:]*0.1) 
 
+y_train = np.reshape(y_train, (y_train.shape[0], output_dim))
+
 print('X_train shape:', X_train.shape)
 
 print('X_test shape:', X_test.shape)

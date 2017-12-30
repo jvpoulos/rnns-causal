@@ -85,8 +85,13 @@ coeff$Variable <- gsub("([a-z])([A-Z])", "\\1 \\2", coeff$Variable)
 
 theme.blank <- theme(axis.text=element_text(size=12)
                      , axis.title.x=element_blank()
+                     , plot.title = element_text(hjust = 0.5)
                      , axis.ticks.x=element_blank()
-                     , axis.ticks.y=element_blank())
+                     , axis.ticks.y=element_blank()
+                     , legend.text=element_text(size=12)
+                     , legend.title = element_blank()
+                     , legend.position = c(0.25,0.1)
+                     , legend.justification = c(1,0))
 
 avg.coef.plot <- ggplot(data=coeff[coeff$value>0,], aes(x=Variable, y=value)) + 
   geom_bar(stat="identity", position="identity") + 
@@ -131,9 +136,8 @@ d2 <- data.frame(
   votediff.y.bsts)
 names(d2) <- c("Fitted", "Date", "Actual")
 
-# MAPE (mean absolute percentage error) on validation set
-bsts.MAPE <- filter(d2, Date %in% c(2000:2004)) %>% summarise(MAPE=mean(abs(Actual-Fitted)/Actual))
-bsts.MAPE*100
+# MPSE 2000 to 2004
+bsts.MSPE <- filter(d2, Date %in% c(2000:2004)) %>% summarise(MSPE=mean((Actual-Fitted)**2))
 
 # 95% forecast credible interval
 posterior.interval <- cbind.data.frame(
@@ -147,13 +151,13 @@ d3 <- left_join(d2, posterior.interval, by="Date")
 
 # Plot actual versus predicted with credible intervals for the holdout period
 bsts.plot <- ggplot(data=d3, aes(x=Date)) +
-  geom_line(aes(y=Actual, colour = "Observed"), size=1.2) +
-  geom_line(aes(y=Fitted, colour = "Predicted"), size=1.2, linetype=2) +
-  theme_bw() + theme(legend.title = element_blank()) + ylab("") + xlab("") +
-  geom_vline(xintercept=2000, linetype=3) + 
+  geom_line(aes(y=Actual, colour = "Observed treated outcome"), size=1.2) +
+  geom_line(aes(y=Fitted, colour = "Predicted treated outcome"), size=1.2, linetype=2) +
+  theme_bw() + theme(legend.title = element_blank()) + ylab("Winner margin (%)") + xlab("") +
+#  geom_vline(xintercept=2000, linetype=3) + 
   geom_vline(xintercept=2005, linetype=2) + 
   geom_ribbon(aes(ymin=LL, ymax=UL), fill="grey", alpha=0.5) +
-  ggtitle(paste0("BSTS (validation MAPE = ", round(100*bsts.MAPE,2), "%)")) +
+  ggtitle(paste0("BSTS (training MSPE = ", round(bsts.MSPE,2), ")")) +
   theme.blank 
 
 ggsave(paste0(results.directory,"plots/bsts-plot.png"), bsts.plot, width=11, height=8.5)
@@ -172,7 +176,7 @@ names(components) <- c("Date", "Component", "Value")
 components.plot <- ggplot(data=components, aes(x=Date, y=Value)) + geom_line() + 
   theme_bw() + theme(legend.title = element_blank()) + ylab("") + xlab("") + 
   facet_grid(Component ~ ., scales="free") + guides(colour=FALSE) + 
-  theme(axis.text.x=element_text(angle = -90, hjust = 0)) + ggtitle("Test model") + theme.blank
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) + ggtitle("BSTS components") + theme.blank
 
 ggsave(paste0(results.directory,"plots/bsts-components-plot-test.png"), components.plot, width=11, height=8.5)
 

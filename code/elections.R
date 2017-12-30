@@ -57,12 +57,25 @@ fg$votediff <- ((fg$mayor_votes - fg$runnerup_votes)/fg$vote_total)*100 # vote m
 
 fg$incumbentshare <- (fg$mayor_votes)/fg$vote_total # incumbent vote share
 
+# Make covariate dummies
+fg$partisan2 <- NA
+fg$partisan2[fg$partisan=="NP"] <- 0
+fg$partisan2[fg$partisan=="P"] <- 1
+
+fg$mayor_dem <- NA
+fg$mayor_dem[fg$mayor_party=="D"] <- 1
+fg$mayor_dem[fg$mayor_party=="R"] <- 0
+
+fg$logvotetotal <- log(fg$vote_total) # make log vote total
+
 # Take means for multiple elections in same year
 
 fg <- fg %>% 
   filter(!is.na(votediff)) %>% 
   group_by(state, city, year) %>% 
   summarise_all(funs(mean(., na.rm = TRUE)))
+
+fg.covars <- fg[c('city','state','year',"partisan2","mayor_dem","logvotetotal")] # Save covariates
 
 fg <- data.frame(fg[c("state", "city", "year","votediff")])
 
@@ -156,7 +169,7 @@ votediff.y.imp <- na.interpolation(votediff.y, option = "linear") # impute missi
 
 # Splits
 
-votediff.years <- sort(intersect(votediff$year,votediff.y.imp$year)) # common years in treated and control
+votediff.years <- sort(intersect(votediff$year,votediff.y$year)) # common years in treated and control
 
 votediff.x.train <- votediff[votediff$year %in% votediff.years & votediff$year < 2005,]
 votediff.x.test <- votediff[votediff$year %in% votediff.years & votediff$year >= 2005,]

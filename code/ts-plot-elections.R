@@ -58,7 +58,7 @@ TsPlotElections <- function(df, main = "") {
     intervention +
    # ticks +
     theme( legend.title = element_blank()
-         , legend.position = c(0.25,0.90)
+        , legend.position = c(0.25,0.85)
          , legend.justification = c(1,0)
        #  , legend.position = "top"
          , legend.background = element_rect()
@@ -72,9 +72,9 @@ TsPlotElections <- function(df, main = "") {
   ) + geom_text(data = ann_text,aes(y = value, label =lab), family="serif", fontface="italic",  size=5) +
     scale_y_continuous(name="Winner margin (%)") +
     scale_colour_manual(name="", values = c("Observed votediff" = wes_palette("Darjeeling")[5], "Predicted votediff" = wes_palette("Darjeeling")[5]),
-                        labels=c("Observed winner margin", "Predicted winner margin")) +
+                        labels=c("Observed treated outcome", "Predicted treated outcome")) +
     scale_linetype_manual(name="", values = c("Predicted votediff" = "dashed", "Observed votediff" = "solid"),
-                          labels=c("Observed winner margin", "Predicted winner margin"))  + 
+                          labels=c("Observed treated outcome", "Predicted treated outcome"))  + 
     theme(legend.key.width=unit(3,"line")) 
 return(gg.xts)
 }

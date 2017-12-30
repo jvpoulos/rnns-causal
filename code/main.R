@@ -31,8 +31,8 @@ source(paste0(code.directory,'impact-plots-elections.R')) # run elections.R firs
 source(paste0(code.directory,'attention-plot-elections.R')) 
 
 source(paste0(code.directory,'bsts-elections.R')) # run elections.R first
-source(paste0(code.directory,'lasso-elections.R')) # run bsts-elections.R first
-source(paste0(code.directory,'two-step-lm-elections.R')) 
+source(paste0(code.directory,'synth-elections.R')) # run elections.R first
 
 # GBR estimates
 source(paste0(code.directory,'gbr-elections.R')) 
+source(paste0(code.directory,'gbr-elections-pred.R'))  # using predictions 

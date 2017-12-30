@@ -15,19 +15,9 @@ pre.period <- 47
 
 test.features <- ncol(votediff.y.test)-1
 
-analysis <- "auto"
-
 # Import test results
 
-if(analysis=="supervised"){
-  setwd(paste0(results.directory, "elections/votediff")) # prediction files loc
-  best.model <- 17
-  }
-
-if(analysis=="auto"){
-  setwd(paste0(results.directory, "elections/votediff-auto")) # prediction files loc
-  best.model <- 11
-  }
+setwd(paste0(results.directory, "elections/votediff")) # prediction files loc
 
 test.files <- list.files(pattern = "*test.csv")
 
@@ -38,9 +28,8 @@ votediff.preds.test <- lapply(test.files,function(x){
 votediff.preds.test.sd <- apply(simplify2array(votediff.preds.test), 1:2, sd)
 
 #votediff.preds.test.mean <- apply(simplify2array(votediff.preds.test), 1:2, mean) # element-wise mean
+best.model <- 60
 votediff.preds.test.mean <- votediff.preds.test[[best.model]] # best model
-
-colnames(votediff.preds.test.mean) <- colnames(votediff.y.test)[-1]
 
 # Bind predictions
 
@@ -74,14 +63,5 @@ votediff.bind.elections <- votediff.bind.elections  %>%
          pointwise.votediff.min = y.true-pred.votediff.max,
          pointwise.votediff.max = y.true-pred.votediff.min)
 
-if(analysis=="supervised"){
-  main <- "Encoder-decoder (+ dense output)"
-  ts.plot <- TsPlotElections(votediff.bind.elections[votediff.bind.elections$year>="1979-12-30 19:00:00",], main=main)
-  ggsave(paste0(results.directory,"plots/impact-votediff.png"), ts.plot, width=11, height=8.5)
-}
-
-if(analysis=="auto"){
-  main <- "Encoder-decoder"
-  ts.plot <- TsPlotElections(votediff.bind.elections[votediff.bind.elections$year>="1979-12-30 19:00:00",], main=main)
-  ggsave(paste0(results.directory,"plots/impact-votediff-auto.png"), ts.plot, width=11, height=8.5)
-}
+ts.plot <- TsPlotElections(votediff.bind.elections[votediff.bind.elections$year>="1979-12-30 19:00:00",], main="Encoder-decoder")
+ggsave(paste0(results.directory,"plots/impact-votediff.png"), ts.plot, width=11, height=8.5)

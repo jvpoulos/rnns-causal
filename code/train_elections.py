@@ -1,7 +1,3 @@
-# Softmax mask inside the network
-# Gives normalized distribution of the importance of each time step (or unit) regarding an input.
-# https://github.com/philipperemy/keras-attention-mechanism
-
 from __future__ import print_function
 
 import matplotlib
@@ -16,15 +12,10 @@ import pandas as pd
 
 from keras import backend as K
 from keras.models import Model
-from keras.layers import LSTM, Dense, Permute, Reshape, Input, merge, Masking, RepeatVector, TimeDistributed, Dropout
+from keras.layers import LSTM, Dense, Input, RepeatVector, TimeDistributed, Dropout, Bidirectional
 from keras.callbacks import ModelCheckpoint, CSVLogger
 from keras import regularizers
 from keras.optimizers import Adam
-
-from keras.models import Sequential
-from keras.layers import Dense, Activation, LSTM, Dropout, RepeatVector, TimeDistributed
-
-from attention_utils import get_activations
 
 # Select gpu
 import os
@@ -42,14 +33,14 @@ dataname = sys.argv[-2] # 'votediff' or 'sim'
 print('Load saved {} data for analysis on {}'.format(dataname, analysis))
 
 n_post  = 5
-n_pre = 47-(n_post*2)
-seq_len = 47
+n_pre = 15
+seq_len = 47+1
 
-X_train = np.array(pkl.load(open('data/{}_x_train_{}.np'.format(dataname,analysis), 'rb')))#[:-n_post] # all but last n timesteps of training x
+X_train = np.array(pkl.load(open('data/{}_x_train_{}.np'.format(dataname,analysis), 'rb')))
 
 print('X_train shape:', X_train.shape)
 
-y_train = np.array(pkl.load(open('data/{}_y_train_{}.np'.format(dataname,analysis), 'rb')))#[:-n_post] # all but last n timesteps of training y
+y_train = np.array(pkl.load(open('data/{}_y_train_{}.np'.format(dataname,analysis), 'rb')))
 
 print('y_train shape:', y_train.shape)
  
@@ -72,32 +63,29 @@ output_dim = dataY.shape[2]
 
 # Define model parameters
 
-dropout = 0.8
-penalty = 0.01
-batch_size = 2
+dropout = 0.8 
+penalty = 0.5  
+batch_size = 8
 activation = 'linear'
 initialization = 'glorot_normal'
 
-# Initiate sequential model
+encoder_hidden = 16 
+decoder_hidden = 8 
+
+# Initiate sequential model 
 
 print('Initializing model')
 
-inputs = Input(shape=(n_pre, nb_features,))
-
-a = Permute((2, 1))(inputs)
-a = Reshape((nb_features, n_pre))(a)
-a = Dense(n_pre, activation='softmax')(a)
-a_probs = Permute((2, 1), name='attention_vec')(a)
-output_attention_mul = merge([inputs, a_probs], name='attention_mul', mode='mul')
-dropout_1 = Dropout(dropout)(output_attention_mul)
-lstm_1 = LSTM(1024, kernel_initializer=initialization, return_sequences=False)(dropout_1) # Encoder
-repeat = RepeatVector(n_post)(lstm_1) # get the last output of the LSTM and repeats it 
-lstm_2 = LSTM(640, kernel_initializer=initialization, return_sequences=True)(repeat)  # Decoder
-output= TimeDistributed(Dense(output_dim, activation=activation, kernel_regularizer=regularizers.l2(penalty)))(lstm_2)
+inputs = Input(shape=(n_pre, nb_features,), name="Inputs")
+dropout_1 = Dropout(dropout, name="Dropout")(inputs)
+lstm_1 = Bidirectional(LSTM(encoder_hidden, kernel_initializer=initialization, return_sequences=False, name='LSTM'), name='Encoder')(dropout_1) # Encoder
+repeat = RepeatVector(n_post, name='Repeat')(lstm_1) # get the last output of the LSTM and repeats it
+lstm_2 = LSTM(decoder_hidden, kernel_initializer=initialization, return_sequences=True, name='Decoder')(repeat)  # Decoder
+output= TimeDistributed(Dense(output_dim, activation=activation, kernel_regularizer=regularizers.l2(penalty)), name='Outputs')(lstm_2)
 
 model = Model(inputs=inputs, output=output)
 
-model.compile(loss="mean_absolute_percentage_error", optimizer=Adam(lr=0.001, clipnorm=5))
+model.compile(loss="mean_absolute_percentage_error", optimizer=Adam(lr=0.001, clipnorm=5))  
 
 print(model.summary())
 
@@ -106,7 +94,7 @@ print(model.summary())
 # Prepare model checkpoints and callbacks
 
 filepath="results/elections/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
-checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=10, save_best_only=True)
+checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=100, save_best_only=True) 
 
 # Train model
 print('Training')
@@ -116,7 +104,7 @@ model.fit(dataX,
   dataY,
   batch_size=batch_size,
   verbose=1,
-  shuffle=False, 
+  shuffle=True, 
   epochs=epochs,
   callbacks=[checkpointer,csv_logger],
-  validation_split= 0.1) 
+  validation_split= 0.01) 

@@ -1,3 +1,4 @@
+
 ## Load best checkpointed model and make predictions
 
 from __future__ import print_function
@@ -15,12 +16,17 @@ import pandas as pd
 from keras import backend as K
 from keras.utils.vis_utils import plot_model, model_to_dot
 from keras.models import Model
-from keras.layers import LSTM, Dense, Permute, Reshape, Input, merge, Masking, RepeatVector, TimeDistributed, Dropout
+from keras.layers import LSTM, Dense, Input, RepeatVector, TimeDistributed, Dropout, Bidirectional
 from keras.callbacks import ModelCheckpoint, CSVLogger
 from keras import regularizers
 from keras.optimizers import Adam
 
-from attention_utils import get_activations
+from read_activations import get_activations
+
+def set_trace():
+    from IPython.core.debugger import Pdb
+    import sys
+    Pdb(color_scheme='Linux').set_trace(sys._getframe().f_back)
 
 # Select gpu
 import os
@@ -38,20 +44,20 @@ dataname = sys.argv[-2]
 print('Load saved {} data for analysis on {}'.format(dataname, analysis))
 
 n_post  = 5
-n_pre = 47-(n_post*2)
-seq_len = 47
+n_pre = 15
+seq_len = 47+1
 
-X_train = np.array(pkl.load(open('data/{}_x_train_{}.np'.format(dataname,analysis), 'rb')))[n_post:] # all but first n timesteps of training x
+X_train = np.array(pkl.load(open('data/{}_x_train_{}.np'.format(dataname,analysis), 'rb')))#[n_post:] # all but first n timesteps of training x
 
 print('X_train shape:', X_train.shape)
 
-X_test = np.array(pkl.load(open('data/{}_x_test_{}.np'.format(dataname,analysis), 'rb')))
+# X_test = np.array(pkl.load(open('data/{}_x_test_{}.np'.format(dataname,analysis), 'rb')))
 
-X = np.concatenate((X_train, X_test), axis=0)
+# X = np.concatenate((X_train, X_test), axis=0)
  
 dX = []
 for i in range(seq_len-n_pre-n_post):
-	dX.append(X[i:i+n_pre])
+	dX.append(X_train[i:i+n_pre])
 
 dataX = np.array(dX)
 
@@ -60,46 +66,42 @@ print('dataX shape:', dataX.shape)
 # Define network structure
 
 nb_features = dataX.shape[2]
-#output_dim = 24
-output_dim = 5
+output_dim = 24
+#output_dim = 5
 
 # Define model parameters
 
-dropout = 0.8
-hidden_dropout = 0
-penalty = 0.01
-batch_size = 2
+dropout = 0.8 
+penalty = 0.5  
+batch_size = 8
 activation = 'linear'
 initialization = 'glorot_normal'
+
+encoder_hidden = 16 
+decoder_hidden = 8 
 
 # Initiate sequential model
 
 print('Initializing model')
 
-inputs = Input(shape=(n_pre, nb_features,))
-
-a = Permute((2, 1))(inputs)
-a = Reshape((nb_features, n_pre))(a)
-a = Dense(n_pre, activation='softmax')(a)
-a_probs = Permute((2, 1), name='attention_vec')(a)
-output_attention_mul = merge([inputs, a_probs], name='attention_mul', mode='mul')
-dropout_1 = Dropout(dropout)(output_attention_mul)
-lstm_1 = LSTM(1024, kernel_initializer=initialization, dropout=hidden_dropout, return_sequences=False)(dropout_1) # Encoder
-repeat = RepeatVector(n_post)(lstm_1) # get the last output of the LSTM and repeats it 
-lstm_2 = LSTM(640, kernel_initializer=initialization, return_sequences=True)(repeat)  # Decoder
-output= TimeDistributed(Dense(output_dim, activation=activation, kernel_regularizer=regularizers.l2(penalty)))(lstm_2)
+inputs = Input(shape=(n_pre, nb_features,), name="Inputs")
+dropout_1 = Dropout(dropout, name="Dropout")(inputs)
+lstm_1 = Bidirectional(LSTM(encoder_hidden, kernel_initializer=initialization, return_sequences=False, name='LSTM'), name='Encoder')(dropout_1) # Encoder
+repeat = RepeatVector(n_post, name='Repeat')(lstm_1) # get the last output of the LSTM and repeats it
+lstm_2 = LSTM(decoder_hidden, kernel_initializer=initialization, return_sequences=True, name='Decoder')(repeat)  # Decoder
+output= TimeDistributed(Dense(output_dim, activation=activation, kernel_regularizer=regularizers.l2(penalty)), name='Outputs')(lstm_2)
 
 model = Model(inputs=inputs, output=output)
 
-model.compile(loss="mean_absolute_percentage_error", optimizer=Adam(lr=0.001, clipnorm=5))
+model.compile(loss="mean_absolute_percentage_error", optimizer=Adam(lr=0.001, clipnorm=5))  
 
 # Visualize model
 
-# plot_model(model, to_file='results/elections/{}/model.png'.format(dataname), # Plot graph of model
+# plot_model(model, to_file='results/elections/{}/encoder-decoder.png'.format(dataname), # Plot graph of model
 #   show_shapes = False,
-#   show_layer_names = False)
+#   show_layer_names = True)
 
-#model_to_dot(model,show_shapes=True,show_layer_names = False).write('results/elections/{}/model.dot'.format(dataname), format='raw', prog='dot') # write to dot file
+# model_to_dot(model,show_shapes=False,show_layer_names = True).write('results/elections/{}/model.dot'.format(dataname), format='raw', prog='dot') # write to dot file
 
 # Load weights
 filename = sys.argv[-3]
@@ -111,20 +113,10 @@ print("Created model and loaded weights from file")
 
 print('Generate predictions')
 
-y_pred_test = model.predict(dataX, batch_size=batch_size, verbose=1) # generate test predictions
-
-y_pred_test = np.mean(y_pred_test, axis=0).squeeze() # mean across # samples
+y_pred_test = model.predict(dataX, batch_size=batch_size, verbose=1) # generate test predictions 
 
 print('predictions shape =', y_pred_test.shape)
 
+y_pred_test = y_pred_test[-1] # get last sample
+
 np.savetxt("{}-{}-test.csv".format(filename,dataname), y_pred_test, delimiter=",")
-
-# Get attention weights 
-
-attention_vector = get_activations(model, dataX, print_shape_only=True, layer_name='attention_vec')[0]
-
-attention_vector = np.mean(attention_vector, axis=0).squeeze() # mean across # samples
-
-print('attention shape =', attention_vector.shape)
-
-np.savetxt('results/elections/{}/attention.csv'.format(dataname), attention_vector, delimiter=',') # save attentions to file
