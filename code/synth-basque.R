@@ -26,6 +26,24 @@ basque.treat <- 10 # catalonia
 
 basque.controls <- basque.controls[!basque.controls %in% basque.treat]
 
+# reshape and split for BSTS and encoder-decoder
+
+basque.x <- reshape(data.frame(basque[basque$regionno%in%basque.controls,])[c("year","regionno","gdpcap")], idvar = "year", timevar = "regionno", direction = "wide")
+
+basque.y <- reshape(data.frame(basque[basque$regionno%in%basque.treat,])[c("year","regionno","gdpcap")], idvar = "year", timevar = "regionno", direction = "wide")
+
+basque.x.train <- basque.x[basque.x$year < 1970,]
+basque.x.test <- basque.x[basque.x$year >= 1970,]
+
+basque.y.train <- basque.y[basque.y$year < 1970,]
+basque.y.test <- basque.y[basque.y$year >= 1970,]
+
+write.csv(basque.x.train[!colnames(basque.x.train) %in% c("year")], paste0(data.directory,"basque/treated/basque-x-train.csv"), row.names=FALSE) 
+write.csv(basque.x.test[!colnames(basque.x.test) %in% c("year")] , paste0(data.directory,"basque/treated/basque-x-test.csv"), row.names=FALSE) 
+
+write.csv(basque.y.train[!colnames(basque.y.train) %in% c("year")], paste0(data.directory,"basque/treated/basque-y-train.csv"), row.names=FALSE) 
+write.csv(basque.y.test[!colnames(basque.y.test) %in% c("year")], paste0(data.directory,"basque/treated/basque-y-test.csv"), row.names=FALSE) 
+
 # dataprep: prepare data for synth
 dataprep.out <-
   dataprep(
