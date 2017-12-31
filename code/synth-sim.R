@@ -72,9 +72,11 @@ dataprep.out<-
 ## run the synth command to identify the weights
 ## that create the best possible synthetic
 ## control unit for the treated.
-synth.out.sim <- synth(dataprep.out)
+#synth.out.sim <- synth(dataprep.out)
 
-saveRDS(synth.out.sim, paste0(data.directory, "synth-out-sim.rds"))
+#saveRDS(synth.out.sim, paste0(data.directory, "synth-out-sim.rds"))
+
+synth.out.sim <- readRDS(paste0(data.directory, "synth-out-sim.rds"))
 
 ## there are two ways to summarize the results
 ## we can either access the output from synth.out.sim.simdirectly
