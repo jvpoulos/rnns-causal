@@ -63,5 +63,6 @@ votediff.bind.elections <- votediff.bind.elections  %>%
          pointwise.votediff.min = y.true-pred.votediff.max,
          pointwise.votediff.max = y.true-pred.votediff.min)
 
-ts.plot <- TsPlotElections(votediff.bind.elections[votediff.bind.elections$year>="1979-12-30 19:00:00",], main="Encoder-decoder")
+ts.plot <- TsPlotElections(votediff.bind.elections[votediff.bind.elections$year>="1979-12-30 19:00:00",], 
+                           main="Mayoral elections: Encoder-decoder (validation MAPE = 57.79)")
 ggsave(paste0(results.directory,"plots/impact-votediff.png"), ts.plot, width=11, height=8.5)

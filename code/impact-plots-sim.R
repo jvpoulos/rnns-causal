@@ -71,8 +71,7 @@ votediff.bind.sim <- votediff.bind.sim  %>%
          pointwise.votediff.min = y.true-pred.votediff.max,
          pointwise.votediff.max = y.true-pred.votediff.min)
 
-
-ts.plot <- TsPlotSim(votediff.bind.sim, "Encoder-decoder", n.pre, n.post)
+ts.plot <- TsPlotSim(votediff.bind.sim, "Simulated data: Encoder-decoder (validation MAPE = 61.97)", n.pre, n.post)
 ggsave(paste0(results.directory,"plots/impact-sim.png"), ts.plot, width=11, height=8.5)
 
 # Absolute percentage estimation error

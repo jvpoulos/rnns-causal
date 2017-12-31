@@ -8,96 +8,80 @@ library(dplyr)
 library(tidyr)
 library(tseries)
 library(boot)
+library(reshape2)
 
 source(paste0(code.directory,'PolitisWhite.R')) 
 
-## The usual sequence of commands is:
-## 1. dataprep() for matrix-extraction
-## 2. synth() for the construction of the synthetic control group
-## 3. synth.tab(), gaps.plot(), and path.plot() to summarize the results
+# Get splits
 
-# Merge covariates back to elections data
+x.train <- read.csv(paste0(data.directory,"elections/sim/sim_x_train_treated.csv"), header=FALSE)
+x.test <- read.csv(paste0(data.directory,"elections/sim/sim_x_test_treated.csv"), header=FALSE)
 
-fg.covars$city <- sub(" ", "", fg.covars$city) # rm space
+y.train <- read.csv(paste0(data.directory,"elections/sim/sim_y_train_treated.csv"), header=FALSE)
+y.test <- read.csv(paste0(data.directory,"elections/sim/sim_y_test_treated.csv"), header=FALSE)
 
-fg.ads.synth <- merge(fg.ads, fg.covars[c("state","city","year","partisan2","mayor_dem","logvotetotal")], by=c("state","city","year"), all.x=TRUE)
+phi <- -abs(y.test*0.1)
+
+y.test.c <- y.test + phi  #true counterfactual
+
+# Construct panel
+
+x.sim <- cbind("t" = 1:52,
+                   rbind(x.train,x.test))
+
+y.sim <- cbind("t" = 1:52,
+               "y" = rowMeans(rbind(y.train,y.test))) 
+
+synth.sim.panel <- cbind(y.sim, x.sim[-1])
+  
+synth.sim.panel <- melt(synth.sim.panel, id.vars = c("t"))
+
+colnames(synth.sim.panel) <- c("t","id", "y")
 
 # Create numeric id
 
-fg.ads.synth <- transform(fg.ads.synth,num=as.numeric(factor(fg.ads.synth$id)))
+synth.sim.panel <- transform(synth.sim.panel,num=as.numeric(factor(synth.sim.panel$id)))
 
-# Take treated means
-
-fg.ads.synth.treat <- fg.ads.synth %>% 
-  filter(treat==1) %>% 
-  group_by(year) %>% 
-  summarise_all(funs(mean(., na.rm = TRUE)))
-
-fg.ads.synth.treat$num <- 999 # treated id
-
-fg.ads.synth <- subset(fg.ads.synth, treat %in% c(0, NA)) # remove treated units
-
-fg.ads.synth <- rbind(fg.ads.synth, fg.ads.synth.treat)# bind treated mean
-
-fg.ads.synth <- fg.ads.synth[c("num", "id", "year", "votediff", "partisan2","mayor_dem","logvotetotal")]
-
-# Make data balanced 
-
-fg.ads.synth <- fg.ads.synth[!is.na(fg.ads.synth$logvotetotal),] #rm if missing vote total
-
-fg.ads.synth <- make.pbalanced(fg.ads.synth, balance.type="fill", index = c("num", "year"))
-
-fg.ads.synth <- fg.ads.synth %>%
-  group_by(num) %>%
-  fill(id, votediff, partisan2, mayor_dem, logvotetotal) %>% # fill in id and predictors
-  fill(id, votediff, partisan2, mayor_dem, logvotetotal, .direction = "up")
-
-fg.ads.synth <- data.frame(fg.ads.synth[fg.ads.synth$year<=2006,]) # max is 2006 
-
-# ## First Example: Toy panel dataset
-# # load data
-# data(synth.data)
+synth.sim.panel$id <- as.character(synth.sim.panel$id)
 
 # create matrices from panel data that provide inputs for synth()
 
 dataprep.out<-
   dataprep(
-    foo = fg.ads.synth,
-    predictors = c("logvotetotal"),
+    foo = synth.sim.panel,
+    predictors = NULL,
     predictors.op = "mean",
-    dependent = "votediff",
+    dependent = "y",
     unit.variable = "num",
-    time.variable = "year",
+    time.variable = "t",
     special.predictors = list(
-      list("votediff",1945:1960,c("mean")),
-      list("votediff",1960:1975,c("mean")),
-      list("votediff",1975:1990,c("mean")),
-      list("votediff",1990:2004,c("mean")),
-      list("votediff",1945:2004,c("mean"))),
-    treatment.identifier = 999,
-    controls.identifier = sort(unique(fg.ads.synth$num[!fg.ads.synth$num %in% c(999)])),
-    time.predictors.prior = c(1945:2004),
-    time.optimize.ssr = c(2000:2004),
+      list("y",1:15,c("mean")),
+      list("y",15:30,c("mean")),
+      list("y",30:45,c("mean")),
+      list("y",45:52,c("mean")),
+      list("y",1:52,c("mean"))),
+    treatment.identifier = 1,
+    controls.identifier = sort(unique(synth.sim.panel$num[!synth.sim.panel$num %in% c(1)])),
+    time.predictors.prior = c(1:47),
+    time.optimize.ssr = c(43:47),
     unit.names.variable = "id",
-    time.plot = 1980:2006
+    time.plot = 1:52
   )
 
 
 ## run the synth command to identify the weights
 ## that create the best possible synthetic
 ## control unit for the treated.
-# synth.out <- synth(dataprep.out)
-# 
-# saveRDS(synth.out, paste0(data.directory, "synth-out.rds"))
+synth.out.sim <- synth(dataprep.out)
 
-synth.out <- readRDS(paste0(data.directory, "synth-out.rds"))
+saveRDS(synth.out.sim, paste0(data.directory, "synth-out-sim.rds"))
 
 ## there are two ways to summarize the results
-## we can either access the output from synth.out directly
-round(synth.out$solution.w,2)
+## we can either access the output from synth.out.sim.simdirectly
+round(synth.out.sim$solution.w,2)
 
 # contains the unit weights or
-synth.out$solution.v
+synth.out.sim$solution.v
 ## contains the predictor weights.
 ## the output from synth opt
 ## can be flexibly combined with
@@ -108,7 +92,7 @@ synth.out$solution.v
 ## treated unit and its synthetic control unit
 ## can be computed by typing
 gaps<- dataprep.out$Y1plot-(
-  dataprep.out$Y0plot%*%synth.out$solution.w
+  dataprep.out$Y0plot%*%synth.out.sim$solution.w
 ) ; gaps
 ## also there are three convenience functions to summarize results.
 ## to get summary tables for all information
@@ -117,22 +101,22 @@ gaps<- dataprep.out$Y1plot-(
 ## synth.tab() command
 synth.tables <- synth.tab(
   dataprep.res = dataprep.out,
-  synth.res = synth.out)
+  synth.res = synth.out.sim)
 print(synth.tables)
 ## to get summary plots for outcome trajectories
 ## of the treated and the synthetic control unit use the
 ## path.plot() and the gaps.plot() commands
 ## plot in levels (treated and synthetic)
-path.plot(dataprep.res = dataprep.out,synth.res = synth.out)
+path.plot(dataprep.res = dataprep.out,synth.res = synth.out.sim)
 ## plot the gaps (treated - synthetic)
-gaps.plot(dataprep.res = dataprep.out,synth.res = synth.out)
+gaps.plot(dataprep.res = dataprep.out,synth.res = synth.out.sim)
 
 # Bootstrap estimate for prediction
 
-bopt <- b.star(dataprep.out$Y0plot%*%synth.out$solution.w, round=TRUE)[[1]]  # get optimal bootstrap block lengths
+bopt <- b.star(dataprep.out$Y0plot%*%synth.out.sim$solution.w, round=TRUE)[[1]]  # get optimal bootstrap block lengths
 
 synth.results <- data.frame('y.true'=dataprep.out$Y1plot[,1],
-                            'y.pred'= dataprep.out$Y0plot%*%synth.out$solution.w[,1])
+                            'y.pred'= dataprep.out$Y0plot%*%synth.out.sim$solution.w[,1])
 # GetPointwise <- function(x){
 #    # Calculate pointwise impact
 #    return(x['y.true']- x['y.pred'])
@@ -165,13 +149,22 @@ theme.blank <- theme(axis.text=element_text(size=12)
                      , legend.position = c(0.25,0.9)
                      , legend.justification = c(1,0))
 
-synth.plot <- ggplot(data=synth.results, aes(x=1980:2006)) +
+synth.plot <- ggplot(data=synth.results, aes(x=1:52)) +
   geom_line(aes(y=y.true, colour = "Observed treated outcome"), size=1.2) +
   geom_line(aes(y=y.pred, colour = "Predicted treated outcome"), size=1.2, linetype=2) +
-  theme_bw() + theme(legend.title = element_blank()) + ylab("Winner margin (%)") + xlab("") +
-  geom_vline(xintercept=2005, linetype=2) + 
+  theme_bw() + theme(legend.title = element_blank()) + ylab("Outcome") + xlab("") +
+  geom_vline(xintercept=48, linetype=2) + 
   geom_ribbon(aes(ymin=y.pred.min, ymax=y.pred.max), fill="grey", alpha=0.5) +
-  ggtitle(paste0("Mayoral elections: Synthetic control (training MSPE = ", round(synth.out$loss.v[[1]],2), ")")) +
+  ggtitle(paste0("Simulated data: Synthetic control (training MSPE = ", round(synth.out.sim$loss.v[[1]],2), ")")) +
   theme.blank 
 
-ggsave(paste0(results.directory,"plots/synth-plot.png"), synth.plot, width=11, height=8.5)
+ggsave(paste0(results.directory,"plots/synth-plot-sim.png"), synth.plot, width=11, height=8.5)
+
+# True Phi
+
+synth.results$y.phi <- NA
+synth.results$y.phi[rownames(synth.results) %in% c(48:52)] <- rowMeans(phi)
+
+# Absolute percentage estimation error
+
+sim.APE <- filter(synth.results, rownames(synth.results) %in% c(48:52)) %>% mutate(APE=abs(pointwise-y.phi)/abs(y.phi))

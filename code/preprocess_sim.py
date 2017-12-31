@@ -66,5 +66,8 @@ pkl.dump(X_test, open('data/sim_x_test_treated.np', 'wb'))
 pkl.dump(y_train, open('data/sim_y_train_treated.np', 'wb'))
 pkl.dump(y_test, open('data/sim_y_test_treated.np', 'wb'))
 
+np.savetxt('data/sim_x_train_treated.csv', X_train, delimiter=",")
+np.savetxt('data/sim_x_test_treated.csv', X_test, delimiter=",")
+
 np.savetxt('data/sim_y_train_treated.csv', y_train, delimiter=",")
 np.savetxt('data/sim_y_test_treated.csv', y_test, delimiter=",")

@@ -90,7 +90,7 @@ theme.blank <- theme(axis.text=element_text(size=12)
                      , axis.ticks.y=element_blank()
                      , legend.text=element_text(size=12)
                      , legend.title = element_blank()
-                     , legend.position = c(0.25,0.1)
+                     , legend.position = c(0.25,0.9)
                      , legend.justification = c(1,0))
 
 avg.coef.plot <- ggplot(data=coeff[coeff$value>0,], aes(x=Variable, y=value)) + 
@@ -157,7 +157,7 @@ bsts.plot <- ggplot(data=d3, aes(x=Date)) +
 #  geom_vline(xintercept=2000, linetype=3) + 
   geom_vline(xintercept=2005, linetype=2) + 
   geom_ribbon(aes(ymin=LL, ymax=UL), fill="grey", alpha=0.5) +
-  ggtitle(paste0("BSTS (training MSPE = ", round(bsts.MSPE,2), ")")) +
+  ggtitle(paste0("Mayoral elections: BSTS (training MSPE = ", round(bsts.MSPE,2), ")")) +
   theme.blank 
 
 ggsave(paste0(results.directory,"plots/bsts-plot.png"), bsts.plot, width=11, height=8.5)
