@@ -30,8 +30,6 @@ print(device_lib.list_local_devices())
 analysis = sys.argv[-1] # 'treated' or 'control'
 dataname = sys.argv[-2] # 'votediff' or 'sim'
 
-EPOCHS = int(sys.argv[-3])
-
 BATCHES = 3
 
 def create_model(n_pre, n_post, nb_features, output_dim):
@@ -66,25 +64,6 @@ def create_model(n_pre, n_post, nb_features, output_dim):
     print(model.summary()) 
 
     return model
-
-def train_sinus(model, dataX, dataY, epoch_count, batches):
-    """ 
-        trains only the sinus model
-    """
-    # Prepare model checkpoints and callbacks
-
-    filepath="results/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
-    checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=10, save_best_only=True)
-
-    csv_logger = CSVLogger('results/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=True)
-
-    history = model.fit(dataX, 
-        dataY, 
-        batch_size=batches, 
-        verbose=1,
-        epochs=epoch_count, 
-        callbacks=[checkpointer,csv_logger],
-        validation_split=0.1)
 
 def test_sinus():
     ''' 
@@ -138,13 +117,23 @@ def test_sinus():
     output_dim = dataY.shape[2]
 
     # create and fit the LSTM network
-    print('creating model...')
     model = create_model(n_pre, n_post, nb_features, output_dim)
-    train_sinus(model, dataX, dataY, EPOCHS, BATCHES)
     
-    # # now test
+    # Load weights
+    filename = sys.argv[-3]
+    model.load_weights(filename, by_name=True)
+
+    print("Created model and loaded weights from file")
     
-    # predict = model.predict(dataX, batch_size=BATCHES, verbose=1)
+    # now test
+
+    print('Generate predictions')
+
+    predict = model.predict(dataX, batch_size=BATCHES, verbose=1)
+
+    print('predictions shape =', predict.shape)
+
+    np.savetxt("{}-{}-test.csv".format(filename,dataname), predict, delimiter=",")
 
     # # now plot
     # nan_array = np.empty((n_pre - 1))
@@ -168,7 +157,7 @@ def test_sinus():
     #     plt.ylabel('sin(t)')
     #     plt.title('Sinus Many to Many Forecast')
     #     plt.legend(loc='best')
-    #     plt.savefig('results/plots/elections_sim/plot_mtm_triple_' + str(i) + '.png')
+    #     plt.savefig('results/basque/' + str(i) + '.png')
     #     plt.cla()
 
 def main():

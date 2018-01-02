@@ -29,6 +29,8 @@ source(paste0(code.directory,'impact-plots-sim.R'))
 source(paste0(code.directory,'bsts-sim.R')) 
 source(paste0(code.directory,'synth-sim.R')) 
 
+source(paste0(code.directory,'sim-plot.R')) # plot MSPE from all models
+
 # Causal impact estimates: basque country
 
 source(paste0(code.directory,'synth-basque.R')) # run first
@@ -36,6 +38,8 @@ source(paste0(code.directory,'synth-basque.R')) # run first
 source(paste0(code.directory,'impact-plots-basque.R'))
 
 source(paste0(code.directory,'bsts-basque.R')) 
+
+source(paste0(code.directory,'basque-plot.R')) # plot MSPE from all models
 
 # Causal impact estimates: mayoral elections
 

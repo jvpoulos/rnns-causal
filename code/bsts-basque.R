@@ -23,14 +23,14 @@ ss.test <- AddSemilocalLinearTrend(ss.test, basque.y.train$gdpcap.10) # Semiloca
 ss.test <- AddSeasonal(ss.test,basque.y.train$gdpcap.10,
                   nseasons = 52) # monthly seasonal component 
 
-bsts.reg.test <- bsts(gdpcap.10 ~ .,
-                     data = cbind(basque.y.train[-1], basque.x.train[-1]),
-                     state.specification = ss.test,
-                     prior=prior.test,
-                     niter = 1000,
-                     ping = 0, seed = 2016)
-
-#saveRDS(bsts.reg.test, paste0(data.directory, "bsts-reg-test-basque.rds"))
+# bsts.reg.test <- bsts(gdpcap.10 ~ .,
+#                       data = cbind(basque.y.train[-1], basque.x.train[-1]),
+#                       state.specification = ss.test,
+#                       prior=prior.test,
+#                       niter = 1000,
+#                       ping = 0, seed = 2016)
+# 
+# saveRDS(bsts.reg.test, paste0(data.directory, "bsts-reg-test-basque.rds"))
 
 bsts.reg.test <- readRDS(paste0(data.directory, "bsts-reg-test-basque.rds"))
 
@@ -62,14 +62,14 @@ d2 <- data.frame(
 names(d2) <- c("Fitted", "Date", "Actual")
 
 # MPSE 
-bsts.MSPE <- filter(d2, Date %in% c(1960:1969)) %>% summarise(MSPE=mean((Actual-Fitted)**2))
+bsts.MSPE <- filter(d2, Date %in% c(1960:1989)) %>% summarise(MSPE=mean((Actual-Fitted)**2))
 bsts.MSPE
 
 # 95% forecast credible interval
 posterior.interval <- cbind.data.frame(
   as.numeric(p.test$interval[1,]),
   as.numeric(p.test$interval[2,]), 
-  subset(d2, Date>1969)$Date)
+  subset(d2, Date>1989)$Date)
 names(posterior.interval) <- c("LL", "UL", "Date")
 
 ## Join intervals to the forecast
@@ -80,13 +80,17 @@ bsts.plot <- ggplot(data=d3, aes(x=Date)) +
   geom_line(aes(y=Actual, colour = "Observed placebo outcome"), size=1.2) +
   geom_line(aes(y=Fitted, colour = "Predicted placebo outcome"), size=1.2, linetype=2) +
   theme_bw() + theme(legend.title = element_blank()) + ylab("Real per-capita GDP (1986 USD, thousand)") + xlab("") +
-  geom_vline(xintercept=1970, linetype=2) + 
+  geom_vline(xintercept=1990, linetype=2) + 
   geom_ribbon(aes(ymin=LL, ymax=UL), fill="grey", alpha=0.5) +
-  ggtitle(paste0("Basque data: BSTS (training MSPE = ", round(bsts.MSPE,2), ")")) +
+  ggtitle(paste0("Basque Country: BSTS (training MSPE = ", round(bsts.MSPE,2), ")")) +
   theme.blank 
 
 ggsave(paste0(results.directory,"plots/bsts-plot-basque.png"), bsts.plot, width=11, height=8.5)
 
 # Post-period MSPE
 
-basque.bsts.MSPE <- filter(synth.results, rownames(synth.results) %in% c(1970:1997)) %>% mutate(MSPE=mean((y.true-y.pred )**2))
+basque.bsts.MSPE <- filter(d3, Date %in% c(1990:1997)) %>% mutate(MSPE=mean((Actual-Fitted )**2))
+
+# Absolute percentage estimation error
+
+basque.bsts.APE <- filter(d3, Date %in% c(1990:1997)) %>% mutate(APE=abs(Fitted-Actual)/abs(Actual))

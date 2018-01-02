@@ -4,8 +4,7 @@ require(reshape2)
 require(dplyr)
 require(zoo)
 require(matrixStats)
-
-source(paste0(code.directory,"ts-plot-sim.R"))
+library(wesanderson)
 
 code.directory <-"~/Dropbox/github/rnns-causal/code/"
 results.directory <-"~/Dropbox/github/rnns-causal/results/"
@@ -38,7 +37,7 @@ votediff.preds.test <- lapply(test.files,function(x){
 votediff.preds.test.sd <- apply(simplify2array(votediff.preds.test), 1:2, sd)
 
 #votediff.preds.test.mean <- apply(simplify2array(votediff.preds.test), 1:2, mean) # element-wise mean
-best.model <-3
+best.model <-6
 votediff.preds.test.mean <- votediff.preds.test[[best.model]] # best model
 
 # Bind predictions
@@ -71,9 +70,34 @@ votediff.bind.sim <- votediff.bind.sim  %>%
          pointwise.votediff.min = y.true-pred.votediff.max,
          pointwise.votediff.max = y.true-pred.votediff.min)
 
-ts.plot <- TsPlotSim(votediff.bind.sim, "Simulated data: Encoder-decoder (validation MAPE = 61.97)", n.pre, n.post)
-ggsave(paste0(results.directory,"plots/impact-sim.png"), ts.plot, width=11, height=8.5)
+
+theme.blank <- theme(axis.text=element_text(size=12)
+                     , axis.title.x=element_blank()
+                     , plot.title = element_text(hjust = 0.5)
+                     , axis.ticks.x=element_blank()
+                     , axis.ticks.y=element_blank()
+                     , legend.text=element_text(size=12)
+                     , legend.title = element_blank()
+                     , legend.position = c(0.25,0.8)
+                     , legend.justification = c(1,0))
+
+# Plot actual versus predicted with credible intervals for the holdout period
+ed.sim.plot <- ggplot(data=votediff.bind.sim, aes(x=1:52)) +
+  geom_line(aes(y=y.true, colour = "Observed treated outcome", linetype= "Observed treated outcome"), size=1.2) +
+  geom_line(aes(y=y.pred, colour = "Predicted treated outcome", linetype = "Predicted treated outcome"), size=1.2) +
+  geom_line(aes(y=y.true.c, colour = "True counterfactual", linetype = "True counterfactual"), size=1.2) +
+  scale_linetype_manual("",values=c("Observed treated outcome"="solid","Predicted treated outcome"="dashed","True counterfactual"="dotted"),
+                        labels=c("Observed treated outcome", "Predicted treated outcome","True counterfactual")) +
+  scale_colour_manual(name="", values = c("Observed treated outcome" = wes_palette("Darjeeling2")[3], "Predicted treated outcome" = wes_palette("Darjeeling2")[4], "True counterfactual" = wes_palette("Darjeeling2")[5]),
+                      labels=c("Observed treated outcome", "Predicted treated outcome","True counterfactual")) +
+  theme_bw() + theme(legend.title = element_blank()) + ylab("ARMA time-series") + xlab("Time-step") +
+  geom_vline(xintercept=48, linetype=2) + 
+  geom_ribbon(aes(ymin= pred.votediff.min, ymax=pred.votediff.max), fill="grey", alpha=0.5) +
+  ggtitle(paste0("Simulated data: Encoder-decoder (validation MSPE = 0.91)")) +
+  theme.blank + theme(legend.key.width=unit(3,"line"))
+
+ggsave(paste0(results.directory,"plots/impact-sim.png"), ed.sim.plot, width=11, height=8.5)
 
 # Absolute percentage estimation error
 
-sim.APE <- filter(votediff.bind.sim, year %in% c(48:52)) %>% mutate(APE=abs(pointwise.votediff-y.phi)/abs(y.phi))
+ed.sim.APE <- filter(votediff.bind.sim, !is.na(pointwise.votediff)) %>% mutate(APE=abs(pointwise.votediff-y.phi)/abs(y.phi))

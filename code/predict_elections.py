@@ -1,6 +1,3 @@
-
-## Load best checkpointed model and make predictions
-
 from __future__ import print_function
 
 import matplotlib
@@ -12,21 +9,15 @@ import math
 import numpy as np
 import cPickle as pkl
 import pandas as pd
+from attrdict import AttrDict
 
 from keras import backend as K
 from keras.utils.vis_utils import plot_model, model_to_dot
 from keras.models import Model
-from keras.layers import LSTM, Dense, Input, RepeatVector, TimeDistributed, Dropout, Bidirectional
+from keras.layers import LSTM, Dense, Input, RepeatVector, TimeDistributed, Dropout
 from keras.callbacks import ModelCheckpoint, CSVLogger
 from keras import regularizers
 from keras.optimizers import Adam
-
-from read_activations import get_activations
-
-def set_trace():
-    from IPython.core.debugger import Pdb
-    import sys
-    Pdb(color_scheme='Linux').set_trace(sys._getframe().f_back)
 
 # Select gpu
 import os
@@ -37,86 +28,151 @@ os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
 from tensorflow.python.client import device_lib
 print(device_lib.list_local_devices())
 
-# Load saved data
-
 analysis = sys.argv[-1] # 'treated' or 'control'
-dataname = sys.argv[-2]
-print('Load saved {} data for analysis on {}'.format(dataname, analysis))
+dataname = sys.argv[-2] # 'votediff' 'sim'
 
-n_post  = 5
-n_pre = 15
-seq_len = 47+1
+BATCHES = 2
 
-X_train = np.array(pkl.load(open('data/{}_x_train_{}.np'.format(dataname,analysis), 'rb')))#[n_post:] # all but first n timesteps of training x
+def create_model(n_pre, n_post, nb_features, output_dim):
+    """ 
+        creates, compiles and returns a RNN model 
+        @param n_pre: the number of previous time steps (input)
+        @param n_post: the number of posterior time steps (output or predictions)
+        @param nb_features: the number of features in the model
+        @param output_dim: the dimension of the target sequence
+    """
+    # Define model parameters
 
-print('X_train shape:', X_train.shape)
+    dropout = 0.2 # elections
+    #dropout = 0.95
+    penalty = 0.001 # elections
+    #penalty = 1 
+    activation = 'linear'
+    initialization = 'glorot_normal'
+    lr = 0.001 # elections
+    #lr = 0.0001
 
-# X_test = np.array(pkl.load(open('data/{}_x_test_{}.np'.format(dataname,analysis), 'rb')))
+    # encoder_hidden = 640
+    # decoder_hidden = 512
+    encoder_hidden = 896 # elections
+    decoder_hidden = 640
 
-# X = np.concatenate((X_train, X_test), axis=0)
- 
-dX = []
-for i in range(seq_len-n_pre-n_post):
-	dX.append(X_train[i:i+n_pre])
+    inputs = Input(shape=(n_pre, nb_features,), name="Inputs")
+    dropout_1 = Dropout(dropout, name="Dropout")(inputs)
+    lstm_1 = LSTM(encoder_hidden, kernel_initializer=initialization, return_sequences=False, name='Encoder')(dropout_1) # Encoder
+    repeat = RepeatVector(n_post, name='Repeat')(lstm_1) # get the last output of the LSTM and repeats it
+    lstm_2 = LSTM(decoder_hidden, kernel_initializer=initialization, return_sequences=True, name='Decoder')(repeat)  # Decoder
+    output= TimeDistributed(Dense(output_dim, activation=activation, kernel_regularizer=regularizers.l2(penalty), name='Dense'), name='Outputs')(lstm_2)
 
-dataX = np.array(dX)
+    model = Model(inputs=inputs, output=output)
 
-print('dataX shape:', dataX.shape)
+    model.compile(loss="mean_squared_error", optimizer=Adam(lr=lr, clipnorm=5))  
 
-# Define network structure
+    return model
 
-nb_features = dataX.shape[2]
-output_dim = 24
-#output_dim = 5
+def test_sinus():
+    ''' 
+        testing how well the network can predict
+        a simple sinus wave.
+    '''
+    # Load saved data
 
-# Define model parameters
+    print('Load saved {} data for analysis on {}'.format(dataname, analysis))
 
-dropout = 0.8 
-penalty = 0.5  
-batch_size = 8
-activation = 'linear'
-initialization = 'glorot_normal'
+    X_train = np.array(pkl.load(open('data/{}_x_train_{}.np'.format(dataname,analysis), 'rb')))
 
-encoder_hidden = 16 
-decoder_hidden = 8 
+    print('X_train shape:', X_train.shape)
 
-# Initiate sequential model
+    y_train = np.array(pkl.load(open('data/{}_y_train_{}.np'.format(dataname,analysis), 'rb')))
 
-print('Initializing model')
+    print('y_train shape:', y_train.shape)
 
-inputs = Input(shape=(n_pre, nb_features,), name="Inputs")
-dropout_1 = Dropout(dropout, name="Dropout")(inputs)
-lstm_1 = Bidirectional(LSTM(encoder_hidden, kernel_initializer=initialization, return_sequences=False, name='LSTM'), name='Encoder')(dropout_1) # Encoder
-repeat = RepeatVector(n_post, name='Repeat')(lstm_1) # get the last output of the LSTM and repeats it
-lstm_2 = LSTM(decoder_hidden, kernel_initializer=initialization, return_sequences=True, name='Decoder')(repeat)  # Decoder
-output= TimeDistributed(Dense(output_dim, activation=activation, kernel_regularizer=regularizers.l2(penalty)), name='Outputs')(lstm_2)
+    X_test = np.array(pkl.load(open('data/{}_x_test_{}.np'.format(dataname,analysis), 'rb')))
 
-model = Model(inputs=inputs, output=output)
+    print('X_test shape:', X_test.shape)
 
-model.compile(loss="mean_absolute_percentage_error", optimizer=Adam(lr=0.001, clipnorm=5))  
+    X = np.concatenate((X_train, X_test, X_test), axis=0) # repeat test
 
-# Visualize model
+    print('X concatenated shape:', X.shape)
 
-# plot_model(model, to_file='results/elections/{}/encoder-decoder.png'.format(dataname), # Plot graph of model
-#   show_shapes = False,
-#   show_layer_names = True)
+    y_test = np.array(pkl.load(open('data/{}_y_test_{}.np'.format(dataname,analysis), 'rb')))
 
-# model_to_dot(model,show_shapes=False,show_layer_names = True).write('results/elections/{}/model.dot'.format(dataname), format='raw', prog='dot') # write to dot file
+    print('y_test shape:', y_test.shape)
 
-# Load weights
-filename = sys.argv[-3]
-model.load_weights(filename, by_name=True)
+    y = np.concatenate((y_train, y_test, y_test), axis=0) # repeat test
 
-print("Created model and loaded weights from file")
+    print('y concatenated shape:', y.shape)
 
-# Evaluation 
+    n_post  = 5
+    n_pre =  47
+    seq_len = n_pre + n_post*2
 
-print('Generate predictions')
+    dX, dY = [], []
+    for i in range(seq_len-n_pre-n_post):
+        dX.append(X[i:i+n_pre])
+        dY.append(y[i+n_pre:i+n_pre+n_post])
+        #dY.append(sinus[i+n_pre])
+    dataX = np.array(dX)
+    dataY = np.array(dY)
 
-y_pred_test = model.predict(dataX, batch_size=batch_size, verbose=1) # generate test predictions 
+    print('dataX shape:', dataX.shape)
+    print('dataY shape:', dataY.shape)
 
-print('predictions shape =', y_pred_test.shape)
+    nb_features = dataX.shape[2]
+    output_dim = dataY.shape[2]
 
-y_pred_test = y_pred_test[-1] # get last sample
+    # create and fit the LSTM network
+    model = create_model(n_pre, n_post, nb_features, output_dim)
+    # Load weights
+    filename = sys.argv[-3]
+    model.load_weights(filename, by_name=True)
 
-np.savetxt("{}-{}-test.csv".format(filename,dataname), y_pred_test, delimiter=",")
+    print("Created model and loaded weights from file")
+    
+    # now test
+
+    print('Generate predictions')
+
+    predict = model.predict(dataX, batch_size=BATCHES, verbose=1)[-1] # get last sample
+
+    print('predictions shape =', predict.shape)
+
+    np.savetxt("{}-{}-test.csv".format(filename,dataname), predict, delimiter=",")
+
+   # # Visualize model
+
+   #  plot_model(model, to_file='results/elections/{}/encoder-decoder.png'.format(dataname), # Plot graph of model
+   #  show_shapes = False,
+   #  show_layer_names = True)
+
+    # # now plot
+    # nan_array = np.empty((n_pre - 1))
+    # nan_array.fill(np.nan)
+    # nan_array2 = np.empty(n_post)
+    # nan_array2.fill(np.nan)
+    # ind = np.arange(n_pre + n_post)
+
+    # fig, ax = plt.subplots()
+    # for i in range(0, n_pre, n_pre):
+
+    #     forecasts = np.concatenate((nan_array, dataX[i, -1:, 0], predict[i, :, 0]))
+    #     ground_truth = np.concatenate((nan_array, dataX[i, -1:, 0], dataY[i, :, 0]))
+    #     network_input = np.concatenate((dataX[i, :, 0], nan_array2))
+     
+    #     ax.plot(ind, network_input, 'b-x', label='Network input')
+    #     ax.plot(ind, forecasts, 'r-x', label='Many to many model forecast')
+    #     ax.plot(ind, ground_truth, 'g-x', label = 'Ground truth')
+        
+    #     plt.xlabel('t')
+    #     plt.ylabel('sin(t)')
+    #     plt.title('Sinus Many to Many Forecast')
+    #     plt.legend(loc='best')
+    #     plt.savefig('results/plots/elections_sim/plot_mtm_triple_' + str(i) + '.png')
+    #     plt.cla()
+
+def main():
+    test_sinus()
+    return 1
+
+if __name__ == "__main__":
+    sys.exit(main())

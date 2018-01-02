@@ -21,7 +21,6 @@ basque <- basque[!basque$regionno%in%c(1,17),] # rm Spain and Basque (treated)
 
 basque.controls <- c(2:16,18)
 
-set.seed(81)
 basque.treat <- 10 # catalonia 
 
 basque.controls <- basque.controls[!basque.controls %in% basque.treat]
@@ -32,11 +31,11 @@ basque.x <- reshape(data.frame(basque[basque$regionno%in%basque.controls,])[c("y
 
 basque.y <- reshape(data.frame(basque[basque$regionno%in%basque.treat,])[c("year","regionno","gdpcap")], idvar = "year", timevar = "regionno", direction = "wide")
 
-basque.x.train <- basque.x[basque.x$year < 1970,]
-basque.x.test <- basque.x[basque.x$year >= 1970,]
+basque.x.train <- basque.x[basque.x$year < 1990,]
+basque.x.test <- basque.x[basque.x$year >= 1990,]
 
-basque.y.train <- basque.y[basque.y$year < 1970,]
-basque.y.test <- basque.y[basque.y$year >= 1970,]
+basque.y.train <- basque.y[basque.y$year < 1990,]
+basque.y.test <- basque.y[basque.y$year >= 1990,]
 
 write.csv(basque.x.train[!colnames(basque.x.train) %in% c("year")], paste0(data.directory,"basque/treated/basque-x-train.csv"), row.names=FALSE) 
 write.csv(basque.x.test[!colnames(basque.x.test) %in% c("year")] , paste0(data.directory,"basque/treated/basque-x-test.csv"), row.names=FALSE) 
@@ -70,8 +69,8 @@ dataprep.out <-
       list("popdens",1969,c("mean")))
     ,treatment.identifier = basque.treat
     ,controls.identifier = basque.controls
-    ,time.predictors.prior = c(1964:1969)
-    ,time.optimize.ssr = c(1960:1969)
+    ,time.predictors.prior = c(1964:1989)
+    ,time.optimize.ssr = c(1960:1989)
     ,unit.names.variable = c("regionname")
     ,time.plot = c(1955:1997)
   )
@@ -102,7 +101,7 @@ dataprep.out$X0[lowest:highest,] <-
   )
 # run synth
 # synth.out.basque <- synth(data.prep.obj = dataprep.out)
-# 
+#  
 # saveRDS(synth.out.basque, paste0(data.directory, "synth-out-basque.rds"))
 
 synth.out.basque<- readRDS(paste0(data.directory, "synth-out-basque.rds"))
@@ -166,13 +165,17 @@ synth.plot <- ggplot(data=synth.results, aes(x=1955:1997)) +
   geom_line(aes(y=y.true, colour = "Observed placebo outcome"), size=1.2) +
   geom_line(aes(y=y.pred, colour = "Predicted placebo outcome"), size=1.2, linetype=2) +
   theme_bw() + theme(legend.title = element_blank()) + ylab("Real per-capita GDP (1986 USD, thousand)") + xlab("") +
-  geom_vline(xintercept=1970, linetype=2) + 
+  geom_vline(xintercept=1990, linetype=2) + 
   geom_ribbon(aes(ymin=y.pred.min, ymax=y.pred.max), fill="grey", alpha=0.5) +
-  ggtitle(paste0("Basque Country data: Synthetic control (training MSPE = ", round(synth.out.basque$loss.v[[1]],4), ")")) +
+  ggtitle(paste0("Basque Country: Synthetic control (training MSPE = ", round(synth.out.basque$loss.v[[1]],3), ")")) +
   theme.blank 
 
 ggsave(paste0(results.directory,"plots/synth-plot-basque.png"), synth.plot, width=11, height=8.5)
 
 # Post-period MSPE
 
-basque.synth.MSPE <- filter(synth.results, rownames(synth.results) %in% c(1970:1997)) %>% mutate(MSPE=mean((y.true-y.pred )**2))
+basque.synth.MSPE <- filter(synth.results, rownames(synth.results) %in% c(1990:1997)) %>% mutate(MSPE=mean((y.true-y.pred )**2))
+
+# Absolute percentage estimation error
+
+basque.synth.APE <- filter(synth.results, rownames(synth.results) %in% c(1990:1997)) %>% mutate(APE=abs(y.pred-y.true)/abs(y.true))

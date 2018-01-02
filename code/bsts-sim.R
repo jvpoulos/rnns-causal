@@ -100,7 +100,7 @@ d3 <- left_join(d2, posterior.interval, by="Date")
 bsts.plot <- ggplot(data=d3, aes(x=Date)) +
   geom_line(aes(y=Actual, colour = "Observed treated outcome"), size=1.2) +
   geom_line(aes(y=Fitted, colour = "Predicted treated outcome"), size=1.2, linetype=2) +
-  theme_bw() + theme(legend.title = element_blank()) + ylab("Outcome") + xlab("") +
+  theme_bw() + theme(legend.title = element_blank()) + ylab("ARMA time-series") + xlab("Time-step") +
   geom_vline(xintercept=48, linetype=2) + 
   geom_ribbon(aes(ymin=LL, ymax=UL), fill="grey", alpha=0.5) +
   ggtitle(paste0("Simulated data: BSTS (training MSPE = ", round(bsts.MSPE,2), ")")) +
@@ -121,4 +121,4 @@ d3$y.phi[d3$Date %in% c(48:52)] <- rowMeans(phi)
 
 # Absolute percentage estimation error
 
-sim.APE <- filter(d3, Date %in% c(48:52)) %>% mutate(APE=abs(pointwise-y.phi)/abs(y.phi))
+bsts.sim.APE <- filter(d3, Date %in% c(48:52)) %>% mutate(APE=abs(pointwise-y.phi)/abs(y.phi))

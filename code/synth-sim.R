@@ -154,7 +154,7 @@ theme.blank <- theme(axis.text=element_text(size=12)
 synth.plot <- ggplot(data=synth.results, aes(x=1:52)) +
   geom_line(aes(y=y.true, colour = "Observed treated outcome"), size=1.2) +
   geom_line(aes(y=y.pred, colour = "Predicted treated outcome"), size=1.2, linetype=2) +
-  theme_bw() + theme(legend.title = element_blank()) + ylab("Outcome") + xlab("") +
+  theme_bw() + theme(legend.title = element_blank()) + ylab("ARMA time-series") + xlab("Time-step") +
   geom_vline(xintercept=48, linetype=2) + 
   geom_ribbon(aes(ymin=y.pred.min, ymax=y.pred.max), fill="grey", alpha=0.5) +
   ggtitle(paste0("Simulated data: Synthetic control (training MSPE = ", round(synth.out.sim$loss.v[[1]],2), ")")) +
@@ -169,4 +169,4 @@ synth.results$y.phi[rownames(synth.results) %in% c(48:52)] <- rowMeans(phi)
 
 # Absolute percentage estimation error
 
-sim.APE <- filter(synth.results, rownames(synth.results) %in% c(48:52)) %>% mutate(APE=abs(pointwise-y.phi)/abs(y.phi))
+synth.sim.APE <- filter(synth.results, rownames(synth.results) %in% c(48:52)) %>% mutate(APE=abs(pointwise-y.phi)/abs(y.phi))
