@@ -78,7 +78,7 @@ theme.blank <- theme(axis.text=element_text(size=12)
                      , axis.ticks.y=element_blank()
                      , legend.text=element_text(size=12)
                      , legend.title = element_blank()
-                     , legend.position = c(0.25,0.8)
+                     , legend.position = c(0.3,0.8)
                      , legend.justification = c(1,0))
 
 # Plot actual versus predicted with credible intervals for the holdout period
@@ -88,7 +88,7 @@ ed.sim.plot <- ggplot(data=votediff.bind.sim, aes(x=1:52)) +
   geom_line(aes(y=y.true.c, colour = "True counterfactual", linetype = "True counterfactual"), size=1.2) +
   scale_linetype_manual("",values=c("Observed treated outcome"="solid","Predicted treated outcome"="dashed","True counterfactual"="dotted"),
                         labels=c("Observed treated outcome", "Predicted treated outcome","True counterfactual")) +
-  scale_colour_manual(name="", values = c("Observed treated outcome" = wes_palette("Darjeeling2")[3], "Predicted treated outcome" = wes_palette("Darjeeling2")[4], "True counterfactual" = wes_palette("Darjeeling2")[5]),
+  scale_colour_manual(name="", values = c("Observed treated outcome" = wes_palette("Darjeeling2")[3], "Predicted treated outcome" = wes_palette("Darjeeling2")[2], "True counterfactual" = wes_palette("Darjeeling2")[5]),
                       labels=c("Observed treated outcome", "Predicted treated outcome","True counterfactual")) +
   theme_bw() + theme(legend.title = element_blank()) + ylab("ARMA time-series") + xlab("Time-step") +
   geom_vline(xintercept=48, linetype=2) + 

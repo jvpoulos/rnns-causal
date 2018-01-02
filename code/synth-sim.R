@@ -58,8 +58,8 @@ dataprep.out<-
       list("y",1:15,c("mean")),
       list("y",15:30,c("mean")),
       list("y",30:45,c("mean")),
-      list("y",45:52,c("mean")),
-      list("y",1:52,c("mean"))),
+      list("y",45:47,c("mean")),
+      list("y",1:47,c("mean"))),
     treatment.identifier = 1,
     controls.identifier = sort(unique(synth.sim.panel$num[!synth.sim.panel$num %in% c(1)])),
     time.predictors.prior = c(1:47),
@@ -72,9 +72,9 @@ dataprep.out<-
 ## run the synth command to identify the weights
 ## that create the best possible synthetic
 ## control unit for the treated.
-#synth.out.sim <- synth(dataprep.out)
-
-#saveRDS(synth.out.sim, paste0(data.directory, "synth-out-sim.rds"))
+# synth.out.sim <- synth(dataprep.out)
+# 
+# saveRDS(synth.out.sim, paste0(data.directory, "synth-out-sim.rds"))
 
 synth.out.sim <- readRDS(paste0(data.directory, "synth-out-sim.rds"))
 
