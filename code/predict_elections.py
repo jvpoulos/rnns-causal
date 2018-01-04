@@ -14,7 +14,7 @@ from attrdict import AttrDict
 from keras import backend as K
 from keras.utils.vis_utils import plot_model, model_to_dot
 from keras.models import Model
-from keras.layers import LSTM, Dense, Input, RepeatVector, TimeDistributed, Dropout
+from keras.layers import LSTM, Dense, Input, RepeatVector, TimeDistributed, Dropout, Bidirectional, GRU
 from keras.callbacks import ModelCheckpoint, CSVLogger
 from keras import regularizers
 from keras.optimizers import Adam
@@ -31,7 +31,7 @@ print(device_lib.list_local_devices())
 analysis = sys.argv[-1] # 'treated' or 'control'
 dataname = sys.argv[-2] # 'votediff' 'sim'
 
-BATCHES = 2
+BATCHES = 8
 
 def create_model(n_pre, n_post, nb_features, output_dim):
     """ 
@@ -42,31 +42,28 @@ def create_model(n_pre, n_post, nb_features, output_dim):
         @param output_dim: the dimension of the target sequence
     """
     # Define model parameters
-
-    dropout = 0.2 # elections
-    #dropout = 0.95
-    penalty = 0.001 # elections
-    #penalty = 1 
+    
+    dropout = 0.2 
+    #dropout = 0.95 # sim
+    penalty = 0.0001
     activation = 'linear'
     initialization = 'glorot_normal'
-    lr = 0.001 # elections
-    #lr = 0.0001
+    lr = 0.001 
 
-    # encoder_hidden = 640
-    # decoder_hidden = 512
-    encoder_hidden = 896 # elections
-    decoder_hidden = 640
+    encoder_hidden = 256
+    decoder_hidden = 128
 
     inputs = Input(shape=(n_pre, nb_features,), name="Inputs")
     dropout_1 = Dropout(dropout, name="Dropout")(inputs)
-    lstm_1 = LSTM(encoder_hidden, kernel_initializer=initialization, return_sequences=False, name='Encoder')(dropout_1) # Encoder
-    repeat = RepeatVector(n_post, name='Repeat')(lstm_1) # get the last output of the LSTM and repeats it
-    lstm_2 = LSTM(decoder_hidden, kernel_initializer=initialization, return_sequences=True, name='Decoder')(repeat)  # Decoder
-    output= TimeDistributed(Dense(output_dim, activation=activation, kernel_regularizer=regularizers.l2(penalty), name='Dense'), name='Outputs')(lstm_2)
+    lstm_1 = Bidirectional(LSTM(encoder_hidden, kernel_initializer=initialization, return_sequences=True, name='LSTM_1'), name='Encoder_1')(dropout_1) # Encoder
+    lstm_2 = Bidirectional(LSTM(encoder_hidden, kernel_initializer=initialization, return_sequences=False, name='LSTM_2'), name='Encoder_2')(lstm_1) # Encoder
+    repeat = RepeatVector(n_post, name='Repeat')(lstm_2) # get the last output of the LSTM and repeats it
+    gru_1 = GRU(decoder_hidden, kernel_initializer=initialization, return_sequences=True, name='Decoder')(repeat)  # Decoder
+    output= TimeDistributed(Dense(output_dim, activation=activation, kernel_regularizer=regularizers.l2(penalty), name='Dense'), name='Outputs')(gru_1)
 
     model = Model(inputs=inputs, output=output)
 
-    model.compile(loss="mean_squared_error", optimizer=Adam(lr=lr, clipnorm=5))  
+    model.compile(loss="mean_squared_error", optimizer=Adam(lr=lr))  
 
     return model
 
@@ -77,49 +74,38 @@ def test_sinus():
     '''
     # Load saved data
 
+  # n_post  = 5 # elections/sim
+    # n_pre =  15
+    # seq_len = 47
+
+    n_post  = 8 # Basque
+    n_pre =  15
+    seq_len = 35
+
     print('Load saved {} data for analysis on {}'.format(dataname, analysis))
 
-    X_train = np.array(pkl.load(open('data/{}_x_train_{}.np'.format(dataname,analysis), 'rb')))
+    X_train = np.array(pkl.load(open('data/{}_x_train_{}.np'.format(dataname,analysis), 'rb')))[n_post:] # all but first n_post timesteps of training x
 
     print('X_train shape:', X_train.shape)
-
-    y_train = np.array(pkl.load(open('data/{}_y_train_{}.np'.format(dataname,analysis), 'rb')))
-
-    print('y_train shape:', y_train.shape)
 
     X_test = np.array(pkl.load(open('data/{}_x_test_{}.np'.format(dataname,analysis), 'rb')))
 
     print('X_test shape:', X_test.shape)
 
-    X = np.concatenate((X_train, X_test, X_test), axis=0) # repeat test
+    X = np.concatenate((X_train, X_test), axis=0)
 
     print('X concatenated shape:', X.shape)
 
-    y_test = np.array(pkl.load(open('data/{}_y_test_{}.np'.format(dataname,analysis), 'rb')))
-
-    print('y_test shape:', y_test.shape)
-
-    y = np.concatenate((y_train, y_test, y_test), axis=0) # repeat test
-
-    print('y concatenated shape:', y.shape)
-
-    n_post  = 5
-    n_pre =  47
-    seq_len = n_pre + n_post*2
-
-    dX, dY = [], []
+    dX = []
     for i in range(seq_len-n_pre-n_post):
         dX.append(X[i:i+n_pre])
-        dY.append(y[i+n_pre:i+n_pre+n_post])
-        #dY.append(sinus[i+n_pre])
-    dataX = np.array(dX)
-    dataY = np.array(dY)
 
+    dataX = np.array(dX)
+  
     print('dataX shape:', dataX.shape)
-    print('dataY shape:', dataY.shape)
 
     nb_features = dataX.shape[2]
-    output_dim = dataY.shape[2]
+    output_dim = 1 # basque:1 elections:25 sim:5
 
     # create and fit the LSTM network
     model = create_model(n_pre, n_post, nb_features, output_dim)
@@ -141,9 +127,9 @@ def test_sinus():
 
    # # Visualize model
 
-   #  plot_model(model, to_file='results/elections/{}/encoder-decoder.png'.format(dataname), # Plot graph of model
-   #  show_shapes = False,
-   #  show_layer_names = True)
+    # plot_model(model, to_file='results/elections/{}/encoder-decoder.png'.format(dataname), # Plot graph of model
+    # show_shapes = False,
+    # show_layer_names = True)
 
     # # now plot
     # nan_array = np.empty((n_pre - 1))

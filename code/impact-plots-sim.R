@@ -93,7 +93,7 @@ ed.sim.plot <- ggplot(data=votediff.bind.sim, aes(x=1:52)) +
   theme_bw() + theme(legend.title = element_blank()) + ylab("ARMA time-series") + xlab("Time-step") +
   geom_vline(xintercept=48, linetype=2) + 
   geom_ribbon(aes(ymin= pred.votediff.min, ymax=pred.votediff.max), fill="grey", alpha=0.5) +
-  ggtitle(paste0("Simulated data: Encoder-decoder (validation MSPE = 0.91)")) +
+  ggtitle("Simulated data: Encoder-decoder (training MSPE = 0.003; validation MSPE = 0.25)") +
   theme.blank + theme(legend.key.width=unit(3,"line"))
 
 ggsave(paste0(results.directory,"plots/impact-sim.png"), ed.sim.plot, width=11, height=8.5)

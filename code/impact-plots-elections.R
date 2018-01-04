@@ -26,7 +26,7 @@ votediff.preds.test <- lapply(test.files,function(x){
 votediff.preds.test.sd <- apply(simplify2array(votediff.preds.test), 1:2, sd)
 
 #votediff.preds.test.mean <- apply(simplify2array(votediff.preds.test), 1:2, mean) # element-wise mean
-best.model <- 81
+best.model <- 3
 votediff.preds.test.mean <- votediff.preds.test[[best.model]] # best model
 
 # Bind predictions
@@ -68,13 +68,13 @@ theme.blank <- theme(axis.text=element_text(size=12)
                      , legend.position = c(0.25,0.9)
                      , legend.justification = c(1,0))
 
-ed.plot <- ggplot(data=votediff.bind.elections[votediff.bind.elections$year >=1980,], aes(x=year)) +
+elections.ed.plot <- ggplot(data=votediff.bind.elections, aes(x=year)) +
   geom_line(aes(y=y.true, colour = "Observed treated outcome"), size=1.2) +
   geom_line(aes(y=y.pred, colour = "Predicted treated outcome"), size=1.2, linetype=2) +
   theme_bw() + theme(legend.title = element_blank()) + ylab("Winner margin (%)") + xlab("") +
   geom_vline(xintercept=2005, linetype=2) + 
   geom_ribbon(aes(ymin=pred.votediff.min, ymax=pred.votediff.max), fill="grey", alpha=0.5) +
-  ggtitle("Mayoral elections: Encoder-decoder (validation MSPE = 17.54)") +
+  ggtitle("Mayoral elections: Encoder-decoder (training MSPE = 126.74; validation MSPE = 297.06)") +
   theme.blank 
 
-ggsave(paste0(results.directory,"plots/impact-votediff.png"), ed.plot, width=11, height=8.5)
+ggsave(paste0(results.directory,"plots/impact-votediff.png"), elections.ed.plot, width=11, height=8.5)
