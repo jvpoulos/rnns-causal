@@ -14,6 +14,8 @@ n.pre <- 47
 n.post <- 5
 output.dim <- 5
 
+autoencoder <- TRUE
+
 # Get splits
 
 y.train <- read.csv(paste0(data.directory,"elections/sim/sim_y_train_treated.csv"), header=FALSE)
@@ -26,7 +28,11 @@ y.test.c <- y.test + phi  #true counterfactual
 
 # Import test results 
 
-setwd(paste0(results.directory, "elections/sim")) # prediction files loc
+if(autoencoder){
+  setwd(paste0(results.directory, "elections-auto/sim")) # prediction files loc
+} else{
+  setwd(paste0(results.directory, "elections/sim")) # prediction files loc
+}
 
 test.files <- list.files(pattern = "*test.csv")
 
@@ -37,7 +43,12 @@ votediff.preds.test <- lapply(test.files,function(x){
 votediff.preds.test.sd <- apply(simplify2array(votediff.preds.test), 1:2, sd)
 
 #votediff.preds.test.mean <- apply(simplify2array(votediff.preds.test), 1:2, mean) # element-wise mean
-best.model <-6
+
+if(autoencoder){
+  best.model <- 9
+} else{
+  best.model <-6
+}
 votediff.preds.test.mean <- votediff.preds.test[[best.model]] # best model
 
 # Bind predictions
@@ -80,6 +91,11 @@ theme.blank <- theme(axis.text=element_text(size=12)
                      , legend.title = element_blank()
                      , legend.position = c(0.3,0.8)
                      , legend.justification = c(1,0))
+if(autoencoder){
+  sim.plot.title <- "Simulated data: Autoencoder (training MSPE = 0.003; validation MSPE = 0.25)"
+} else{
+  "Simulated data: Encoder-decoder (training MSPE = 0.52; validation MSPE = 0.32)"
+}
 
 # Plot actual versus predicted with credible intervals for the holdout period
 ed.sim.plot <- ggplot(data=votediff.bind.sim, aes(x=1:52)) +
@@ -93,11 +109,19 @@ ed.sim.plot <- ggplot(data=votediff.bind.sim, aes(x=1:52)) +
   theme_bw() + theme(legend.title = element_blank()) + ylab("ARMA time-series") + xlab("Time-step") +
   geom_vline(xintercept=48, linetype=2) + 
   geom_ribbon(aes(ymin= pred.votediff.min, ymax=pred.votediff.max), fill="grey", alpha=0.5) +
-  ggtitle("Simulated data: Encoder-decoder (training MSPE = 0.003; validation MSPE = 0.25)") +
+  ggtitle(sim.plot.title) +
   theme.blank + theme(legend.key.width=unit(3,"line"))
 
-ggsave(paste0(results.directory,"plots/impact-sim.png"), ed.sim.plot, width=11, height=8.5)
+if(autoencoder){
+  ggsave(paste0(results.directory,"plots/impact-sim-auto.png"), ed.sim.plot, width=11, height=8.5)
+} else{
+  ggsave(paste0(results.directory,"plots/impact-sim.png"), ed.sim.plot, width=11, height=8.5)
+}
 
 # Absolute percentage estimation error
 
-ed.sim.APE <- filter(votediff.bind.sim, !is.na(pointwise.votediff)) %>% mutate(APE=abs(pointwise.votediff-y.phi)/abs(y.phi))
+if(autoencoder){
+auto.sim.APE <- filter(votediff.bind.sim, !is.na(pointwise.votediff)) %>% mutate(APE=abs(pointwise.votediff-y.phi)/abs(y.phi))
+} else{
+  ed.sim.APE <- filter(votediff.bind.sim, !is.na(pointwise.votediff)) %>% mutate(APE=abs(pointwise.votediff-y.phi)/abs(y.phi))
+}
