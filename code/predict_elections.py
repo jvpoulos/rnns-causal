@@ -43,8 +43,11 @@ def create_model(n_pre, n_post, nb_features, output_dim):
     """
     # Define model parameters
     
-    dropout = 0.2 
-    #dropout = 0.95 # sim
+   dropout = 0.2 
+
+    if dataname == 'sim':
+        dropout = 0.95 
+
     penalty = 0.0001
     activation = 'linear'
     initialization = 'glorot_normal'
@@ -74,13 +77,14 @@ def test_sinus():
     '''
     # Load saved data
 
-  # n_post  = 5 # elections/sim
-    # n_pre =  15
-    # seq_len = 47
-
-    n_post  = 8 # Basque
+    n_post  = 5 # elections/sim
     n_pre =  15
-    seq_len = 35
+    seq_len = 47
+
+    if dataname == 'basque':
+        n_post  = 1 
+        n_pre =  14
+        seq_len = 43
 
     print('Load saved {} data for analysis on {}'.format(dataname, analysis))
 
@@ -105,8 +109,14 @@ def test_sinus():
     print('dataX shape:', dataX.shape)
 
     nb_features = dataX.shape[2]
-    output_dim = 1 # basque:1 elections:25 sim:5
 
+    if dataname == 'basque':
+        output_dim = 1
+    if dataname == 'elections':
+        output_dim = 25
+    if dataname == 'sim':
+        output_dim = 5
+        
     # create and fit the LSTM network
     model = create_model(n_pre, n_post, nb_features, output_dim)
     # Load weights

@@ -9,7 +9,6 @@ import math
 import numpy as np
 import cPickle as pkl
 import pandas as pd
-from attrdict import AttrDict
 
 from keras import backend as K
 from keras.models import Model
@@ -28,7 +27,7 @@ from tensorflow.python.client import device_lib
 print(device_lib.list_local_devices())
 
 analysis = sys.argv[-1] # 'treated' or 'control'
-dataname = sys.argv[-2] # 'votediff' 'sim'
+dataname = sys.argv[-2] # 'votediff' 'sim' etc. 
 
 EPOCHS = int(sys.argv[-3])
 
@@ -45,7 +44,10 @@ def create_model(n_pre, n_post, nb_features, output_dim):
     # Define model parameters
 
     dropout = 0.2 
-    #dropout = 0.95 # sim
+
+    if dataname == 'sim':
+        dropout = 0.95 
+
     penalty = 0.0001
     activation = 'linear'
     initialization = 'glorot_normal'
@@ -104,17 +106,22 @@ def test_sinus():
 
     y_train = np.array(pkl.load(open('data/{}_y_train_{}.np'.format(dataname,analysis), 'rb')))
 
-    y_train = np.reshape(y_train, (y_train.shape[0], 1)) # basque
+    if dataname == 'basque':
+        y_train = np.reshape(y_train, (y_train.shape[0], 1)) 
 
     print('y_train shape:', y_train.shape)
 
-    # n_post  = 5 # elections/sim
-    # n_pre =  15
-    # seq_len = 47
+    y_train = np.log(y_train) # take log
+    X_train = np.log(X_train) 
 
-    n_post  = 8 # Basque
+    n_post  = 5 # elections/sim
     n_pre =  15
-    seq_len = 35
+    seq_len = 47
+
+    if dataname == 'basque':
+        n_post  = 1 
+        n_pre =  14
+        seq_len = 43
 
     dX, dY = [], []
     for i in range(seq_len-n_pre-n_post):
@@ -135,34 +142,6 @@ def test_sinus():
     model = create_model(n_pre, n_post, nb_features, output_dim)
     train_sinus(model, dataX, dataY, EPOCHS, BATCHES)
     
-    # # now test
-    
-    # predict = model.predict(dataX, batch_size=BATCHES, verbose=1)
-
-    # # now plot
-    # nan_array = np.empty((n_pre - 1))
-    # nan_array.fill(np.nan)
-    # nan_array2 = np.empty(n_post)
-    # nan_array2.fill(np.nan)
-    # ind = np.arange(n_pre + n_post)
-
-    # fig, ax = plt.subplots()
-    # for i in range(0, n_pre, n_pre):
-
-    #     forecasts = np.concatenate((nan_array, dataX[i, -1:, 0], predict[i, :, 0]))
-    #     ground_truth = np.concatenate((nan_array, dataX[i, -1:, 0], dataY[i, :, 0]))
-    #     network_input = np.concatenate((dataX[i, :, 0], nan_array2))
-     
-    #     ax.plot(ind, network_input, 'b-x', label='Network input')
-    #     ax.plot(ind, forecasts, 'r-x', label='Many to many model forecast')
-    #     ax.plot(ind, ground_truth, 'g-x', label = 'Ground truth')
-        
-    #     plt.xlabel('t')
-    #     plt.ylabel('sin(t)')
-    #     plt.title('Sinus Many to Many Forecast')
-    #     plt.legend(loc='best')
-    #     plt.savefig('results/plots/elections_sim/plot_mtm_triple_' + str(i) + '.png')
-    #     plt.cla()
 
 def main():
     test_sinus()

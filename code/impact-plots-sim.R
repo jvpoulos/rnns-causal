@@ -14,7 +14,7 @@ n.pre <- 47
 n.post <- 5
 output.dim <- 5
 
-autoencoder <- TRUE
+autoencoder <- FALSE
 
 # Get splits
 
