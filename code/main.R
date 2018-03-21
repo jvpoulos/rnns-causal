@@ -17,7 +17,6 @@ data.directory <- "~/Dropbox/github/rnns-causal/data/"
 code.directory <-"~/Dropbox/github/rnns-causal/code/"
 results.directory <-"~/Dropbox/github/rnns-causal/results/"
 
-
 descriptive <- FALSE
 if(descriptive){
 source(paste0(code.directory,'descriptive.R')) 
@@ -44,11 +43,11 @@ source(paste0(code.directory,'basque-plot.R')) # plot MSPE from all models
 
 # california
 
-source(paste0(gans.code.directory,'synth-california.R')) # run first
+# First run synth-california.R in gans-causal/code
 
 # west germany
 
-source(paste0(gans.code.directory,'synth-germany.R')) # run first
+# First run synth-germany.R in gans-causal/code
 
 # Causal impact estimates: mayoral elections
 

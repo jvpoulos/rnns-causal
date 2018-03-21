@@ -43,30 +43,19 @@ def create_model(n_pre, n_post, nb_features, output_dim):
     """
     # Define model parameters
     
-    dropout = 0.5 
-
-    if dataname == 'sim':
-        dropout = 0.95 
-
-    penalty = 1
+    penalty = 0.01
     activation = 'linear'
     initialization = 'glorot_normal'
     lr = 0.001 
 
-    encoder_hidden = 256
-    decoder_hidden = 128
-
     inputs = Input(shape=(n_pre, nb_features,), name="Inputs")
-    dropout_1 = Dropout(dropout, name="Dropout")(inputs)
-    lstm_1 = Bidirectional(LSTM(encoder_hidden, kernel_initializer=initialization, return_sequences=True, name='LSTM_1'), name='Encoder_1')(dropout_1) # Encoder
-    lstm_2 = Bidirectional(LSTM(encoder_hidden, kernel_initializer=initialization, return_sequences=False, name='LSTM_2'), name='Encoder_2')(lstm_1) # Encoder
-    repeat = RepeatVector(n_post, name='Repeat')(lstm_2) # get the last output of the LSTM and repeats it
-    gru_1 = GRU(decoder_hidden, kernel_initializer=initialization, return_sequences=True, name='Decoder')(repeat)  # Decoder
-    output= TimeDistributed(Dense(output_dim, activation=activation, kernel_regularizer=regularizers.l2(penalty), name='Dense'), name='Outputs')(gru_1)
+    lstm_1 = LSTM(output_dim, activation=activation, kernel_regularizer=regularizers.l2(penalty), kernel_initializer=initialization, return_sequences=False)(inputs) 
 
-    model = Model(inputs=inputs, output=output)
+    model = Model(inputs=inputs, output=lstm_1)
 
     model.compile(loss="mean_squared_error", optimizer=Adam(lr=lr))  
+
+    print(model.summary()) 
 
     return model
 
