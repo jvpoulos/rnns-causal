@@ -33,6 +33,12 @@ EPOCHS = int(sys.argv[-3])
 
 BATCHES = 8
 
+if dataname == 'california':
+    BATCHES = 3
+
+if dataname == 'germany':
+    BATCHES = 3
+
 def create_model(n_pre, n_post, nb_features, output_dim):
     """ 
         creates, compiles and returns a RNN model 
@@ -44,7 +50,15 @@ def create_model(n_pre, n_post, nb_features, output_dim):
     # Define model parameters
 
 
-    penalty = 0.01
+    if dataname == 'basque':
+        penalty = 0.01
+
+    if dataname == 'germany':
+        penalty = 0.001       
+
+    if dataname == 'california':
+        penalty = 0.001
+
     activation = 'linear'
     initialization = 'glorot_normal'
     lr = 0.001 
@@ -112,16 +126,30 @@ def test_sinus():
 
     print('y concatenated shape:', y.shape)
 
-    y= np.log(y) # take log of output
+    if dataname == 'elections':
+        n_post  = 5 
+        n_pre =  15
+        seq_len = 47
 
-    n_post  = 5 # elections/sim
-    n_pre =  15
-    seq_len = 47
+    if dataname == 'sim':
+        n_post  = 5 
+        n_pre =  15
+        seq_len = 47
 
     if dataname == 'basque':
         n_post  = 1 
         n_pre =  14-1 
         seq_len = 43
+    
+    if dataname == 'california':
+        n_post  = 1 
+        n_pre =  19-1 
+        seq_len = 31
+
+    if dataname == 'germany':
+        n_post  = 1 
+        n_pre =  30-1 
+        seq_len = 44   
 
     dX, dY = [], []
     for i in range(seq_len-n_pre-n_post):

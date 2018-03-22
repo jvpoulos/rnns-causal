@@ -1,5 +1,5 @@
 #####################################
-### Compare Basque Country estimation accuracy ###
+### Compare california Country estimation accuracy ###
 #####################################
 
 library(ggplot2)
@@ -8,11 +8,11 @@ library(wesanderson)
 
 # Absolute percentage estimation error
 
-basque.ape.df <- data.frame("Year"=1969:1997,
-                            "Encoder.decoder"= basque.ed.APE$APE,
-                            "LSTM"= basque.lstm.APE$APE,
-                            "BSTS"= basque.bsts.APE$APE,
-                            "Synthetic control"= basque.synth.APE$APE)
+california.ape.df <- data.frame("Year"=1989:2000,
+                            "Encoder.decoder"= california.ed.APE$APE,
+                            "LSTM"= california.lstm.APE$APE,
+                            "BSTS"= california.bsts.APE$APE,
+                            "Synthetic control"= california.synth.APE$APE)
 
 theme.blank <- theme(axis.text=element_text(size=12)
                      , axis.title.x=element_blank()
@@ -21,11 +21,11 @@ theme.blank <- theme(axis.text=element_text(size=12)
                      , axis.ticks.y=element_blank()
                      , legend.text=element_text(size=12)
                      , legend.title = element_blank()
-                     , legend.position = c(0.25,0.80)
+                     , legend.position = c(0.25,0.8)
                      , legend.justification = c(1,0))
 
 # Plot actual versus predicted with credible intervals for the holdout period
-basque.ape.plot <- ggplot(data=basque.ape.df, aes(x=Year)) +
+california.ape.plot <- ggplot(data=california.ape.df, aes(x=Year)) +
   geom_line(aes(y=BSTS, colour = "BSTS", linetype = "BSTS"), size=1.2) +
   geom_line(aes(y=Encoder.decoder, colour = "Encoder-decoder", linetype = "Encoder-decoder"), size=1.2) +
   geom_line(aes(y=LSTM, colour = "LSTM", linetype = "LSTM"), size=1.2) +
@@ -36,7 +36,7 @@ basque.ape.plot <- ggplot(data=basque.ape.df, aes(x=Year)) +
                       labels=c("BSTS", "Encoder-decoder", "LSTM","Synthetic control")) +
   scale_y_continuous(labels = scales::percent) +
   theme_bw() + theme(legend.title = element_blank()) + ylab("Average prediction error (APE)") + xlab("") +
-  ggtitle(paste0("Basque Country: Estimation accuracy")) +
+  ggtitle(paste0("California: Estimation accuracy")) +
   theme.blank + theme(legend.key.width=unit(3,"line")) 
 
-ggsave(paste0(results.directory,"plots/basque-ape-plot.png"), basque.ape.plot, width=11, height=8.5)
+ggsave(paste0(results.directory,"plots/california-ape-plot.png"), california.ape.plot, width=11, height=8.5)

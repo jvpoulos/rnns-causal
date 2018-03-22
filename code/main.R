@@ -35,7 +35,9 @@ source(paste0(code.directory,'sim-plot.R')) # plot MSPE from all models
 
 # First run synth-basque.R in gans-causal/code
 
-source(paste0(code.directory,'impact-plots-basque.R'))
+source(paste0(code.directory,'encoder-decoder-basque.R'))
+
+source(paste0(code.directory,'lstm-basque.R'))
 
 source(paste0(code.directory,'bsts-basque.R')) 
 
@@ -45,9 +47,25 @@ source(paste0(code.directory,'basque-plot.R')) # plot MSPE from all models
 
 # First run synth-california.R in gans-causal/code
 
+source(paste0(code.directory,'encoder-decoder-california.R'))
+
+source(paste0(code.directory,'lstm-california.R'))
+
+source(paste0(code.directory,'bsts-california.R')) 
+
+source(paste0(code.directory,'california-plot.R')) # plot MSPE from all models
+
 # west germany
 
 # First run synth-germany.R in gans-causal/code
+
+source(paste0(code.directory,'encoder-decoder-germany.R'))
+
+source(paste0(code.directory,'lstm-germany.R'))
+
+source(paste0(code.directory,'bsts-germany.R')) 
+
+source(paste0(code.directory,'germany-plot.R')) # plot MSPE from all models
 
 # Causal impact estimates: mayoral elections
 
