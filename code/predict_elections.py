@@ -39,6 +39,9 @@ if dataname == 'california':
 if dataname == 'germany':
     BATCHES = 3
 
+if dataname == 'votediff':
+    BATCHES = 2
+    
 def create_model(n_pre, n_post, nb_features, output_dim):
     """ 
         creates, compiles and returns a RNN model 
@@ -51,8 +54,12 @@ def create_model(n_pre, n_post, nb_features, output_dim):
     
     dropout = 0.5 
 
+    if dataname == 'votediff':
+        penalty = 0.1   
+
     if dataname == 'sim':
-        dropout = 0.95 
+        dropout = 0.8
+        penalty = 1
 
     if dataname == 'basque':
         penalty = 1
@@ -105,15 +112,15 @@ def test_sinus():
 
     print('X concatenated shape:', X.shape)
 
-    if dataname == 'elections':
-        n_post  = 5 
-        n_pre =  15
-        seq_len = 47
+    if dataname == 'votediff':
+        n_post  = 1 
+        n_pre =  47-1
+        seq_len = 52
 
     if dataname == 'sim':
-        n_post  = 5 
-        n_pre =  15
-        seq_len = 47
+        n_post  = 1
+        n_pre =  47-1
+        seq_len = 52
 
     if dataname == 'basque':
         n_post  = 1 
@@ -146,8 +153,8 @@ def test_sinus():
         output_dim = 1
     if dataname == 'basque':
         output_dim = 1
-    if dataname == 'elections':
-        output_dim = 25
+    if dataname == 'votediff':
+        output_dim = 24
     if dataname == 'sim':
         output_dim = 5
         
@@ -163,12 +170,11 @@ def test_sinus():
 
     print('Generate predictions')
 
-    predict = model.predict(dataX, batch_size=BATCHES, verbose=1)#[-1] # get last sample
+    predict = model.predict(dataX, batch_size=BATCHES, verbose=1)
 
     print('predictions shape =', predict.shape)
 
     np.savetxt("{}-{}-test.csv".format(filename,dataname), np.squeeze(predict), delimiter=",")
-
 
 def main():
     test_sinus()

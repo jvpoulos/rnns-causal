@@ -145,6 +145,10 @@ fg.ads$strata[fg.ads$strata70==0 & fg.ads$strata90==0] <- 50
 
 fg.ads$id <- paste(fg.ads$city, fg.ads$state,sep=".")
 
+# Take log of vote difference
+
+fg.ads$votediff <- log(fg.ads$votediff)
+
 # Create means by treatment status
 
 fg.ads.treat <- spread(subset(fg.ads, treat==1, select=c("id","year","votediff")), key = id, value = votediff)

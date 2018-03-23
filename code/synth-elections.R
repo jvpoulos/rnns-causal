@@ -54,11 +54,7 @@ fg.ads.synth <- fg.ads.synth %>%
 
 fg.ads.synth <- data.frame(fg.ads.synth[fg.ads.synth$year<=2006,]) # max is 2006 
 
-# ## First Example: Toy panel dataset
-# # load data
-# data(synth.data)
-
-# create matrices from panel data that provide inputs for synth()
+# select v
 
 dataprep.out<-
   dataprep(
@@ -69,11 +65,31 @@ dataprep.out<-
     unit.variable = "num",
     time.variable = "year",
     special.predictors = list(
-      list("votediff",1945:1960,c("mean")),
-      list("votediff",1960:1975,c("mean")),
-      list("votediff",1975:1990,c("mean")),
-      list("votediff",1990:2004,c("mean")),
-      list("votediff",1945:2004,c("mean"))),
+      list("votediff",2000:2004,c("mean"))),
+    treatment.identifier = 999,
+    controls.identifier = sort(unique(fg.ads.synth$num[!fg.ads.synth$num %in% c(999)])),
+    time.predictors.prior = c(1945:2004),
+    time.optimize.ssr = c(2002:2004),
+    unit.names.variable = "id",
+    time.plot = 1980:2006
+  )
+
+# synth.out.v <- 
+#   synth(
+#     data.prep.obj=dataprep.out,
+#     Margin.ipop=.005,Sigf.ipop=7,Bound.ipop=6
+#   )
+
+dataprep.out<-
+  dataprep(
+    foo = fg.ads.synth,
+    predictors = c("logvotetotal"),
+    predictors.op = "mean",
+    dependent = "votediff",
+    unit.variable = "num",
+    time.variable = "year",
+    special.predictors = list(
+      list("votediff",2000:2004,c("mean"))),
     treatment.identifier = 999,
     controls.identifier = sort(unique(fg.ads.synth$num[!fg.ads.synth$num %in% c(999)])),
     time.predictors.prior = c(1945:2004),
@@ -82,11 +98,11 @@ dataprep.out<-
     time.plot = 1980:2006
   )
 
-
 ## run the synth command to identify the weights
 ## that create the best possible synthetic
 ## control unit for the treated.
-# synth.out <- synth(dataprep.out)
+# synth.out <- synth(dataprep.out, 
+#                    custom.v=as.numeric(synth.out.v$solution.v))
 # 
 # saveRDS(synth.out, paste0(data.directory, "synth-out.rds"))
 
@@ -168,9 +184,9 @@ theme.blank <- theme(axis.text=element_text(size=12)
 synth.plot <- ggplot(data=synth.results, aes(x=1980:2006)) +
   geom_line(aes(y=y.true, colour = "Observed treated outcome"), size=1.2) +
   geom_line(aes(y=y.pred, colour = "Predicted treated outcome"), size=1.2, linetype=2) +
-  theme_bw() + theme(legend.title = element_blank()) + ylab("Winner margin (%)") + xlab("") +
+  theme_bw() + theme(legend.title = element_blank()) + ylab("Winner margin (ln)") + xlab("") +
   geom_vline(xintercept=2005, linetype=2) + 
-  geom_ribbon(aes(ymin=y.pred.min, ymax=y.pred.max), fill="grey", alpha=0.5) +
+ # geom_ribbon(aes(ymin=y.pred.min, ymax=y.pred.max), fill="grey", alpha=0.5) +
   ggtitle(paste0("Mayoral elections: Synthetic control (training MSPE = ", round(synth.out$loss.v[[1]],2), ")")) +
   theme.blank 
 

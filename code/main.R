@@ -24,7 +24,9 @@ source(paste0(code.directory,'descriptive.R'))
 
 # Causal impact estimates: simulated data
 
-source(paste0(code.directory,'impact-plots-sim.R'))
+source(paste0(code.directory,'encoder-decoder-sim.R'))
+
+source(paste0(code.directory,'lstm-sim.R'))
 
 source(paste0(code.directory,'bsts-sim.R')) 
 source(paste0(code.directory,'synth-sim.R')) 
@@ -74,9 +76,12 @@ source(paste0(code.directory,'elections.R'))
 
 source(paste0(code.directory,'impact-plots-elections.R')) # run elections.R first
 
+source(paste0(code.directory,'encoder-decoder-elections.R'))
+
+source(paste0(code.directory,'lstm-elections.R'))
+
 source(paste0(code.directory,'bsts-elections.R')) # run elections.R first
 source(paste0(code.directory,'synth-elections.R')) # run elections.R first
 
 # GBR estimates
 source(paste0(code.directory,'gbr-elections.R')) 
-source(paste0(code.directory,'gbr-elections-pred.R'))  # using predictions 

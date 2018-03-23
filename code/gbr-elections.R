@@ -69,7 +69,6 @@ votediff.est.05.CI
 
 summary(lm(t05 ~ pre + grp_buy + strata70 + strata90, ads.exp.means)) # N=31
 
-
 ## 2006
 
 f1 <- formula(t06 ~ pre + delta + strata70 + strata90, weights=1/pre) # eq. 1 in vaver 2011

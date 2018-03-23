@@ -39,6 +39,9 @@ if dataname == 'california':
 if dataname == 'germany':
     BATCHES = 3
 
+if dataname == 'votediff':
+    BATCHES = 2
+
 def create_model(n_pre, n_post, nb_features, output_dim):
     """ 
         creates, compiles and returns a RNN model 
@@ -51,8 +54,12 @@ def create_model(n_pre, n_post, nb_features, output_dim):
 
     dropout = 0.5 
 
+    if dataname == 'votediff':
+        penalty = 0.1   
+
     if dataname == 'sim':
-        dropout = 0.95 
+        dropout = 0.8
+        penalty = 1
 
     if dataname == 'basque':
         penalty = 1
@@ -138,15 +145,15 @@ def test_sinus():
 
     print('y concatenated shape:', y.shape)
 
-    if dataname == 'elections':
-        n_post  = 5 
-        n_pre =  15
-        seq_len = 47
+    if dataname == 'votediff':
+        n_post  = 1 
+        n_pre =  47-1
+        seq_len = 52
 
     if dataname == 'sim':
-        n_post  = 5 
-        n_pre =  15
-        seq_len = 47
+        n_post  = 1
+        n_pre =  47-1
+        seq_len = 52
 
     if dataname == 'basque':
         n_post  = 1 

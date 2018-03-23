@@ -14,11 +14,11 @@ source(paste0(code.directory,'PolitisWhite.R'))
 
 # Get splits
 
-x.train <- read.csv(paste0(data.directory,"elections/sim/sim_x_train_treated.csv"), header=FALSE)
-x.test <- read.csv(paste0(data.directory,"elections/sim/sim_x_test_treated.csv"), header=FALSE)
+x.train <- read.csv(paste0(data.directory,"sim/treated/sim_x_train_treated.csv"), header=FALSE)
+x.test <- read.csv(paste0(data.directory,"sim/treated/sim_x_test_treated.csv"), header=FALSE)
 
-y.train <- read.csv(paste0(data.directory,"elections/sim/sim_y_train_treated.csv"), header=FALSE)
-y.test <- read.csv(paste0(data.directory,"elections/sim/sim_y_test_treated.csv"), header=FALSE)
+y.train <- read.csv(paste0(data.directory,"sim/treated/sim_y_train_treated.csv"), header=FALSE)
+y.test <- read.csv(paste0(data.directory,"sim/treated/sim_y_test_treated.csv"), header=FALSE)
 
 phi <- -abs(y.test*0.1)
 
@@ -55,11 +55,8 @@ dataprep.out<-
     unit.variable = "num",
     time.variable = "t",
     special.predictors = list(
-      list("y",1:15,c("mean")),
-      list("y",15:30,c("mean")),
       list("y",30:45,c("mean")),
-      list("y",45:47,c("mean")),
-      list("y",1:47,c("mean"))),
+      list("y",45:47,c("mean"))),
     treatment.identifier = 1,
     controls.identifier = sort(unique(synth.sim.panel$num[!synth.sim.panel$num %in% c(1)])),
     time.predictors.prior = c(1:47),
@@ -68,15 +65,40 @@ dataprep.out<-
     time.plot = 1:52
   )
 
+synth.out.v <-
+  synth(
+    data.prep.obj=dataprep.out,
+    Margin.ipop=.005,Sigf.ipop=7,Bound.ipop=6
+  )
+
+dataprep.out<-
+  dataprep(
+    foo = synth.sim.panel,
+    predictors = NULL,
+    predictors.op = "mean",
+    dependent = "y",
+    unit.variable = "num",
+    time.variable = "t",
+    special.predictors = list(
+      list("y",30:45,c("mean")),
+      list("y",45:47,c("mean"))),
+    treatment.identifier = 1,
+    controls.identifier = sort(unique(synth.sim.panel$num[!synth.sim.panel$num %in% c(1)])),
+    time.predictors.prior = c(1:47),
+    time.optimize.ssr = c(43:47),
+    unit.names.variable = "id",
+    time.plot = 1:52
+  )
 
 ## run the synth command to identify the weights
 ## that create the best possible synthetic
 ## control unit for the treated.
-# synth.out.sim <- synth(dataprep.out)
-# 
-# saveRDS(synth.out.sim, paste0(data.directory, "synth-out-sim.rds"))
+synth.out.sim <- synth(dataprep.out,
+                   custom.v=as.numeric(synth.out.v$solution.v))
 
-synth.out.sim <- readRDS(paste0(data.directory, "synth-out-sim.rds"))
+saveRDS(synth.out.sim, paste0(data.directory, "synth-out-sim.rds"))
+
+#synth.out.sim <- readRDS(paste0(data.directory, "synth-out-sim.rds"))
 
 ## there are two ways to summarize the results
 ## we can either access the output from synth.out.sim.simdirectly
@@ -156,7 +178,7 @@ synth.plot <- ggplot(data=synth.results, aes(x=1:52)) +
   geom_line(aes(y=y.pred, colour = "Predicted treated outcome"), size=1.2, linetype=2) +
   theme_bw() + theme(legend.title = element_blank()) + ylab("ARMA time-series") + xlab("Time-step") +
   geom_vline(xintercept=48, linetype=2) + 
-  geom_ribbon(aes(ymin=y.pred.min, ymax=y.pred.max), fill="grey", alpha=0.5) +
+#  geom_ribbon(aes(ymin=y.pred.min, ymax=y.pred.max), fill="grey", alpha=0.5) +
   ggtitle(paste0("Simulated data: Synthetic control (training MSPE = ", round(synth.out.sim$loss.v[[1]],2), ")")) +
   theme.blank 
 
@@ -169,4 +191,9 @@ synth.results$y.phi[rownames(synth.results) %in% c(48:52)] <- rowMeans(phi)
 
 # Absolute percentage estimation error
 
-synth.sim.APE <- filter(synth.results, rownames(synth.results) %in% c(48:52)) %>% mutate(APE=abs(pointwise-y.phi)/abs(y.phi))
+synth.sim.APE <- filter(synth.results, rownames(synth.results) %in% c(48:52)) %>% mutate(APE=abs(y.pred-(y.true+y.phi))/abs((y.true+y.phi)))
+mean(synth.sim.APE$APE)
+
+# Post-period MSPE
+sim.lstm.MSPE <- filter(sim.lstm, x %in% c(48:52)) %>% summarise(MSPE=mean(((y.true+y.phi)-y.pred)**2))
+sim.lstm.MSPE

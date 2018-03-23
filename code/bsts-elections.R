@@ -16,47 +16,24 @@ votediff.y.bsts <- cbind(votediff.y['year'],"y.true"=rowMeans(votediff.y[-1], na
 votediff.y.bsts.train <- votediff.y.bsts[votediff.y.bsts$year %in% votediff.years & votediff.y.bsts$year < 2005,]
 votediff.y.bsts.test <- votediff.y.bsts[votediff.y.bsts$year %in% votediff.years & votediff.y.bsts$year >= 2005,]
 
-#train.indices <- c(1:42)
-# val.indices <- c(43:47)
-
 ### Set up the priors
-# prior.val <- SpikeSlabPrior(x=model.matrix(y.true ~ ., data=cbind("y.true"=votediff.y.bsts.train$y.true[train.indices], votediff.x.train[-1][train.indices,])),
-#                         y=votediff.y.bsts.train$y.true[train.indices],
-#                         prior.information.weight = 0.01)
-# 
+
 prior.test <- SpikeSlabPrior(x=model.matrix(y.true ~ ., data=cbind("y.true"=votediff.y.bsts.train$y.true, votediff.x.train[-1])), 
                         y=votediff.y.bsts.train$y.true, 
                         prior.information.weight = 0.01)
 
 ## Construct state components
 
-# ss.val <- list()
-# ss.val <- AddSemilocalLinearTrend(ss.val, votediff.y.bsts.train$y.true[train.indices]) # Semilocal Linear Trend
-# ss.val <- AddSeasonal(ss.val,votediff.y.bsts.train$y.true[train.indices],
-#                   nseasons = 52) # monthly seasonal component
-
 ss.test <- list()
 ss.test <- AddSemilocalLinearTrend(ss.test, votediff.y.bsts.train$y.true) # Semilocal Linear Trend
 ss.test <- AddSeasonal(ss.test,votediff.y.bsts.train$y.true,
                   nseasons = 52) # monthly seasonal component 
 
-# #  Run the bsts model
-# bsts.reg.val <- bsts(y.true ~ .,
-#                  data = cbind("y.true"=votediff.y.bsts.train$y.true[train.indices], votediff.x.train[-1][train.indices,]),
-#                  state.specification = ss.val,
-#                  prior=prior.val,
-#                  niter = 1000,
-#                  ping = 0, seed = 2016)
-# 
-# saveRDS(bsts.reg.val, paste0(data.directory, "bsts-reg-val.rds"))
-
-#bsts.reg.val <- readRDS(paste0(data.directory, "bsts-reg-val.rds"))
-
 # bsts.reg.test <- bsts(y.true ~ .,
 #                      data = cbind("y.true"=votediff.y.bsts.train$y.true, votediff.x.train[-1]),
 #                      state.specification = ss.test,
 #                      prior=prior.test,
-#                      niter = 1000,
+#                      niter = 100,
 #                      ping = 0, seed = 2016)
 # 
 # saveRDS(bsts.reg.test, paste0(data.directory, "bsts-reg-test.rds"))
@@ -64,8 +41,6 @@ ss.test <- AddSeasonal(ss.test,votediff.y.bsts.train$y.true,
 bsts.reg.test <- readRDS(paste0(data.directory, "bsts-reg-test.rds"))
 
 # Get a suggested number of burn-ins to discard
-# burn.val <- SuggestBurn(0.1, bsts.reg.val) 
-
 burn.test <- SuggestBurn(0.1, bsts.reg.test) 
 
 PositiveMean <- function(b) {
@@ -117,11 +92,6 @@ ggsave(paste0(results.directory,"plots/bsts-inclusion-plot-test.png"), inclusion
 
 # Predict
 
-# p.val <- predict.bsts(bsts.reg.val, 
-#                   newdata = votediff.x.train[val.indices,][-1],
-#                   burn = burn.val, 
-#                   quantiles = c(.025, .975))
-
 p.test <- predict.bsts(bsts.reg.test, 
                   newdata = votediff.x.test[-1],
                   burn = burn.test, 
@@ -143,7 +113,7 @@ bsts.MSPE <- filter(d2, Date %in% c(2000:2004)) %>% summarise(MSPE=mean((Actual-
 posterior.interval <- cbind.data.frame(
   as.numeric(p.test$interval[1,]),
   as.numeric(p.test$interval[2,]), 
-  subset(d2, Date>=2000)$Date)
+  subset(d2, Date>=2005)$Date)
 names(posterior.interval) <- c("LL", "UL", "Date")
 
 ## Join intervals to the forecast
@@ -153,7 +123,7 @@ d3 <- left_join(d2, posterior.interval, by="Date")
 bsts.plot <- ggplot(data=d3, aes(x=Date)) +
   geom_line(aes(y=Actual, colour = "Observed treated outcome"), size=1.2) +
   geom_line(aes(y=Fitted, colour = "Predicted treated outcome"), size=1.2, linetype=2) +
-  theme_bw() + theme(legend.title = element_blank()) + ylab("Winner margin (%)") + xlab("") +
+  theme_bw() + theme(legend.title = element_blank()) + ylab("Winner margin (ln)") + xlab("") +
 #  geom_vline(xintercept=2000, linetype=3) + 
   geom_vline(xintercept=2005, linetype=2) + 
   geom_ribbon(aes(ymin=LL, ymax=UL), fill="grey", alpha=0.5) +

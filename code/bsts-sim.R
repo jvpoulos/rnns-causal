@@ -13,11 +13,11 @@ library(reshape2)
 
 # Get splits
 
-x.train <- read.csv(paste0(data.directory,"elections/sim/sim_x_train_treated.csv"), header=FALSE)
-x.test <- read.csv(paste0(data.directory,"elections/sim/sim_x_test_treated.csv"), header=FALSE)
+x.train <- read.csv(paste0(data.directory,"sim/treated/sim_x_train_treated.csv"), header=FALSE)
+x.test <- read.csv(paste0(data.directory,"sim/treated/sim_x_test_treated.csv"), header=FALSE)
 
-y.train <- read.csv(paste0(data.directory,"elections/sim/sim_y_train_treated.csv"), header=FALSE)
-y.test <- read.csv(paste0(data.directory,"elections/sim/sim_y_test_treated.csv"), header=FALSE)
+y.train <- read.csv(paste0(data.directory,"sim/treated/sim_y_train_treated.csv"), header=FALSE)
+y.test <- read.csv(paste0(data.directory,"sim/treated/sim_y_test_treated.csv"), header=FALSE)
 
 phi <- -abs(y.test*0.1)
 
@@ -83,8 +83,8 @@ d2 <- data.frame(
 names(d2) <- c("Fitted", "Date", "Actual")
 
 # MPSE 2000 to 2004
-bsts.MSPE <- filter(d2, Date %in% c(43:47)) %>% summarise(MSPE=mean((Actual-Fitted)**2))
-bsts.MSPE
+sim.bsts.MSPE <- filter(d2, Date %in% c(43:47)) %>% summarise(MSPE=mean((Actual-Fitted)**2))
+sim.bsts.MSPE
 
 # 95% forecast credible interval
 posterior.interval <- cbind.data.frame(
@@ -103,7 +103,7 @@ bsts.plot <- ggplot(data=d3, aes(x=Date)) +
   theme_bw() + theme(legend.title = element_blank()) + ylab("ARMA time-series") + xlab("Time-step") +
   geom_vline(xintercept=48, linetype=2) + 
   geom_ribbon(aes(ymin=LL, ymax=UL), fill="grey", alpha=0.5) +
-  ggtitle(paste0("Simulated data: BSTS (training MSPE = ", round(bsts.MSPE,2), ")")) +
+  ggtitle(paste0("Simulated data: BSTS (training MSPE = ", round(sim.bsts.MSPE,2), ")")) +
   theme.blank 
 
 ggsave(paste0(results.directory,"plots/bsts-plot-sim.png"), bsts.plot, width=11, height=8.5)
@@ -121,4 +121,5 @@ d3$y.phi[d3$Date %in% c(48:52)] <- rowMeans(phi)
 
 # Absolute percentage estimation error
 
-bsts.sim.APE <- filter(d3, Date %in% c(48:52)) %>% mutate(APE=abs(pointwise-y.phi)/abs(y.phi))
+bsts.sim.APE <- filter(d3, Date %in% c(48:52)) %>% mutate(APE=abs(Fitted-(Actual+y.phi))/abs((Actual+y.phi)))
+mean(bsts.sim.APE$APE)
