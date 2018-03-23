@@ -82,8 +82,8 @@ d2 <- data.frame(
   y.sim)
 names(d2) <- c("Fitted", "Date", "Actual")
 
-# MPSE 2000 to 2004
-sim.bsts.MSPE <- filter(d2, Date %in% c(43:47)) %>% summarise(MSPE=mean((Actual-Fitted)**2))
+# MPSE pre
+sim.bsts.MSPE <- filter(d2, Date %in% c(1:47)) %>% summarise(MSPE=mean((Actual-Fitted)**2))
 sim.bsts.MSPE
 
 # 95% forecast credible interval
