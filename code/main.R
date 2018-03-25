@@ -69,6 +69,10 @@ source(paste0(code.directory,'bsts-germany.R'))
 
 source(paste0(code.directory,'germany-plot.R')) # plot MSPE from all models
 
+# Plot benchmarks
+
+source(paste0(code.directory,'plot-benchmarks.R')) 
+
 # Causal impact estimates: mayoral elections
 
 # Assemble elections data

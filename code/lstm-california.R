@@ -15,7 +15,7 @@ california.lstm.preds <- read_csv(paste0(results.directory, "lstm/california/wei
 
 # Actual versus predicted
 california.lstm <- data.frame(
-  "y.pred" = c(rep(NA,length(california.y.train$cigsale.23)), california.ed.preds[[1]]),
+  "y.pred" = c(rep(NA,length(california.y.train$cigsale.23)), california.lstm.preds[[1]]),
   "y.true" = c(california.y.train$cigsale.23, california.y.test$cigsale.23),
   "year" =  1970:2000
 )
