@@ -35,7 +35,7 @@ germany.ape.plot <- ggplot(data=germany.ape.df, aes(x=Year)) +
   scale_colour_manual(name="Model", values = c("BSTS" = wes_palette("Darjeeling")[4], "Encoder-decoder" = wes_palette("Darjeeling")[2], "LSTM" = wes_palette("Darjeeling")[3],"Synthetic control" = wes_palette("Darjeeling")[5]),
                       labels=c("BSTS", "Encoder-decoder", "LSTM","Synthetic control")) +
   scale_y_continuous(labels = scales::percent) +
-  theme_bw() + theme(legend.title = element_blank()) + ylab("Average prediction error (APE)") + xlab("") +
+  theme_bw() + theme(legend.title = element_blank()) + ylab("Absolute prediction error (APE)") + xlab("") +
   ggtitle(paste0("West Germany: Estimation accuracy")) +
   theme.blank + theme(legend.key.width=unit(3,"line")) 
 

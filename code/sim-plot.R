@@ -33,7 +33,7 @@ sim.ape.plot <- ggplot(data=sim.ape.df, aes(x=t)) +
                         labels=c("BSTS", "Encoder-decoder","LSTM","Synthetic control")) +
   scale_colour_manual(name="Model", values = c("BSTS" = wes_palette("Darjeeling")[4], "Encoder-decoder" = wes_palette("Darjeeling")[2], "LSTM" = wes_palette("Darjeeling")[3],"Synthetic control" = wes_palette("Darjeeling")[5]),
                       labels=c("BSTS", "Encoder-decoder", "LSTM","Synthetic control")) +
-  theme_bw() + theme(legend.title = element_blank()) + ylab("Average prediction error (APE)") + xlab("t'") +
+  theme_bw() + theme(legend.title = element_blank()) + ylab("Absolute prediction error (APE)") + xlab("t'") +
   ggtitle(paste0("Simulation data: Estimation accuracy")) +
   theme.blank + theme(legend.key.width=unit(3,"line")) 
 

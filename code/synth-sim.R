@@ -9,6 +9,7 @@ library(tidyr)
 library(tseries)
 library(boot)
 library(reshape2)
+library(matrixStats)
 
 source(paste0(code.directory,'PolitisWhite.R')) 
 
