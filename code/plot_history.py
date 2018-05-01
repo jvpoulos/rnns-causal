@@ -1,7 +1,6 @@
 import sys 
 import matplotlib.pyplot as plt
 import numpy as np
-from utils import set_trace
 
 # Read training log
 history = np.genfromtxt(sys.argv[-2], names=True, delimiter=",")

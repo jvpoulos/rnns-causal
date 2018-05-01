@@ -1,5 +1,5 @@
 ###################################
-# Main                            #
+# Main (rnns-causal)              #
 ###################################
 
 # Setup parallel processing 
@@ -17,55 +17,39 @@ data.directory <- "~/Dropbox/github/rnns-causal/data/"
 code.directory <-"~/Dropbox/github/rnns-causal/code/"
 results.directory <-"~/Dropbox/github/rnns-causal/results/"
 
-descriptive <- FALSE
-if(descriptive){
-source(paste0(code.directory,'descriptive.R')) 
-}
-
-# Causal impact estimates: simulated data
-
-source(paste0(code.directory,'encoder-decoder-sim.R'))
-
-source(paste0(code.directory,'lstm-sim.R'))
-
-source(paste0(code.directory,'bsts-sim.R')) 
-source(paste0(code.directory,'synth-sim.R')) 
-
-source(paste0(code.directory,'sim-plot.R')) # plot MSPE from all models
-
 # Causal impact estimates: basque country
 
-# First run synth-basque.R in gans-causal/code
+# First run synth-basque.R in gans-causal/code with predictors=TRUE
 
-source(paste0(code.directory,'encoder-decoder-basque.R'))
+source(paste0(code.directory,'encoder-decoder-basque.R')) # gans-causal/code/train_encoder_decoder.py 
 
-source(paste0(code.directory,'lstm-basque.R'))
+source(paste0(code.directory,'lstm-basque.R')) # gans-causal/code/train_lstm.py 
 
-source(paste0(code.directory,'bsts-basque.R')) 
+source(paste0(code.directory,'vae-basque.R')) 
 
 source(paste0(code.directory,'basque-plot.R')) # plot MSPE from all models
 
 # california
 
-# First run synth-california.R in gans-causal/code
+# First run synth-california.R in gans-causal/code with predictors=TRUE
 
-source(paste0(code.directory,'encoder-decoder-california.R'))
+source(paste0(code.directory,'encoder-decoder-california.R')) # gans-causal/code/train_encoder_decoder.py 
 
-source(paste0(code.directory,'lstm-california.R'))
+source(paste0(code.directory,'lstm-california.R')) # gans-causal/code/train_lstm.py
 
-source(paste0(code.directory,'bsts-california.R')) 
+source(paste0(code.directory,'vae-california.R')) 
 
 source(paste0(code.directory,'california-plot.R')) # plot MSPE from all models
 
 # west germany
 
-# First run synth-germany.R in gans-causal/code
+# First run synth-germany.R in gans-causal/code with predictors=TRUE
 
-source(paste0(code.directory,'encoder-decoder-germany.R'))
+source(paste0(code.directory,'encoder-decoder-germany.R')) # gans-causal/code/train_encoder_decoder.py  
 
-source(paste0(code.directory,'lstm-germany.R'))
+source(paste0(code.directory,'lstm-germany.R')) # gans-causal/code/train_lstm.py
 
-source(paste0(code.directory,'bsts-germany.R')) 
+source(paste0(code.directory,'vae-germany.R')) 
 
 source(paste0(code.directory,'germany-plot.R')) # plot MSPE from all models
 
@@ -78,11 +62,12 @@ source(paste0(code.directory,'plot-benchmarks.R'))
 # Assemble elections data
 source(paste0(code.directory,'elections.R')) 
 
-source(paste0(code.directory,'encoder-decoder-elections.R'))# run elections.R first
+source(paste0(code.directory,'encoder-decoder-elections.R')) # train_encoder_decoder.py 
 
 source(paste0(code.directory,'lstm-elections.R'))
 
-source(paste0(code.directory,'bsts-elections.R')) # run elections.R first
+source(paste0(code.directory,'vae-elections.R')) # run elections.R first
+
 source(paste0(code.directory,'synth-elections.R')) # run elections.R first
 
 # GBR estimates

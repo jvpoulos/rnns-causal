@@ -1,5 +1,5 @@
 #####################################
-### lstm ### 
+### linear ### 
 #####################################
 
 library(dplyr)
@@ -9,30 +9,53 @@ library(tidyr)
 library(reshape2)
 library(readr)
 
-# import predictions
-
-california.lstm.pred.treated <- read_csv(paste0(results.directory, "lstm/california/treated/weights.4900-0.025.hdf5-california-test.csv"), col_names = FALSE)
-california.lstm.pred.control <- read_csv(paste0(results.directory, "lstm/california/control/weights.4930-0.513.hdf5-california-test.csv"), col_names = FALSE)
+for(t in 1:california.n.post){
+  if(t==1){
+    # Train
+    linear.reg <- glm(x = as.ts(cbind(california.y[1:california.n.pre,], california.x[1:california.n.pre,])), 
+                     demean = TRUE, intercept = TRUE) 
+    # Predict
+    p.test <- predict(linear.reg, 
+                      newdata = as.ts(cbind(california.y[1:california.n.pre,], california.x[1:california.n.pre,])), 
+                      n.ahead =  1, 
+                      se.fit=FALSE)
+    
+    california.linear.pred <- c(p.test)
+    
+  }else{
+    end <- (california.n.pre-1)+t
+    # Train
+    linear.reg <- update(linear.reg, x = as.ts(cbind(california.y[t:end,], california.x[t:end,]))) 
+    
+    # Predict
+    p.test <- predict(linear.reg, 
+                      newdata = as.ts(cbind(california.y[t:end,], california.x[t:end,])), 
+                      n.ahead =  1,
+                      se.fit=FALSE)
+    
+    california.linear.pred <- rbind(california.linear.pred, p.test)
+  }
+}
 
 # Actual versus predicted
-california.lstm <- data.frame(
-  "y.pred" = rbind(matrix(NA, california.n.pre, california.n.placebo+1), as.matrix(cbind(california.lstm.pred.treated, california.lstm.pred.control))),
+california.linear <- data.frame(
+  "y.pred" = rbind(matrix(NA, california.n.pre, california.n.placebo+1), as.matrix(california.linear.pred)),
   "y.true" = cbind(california.y, california.x),
   "year" =  1970:2000
 )
 
 # Post-period MSE and MAPE (all controls)
 
-california.control.forecast <- as.matrix(california.lstm.pred.control)
+california.control.forecast <- as.matrix(california.linear.pred[,-1])
 california.control.true <- as.matrix(california.x[(california.n.pre+1):nrow(california.x),])
 
-california.lstm.mse <- error(forecast=california.control.forecast, true=california.control.true, method = "mse") # post-intervention MSE
+california.linear.mse <- error(forecast=california.control.forecast, true=california.control.true, method = "mse") # post-intervention MSE
 
-california.lstm.preds <- rbind(matrix(NA, california.n.pre, california.n.placebo+1), as.matrix(cbind(california.lstm.pred.treated, california.lstm.pred.control))) # pad pre-period for plot
+california.linear.preds <- rbind(matrix(NA, california.n.pre, california.n.placebo+1), as.matrix(california.linear.pred)) # pad pre-period for plot
 
 # Calculate real treated pooled intervention effect
 
-california.treat.forecast <-  as.matrix(california.lstm.pred.treated)
+california.treat.forecast <-  as.matrix(california.linear.pred[,1])
 
 california.treat.true <- as.matrix(california.y[1][(california.n.pre+1):nrow(california.y),])
 
@@ -47,21 +70,17 @@ california.p.values.control <- sapply(1:length(california.controls), function(c)
   PermutationTest(california.control.forecast[,-c], california.control.true[,-c], california.t.stat.control, california.n.placebo-1, np=10000)
 })
 
-lstm.california.fpr <- sum(california.p.values.control <=0.05)/length(california.p.values.control) #FPR
-
-# CIs for treated
-
-california.CI.treated <- PermutationCI(california.control.forecast, california.control.true, california.t.stat, california.n.placebo, np=10000, l=1000)
+linear.california.fpr <- sum(california.p.values.control <=0.05)/length(california.p.values.control) #FPR
 
 # Plot pointwise impacts
 
 # Pointwise impacts
-california.lstm.control <- data.frame(
+california.linear.control <- data.frame(
   "pointwise.control" = california.x[(california.n.pre+1):nrow(california.x),]-california.control.forecast,
   "year" =  1989:2000
 )
 
-california.lstm.treat <- data.frame(
+california.linear.treat <- data.frame(
   "pointwise.treat" = california.y[(california.n.pre+1):nrow(california.y),]-california.treat.forecast, 
   "year" =  1989:2000
 )
@@ -75,58 +94,51 @@ theme.blank <- theme(axis.text=element_text(size=14)
                      , panel.grid.minor = element_blank()
                      , legend.text=element_text(size=14)
                      , legend.title = element_blank()
-                     , legend.position = c(0.9,0.9)
+                     , legend.position = c(0.2,0.15)
                      , legend.justification = c(1,0))
 
-california.lstm.control.long <- melt(california.lstm.control, id="year")  # convert to long format
-california.lstm.control.long$group <- "Control"
+california.linear.control.long <- melt(california.linear.control, id="year")  # convert to long format
+california.linear.control.long$group <- "Control"
 
-california.lstm.treat.long <- melt(california.lstm.treat, id="year")  # convert to long format
-california.lstm.treat.long$group <- "Treated"
+california.linear.treat.long <- melt(california.linear.treat, id="year")  # convert to long format
+california.linear.treat.long$group <- "Treated"
 
-california.lstm.long <- rbind(california.lstm.treat.long, california.lstm.control.long)
+california.linear.long <- rbind(california.linear.treat.long, california.linear.control.long)
 
-california.lstm.long$ymin <- NA
-california.lstm.long$ymax <- NA
-
-california.lstm.long$ymin[california.lstm.long$group=="Treated"] <- california.CI.treated[,1]
-california.lstm.long$ymax[california.lstm.long$group=="Treated"] <- california.CI.treated[,2]
-
-lstm.plot.california <- ggplot(data=california.lstm.long, aes(x=year, y=value, colour=variable, size=group, alpha=group)) +
+linear.plot.california <- ggplot(data=california.linear.long, aes(x=year, y=value, colour=variable, size=group, alpha=group)) +
   geom_line() +
-  geom_ribbon(aes(ymin=ymin, ymax=ymax), fill="grey", alpha=0.5, size=0) +
   theme_bw() + theme(legend.title = element_blank()) + 
   ylab("Treatment effects on log per-capita cigarette sales (in packs)") + 
   xlab("Year") +
   scale_alpha_manual(values=c(0.2, 0.9)) +
   scale_size_manual(values=c(0.8, 2)) +
   geom_hline(yintercept=0, linetype=2) + 
-  ggtitle("LSTM Treatment Effects: California Dataset") +
+  ggtitle("Linear Model Treatment Effects: California Dataset") +
   theme.blank + guides(colour=FALSE)
 
-ggsave(paste0(results.directory,"plots/lstm-plot-effects-california.png"), lstm.plot.california, width=11, height=8.5)
+ggsave(paste0(results.directory,"plots/linear-plot-effects-california.png"), linear.plot.california, width=11, height=8.5)
 
 # Plot p-values
 
-california.lstm.control<- data.frame(
+california.linear.control<- data.frame(
   "p.value" = california.p.values.control, 
   "year" =  1989:2000
 )
 
-california.lstm.treat<- data.frame(
+california.linear.treat<- data.frame(
   "p.value" = california.p.values.treated, 
   "year" =  1989:2000
 )
 
-california.lstm.control.long <- melt(california.lstm.control, id="year")  # convert to long format
-california.lstm.control.long$group <- "Control"
+california.linear.control.long <- melt(california.linear.control, id="year")  # convert to long format
+california.linear.control.long$group <- "Control"
 
-california.lstm.treat.long <- melt(california.lstm.treat, id="year")  # convert to long format
-california.lstm.treat.long$group <- "Treated"
+california.linear.treat.long <- melt(california.linear.treat, id="year")  # convert to long format
+california.linear.treat.long$group <- "Treated"
 
-california.lstm.long <- rbind(california.lstm.treat.long, california.lstm.control.long)
+california.linear.long <- rbind(california.linear.treat.long, california.linear.control.long)
 
-lstm.plot.pvalues.california <- ggplot(data=california.lstm.long, aes(x=year, y=value, colour=variable, size=group, alpha=group)) +
+linear.plot.pvalues.california <- ggplot(data=california.linear.long, aes(x=year, y=value, colour=variable, size=group, alpha=group)) +
   geom_point() +
   theme_bw() + theme(legend.title = element_blank()) + 
   ylab("p-value") + 
@@ -135,10 +147,10 @@ lstm.plot.pvalues.california <- ggplot(data=california.lstm.long, aes(x=year, y=
   scale_size_manual(values=c(0.8, 2)) +
   geom_hline(yintercept=0, linetype=1) + 
   geom_hline(yintercept=0.05, linetype=2, colour="red") + 
-  ggtitle("LSTM p-values: California Dataset") +
+  ggtitle("Linear model p-values: California Dataset") +
   theme.blank + guides(colour=FALSE)
 
-ggsave(paste0(results.directory,"plots/lstm-plot-pvalues-california.png"), lstm.plot.pvalues.california, width=11, height=8.5)
+ggsave(paste0(results.directory,"plots/linear-plot-pvalues-california.png"), linear.plot.pvalues.california, width=11, height=8.5)
 
 # Plot actual versus predicted
 
@@ -152,12 +164,12 @@ theme.blank <- theme(axis.text=element_text(size=12)
                      , legend.position = c(0.25,0.80)
                      , legend.justification = c(1,0))
 
-california.lstm.plot <- ggplot(data=california.lstm, aes(x=year)) +
+california.linear.plot <- ggplot(data=california.linear, aes(x=year)) +
   geom_line(aes(y=california.y, colour = "Observed treated outcome"), size=1.2) +
-  geom_line(aes(y=california.lstm.preds[,1], colour = "Predicted treated outcome"), size=1.2, linetype=2) +
+  geom_line(aes(y=california.linear.preds[,1], colour = "Predicted treated outcome"), size=1.2, linetype=2) +
   theme_bw() + theme(legend.title = element_blank()) + ylab("Log per-capita cigarette sales (in packs))") + xlab("") +
   geom_vline(xintercept=1989, linetype=2) + 
-  ggtitle(paste0("LSTM actual vs. counterfactual outcome: California Dataset")) +
+  ggtitle(paste0("Linear model actual vs. counterfactual outcome: California Dataset")) +
   theme.blank 
 
-ggsave(paste0(results.directory,"plots/lstm-plot-california.png"), california.lstm.plot, width=11, height=8.5)
+ggsave(paste0(results.directory,"plots/linear-plot-california.png"), california.linear.plot, width=11, height=8.5)
