@@ -11,8 +11,8 @@ library(readr)
 
 # import predictions
 
-basque.lstm.pred.treated <- read_csv(paste0(results.directory, "lstm/basque/treated/weights.2880-0.004.hdf5-basque-test.csv"), col_names = FALSE)
-basque.lstm.pred.control <- read_csv(paste0(results.directory, "lstm/basque/control/weights.2200-0.002.hdf5-basque-test.csv"), col_names = FALSE)
+basque.lstm.pred.treated <- read_csv(paste0(results.directory, "lstm/basque/treated/weights.9910-0.002.hdf5-basque-test.csv"), col_names = FALSE)
+basque.lstm.pred.control <- read_csv(paste0(results.directory, "lstm/basque/control/weights.1140-0.002.hdf5-basque-test.csv"), col_names = FALSE)
 
 # Actual versus predicted
 basque.lstm <- data.frame(

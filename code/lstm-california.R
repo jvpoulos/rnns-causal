@@ -11,8 +11,8 @@ library(readr)
 
 # import predictions
 
-california.lstm.pred.treated <- read_csv(paste0(results.directory, "lstm/california/treated/weights.4900-0.025.hdf5-california-test.csv"), col_names = FALSE)
-california.lstm.pred.control <- read_csv(paste0(results.directory, "lstm/california/control/weights.4930-0.513.hdf5-california-test.csv"), col_names = FALSE)
+california.lstm.pred.treated <- read_csv(paste0(results.directory, "lstm/california/treated/weights.5700-0.009.hdf5-california-test.csv"), col_names = FALSE)
+california.lstm.pred.control <- read_csv(paste0(results.directory, "lstm/california/control/weights.7180-0.007.hdf5-california-test.csv"), col_names = FALSE)
 
 # Actual versus predicted
 california.lstm <- data.frame(

@@ -25,10 +25,6 @@ source(paste0(code.directory,'encoder-decoder-basque.R')) # gans-causal/code/tra
 
 source(paste0(code.directory,'lstm-basque.R')) # gans-causal/code/train_lstm.py 
 
-source(paste0(code.directory,'vae-basque.R')) 
-
-source(paste0(code.directory,'basque-plot.R')) # plot MSPE from all models
-
 # california
 
 # First run synth-california.R in gans-causal/code with predictors=TRUE
@@ -37,10 +33,6 @@ source(paste0(code.directory,'encoder-decoder-california.R')) # gans-causal/code
 
 source(paste0(code.directory,'lstm-california.R')) # gans-causal/code/train_lstm.py
 
-source(paste0(code.directory,'vae-california.R')) 
-
-source(paste0(code.directory,'california-plot.R')) # plot MSPE from all models
-
 # west germany
 
 # First run synth-germany.R in gans-causal/code with predictors=TRUE
@@ -48,10 +40,6 @@ source(paste0(code.directory,'california-plot.R')) # plot MSPE from all models
 source(paste0(code.directory,'encoder-decoder-germany.R')) # gans-causal/code/train_encoder_decoder.py  
 
 source(paste0(code.directory,'lstm-germany.R')) # gans-causal/code/train_lstm.py
-
-source(paste0(code.directory,'vae-germany.R')) 
-
-source(paste0(code.directory,'germany-plot.R')) # plot MSPE from all models
 
 # Plot benchmarks
 
@@ -66,7 +54,7 @@ source(paste0(code.directory,'encoder-decoder-elections.R')) # train_encoder_dec
 
 source(paste0(code.directory,'lstm-elections.R'))
 
-source(paste0(code.directory,'vae-elections.R')) # run elections.R first
+source(paste0(code.directory,'linear-elections.R')) # run elections.R first
 
 source(paste0(code.directory,'synth-elections.R')) # run elections.R first
 
