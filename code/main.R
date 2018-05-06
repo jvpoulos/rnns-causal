@@ -47,14 +47,11 @@ source(paste0(code.directory,'plot-benchmarks.R'))
 
 # Causal impact estimates: mayoral elections
 
-# Assemble elections data
-source(paste0(code.directory,'elections.R')) 
+source(paste0(code.directory,'elections.R')) # Assemble elections data
 
 source(paste0(code.directory,'encoder-decoder-elections.R')) # train_encoder_decoder.py 
 
 source(paste0(code.directory,'lstm-elections.R'))
-
-source(paste0(code.directory,'linear-elections.R')) # run elections.R first
 
 source(paste0(code.directory,'synth-elections.R')) # run elections.R first
 

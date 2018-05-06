@@ -10,8 +10,6 @@ library(stringr)
 library(foreign)
 library(imputeTS)
 
-data.directory <- "~/Dropbox/github/rnns-causal/data/"
-
 ## Load H&P (2017) data
 hopkins <- read.table(paste0(data.directory,"hopkins/mayoralelections_final_full.tab"),
                   header = TRUE, sep = "\t", fill = TRUE, stringsAsFactors = FALSE)
@@ -169,28 +167,20 @@ votediff.y <- votediff.y[with(votediff.y, order(year)), ] # sort
 
 votediff.y.imp <- na.interpolation(votediff.y, option = "linear") # impute missing labels via linear interpolation
 
-#votediff.y <- cbind(votediff.y['year'],"y.true"=rowMeans(votediff.y[-1], na.rm=TRUE)) # take treated mean
-
 # Splits
 
 votediff.years <- sort(intersect(votediff$year,votediff.y$year)) # common years in treated and control
 
-votediff.x.train <- votediff[votediff$year %in% votediff.years & votediff$year < 2005,]
-votediff.x.test <- votediff[votediff$year %in% votediff.years & votediff$year >= 2005,]
+votediff.x <- votediff[votediff$year %in% votediff.years,]
 
-votediff.y.train <- votediff.y.imp[votediff.y.imp$year %in% votediff.years & votediff.y.imp$year < 2005,]
-votediff.y.test <- votediff.y.imp[votediff.y.imp$year %in% votediff.years & votediff.y.imp$year >= 2005,]
+votediff.y.imp <- votediff.y.imp[votediff.y.imp$year %in% votediff.years,] 
 
-votediff.x.train <-  votediff.x.train[ , colSums(is.na(votediff.x.train)) == 0] # Remove training features with NA
-votediff.x.test <-  votediff.x.test[ , colSums(is.na(votediff.x.test)) == 0] # Remove test features with NA
+votediff.x <-  votediff.x[ , colSums(is.na(votediff.x)) == 0] # Remove training features with all NA
 
-votediff.y.train <-  votediff.y.train[ , colSums(is.na(votediff.y.train)) == 0] # Remove training labels with NA
-votediff.y.test <-  votediff.y.test[ , colSums(is.na(votediff.y.test)) == 0] # Remove test labels with NA
+votediff.y.imp <-  votediff.y.imp[ , colSums(is.na(votediff.y.imp)) == 0] # Remove training labels with all NA
 
 # Export each as csv (labels, features)
 
-write.csv(votediff.x.train[!colnames(votediff.x.train) %in% c("year")], paste0(data.directory,"elections/treated/votediff-x-train.csv"), row.names=FALSE) 
-write.csv(votediff.x.test[!colnames(votediff.x.test) %in% c("year")] , paste0(data.directory,"elections/treated/votediff-x-test.csv"), row.names=FALSE) 
+write.csv(votediff.x[!colnames(votediff.x) %in% c("year")], paste0(data.directory,"elections/votediff-x.csv"), row.names=FALSE) 
 
-write.csv(votediff.y.train[!colnames(votediff.y.train) %in% c("year")], paste0(data.directory,"elections/treated/votediff-y-train.csv"), row.names=FALSE) 
-write.csv(votediff.y.test[!colnames(votediff.y.test) %in% c("year")], paste0(data.directory,"elections/treated/votediff-y-test.csv"), row.names=FALSE) 
+write.csv(votediff.y.imp[!colnames(votediff.y.imp) %in% c("year")], paste0(data.directory,"elections/votediff-y.csv"), row.names=FALSE) 

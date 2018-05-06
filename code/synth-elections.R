@@ -1,5 +1,5 @@
 ######################################################################
-# Synthetic control applied to elections data                         #
+# Synthetic control applied to votediff data  (Placebo)                       #
 ######################################################################
 
 library(Synth)
@@ -8,15 +8,17 @@ library(dplyr)
 library(tidyr)
 library(tseries)
 library(boot)
+library(reshape2)
+library(scales)
+library(ggplot2)
+library(ftsa)
 
-source(paste0(code.directory,'PolitisWhite.R')) 
+library(foreign)
+library(xtable)
 
-## The usual sequence of commands is:
-## 1. dataprep() for matrix-extraction
-## 2. synth() for the construction of the synthetic control group
-## 3. synth.tab(), gaps.plot(), and path.plot() to summarize the results
+library(matrixStats)
 
-# Merge covariates back to elections data
+# Merge covariates back to votediff data
 
 fg.covars$city <- sub(" ", "", fg.covars$city) # rm space
 
@@ -54,140 +56,121 @@ fg.ads.synth <- fg.ads.synth %>%
 
 fg.ads.synth <- data.frame(fg.ads.synth[fg.ads.synth$year<=2006,]) # max is 2006 
 
-# select v
+# run synth on treated and control
 
-dataprep.out<-
-  dataprep(
-    foo = fg.ads.synth,
-    predictors = c("logvotetotal"),
-    predictors.op = "mean",
-    dependent = "votediff",
-    unit.variable = "num",
-    time.variable = "year",
-    special.predictors = list(
-      list("votediff",2000:2004,c("mean"))),
-    treatment.identifier = 999,
-    controls.identifier = sort(unique(fg.ads.synth$num[!fg.ads.synth$num %in% c(999)])),
-    time.predictors.prior = c(1945:2004),
-    time.optimize.ssr = c(2002:2004),
-    unit.names.variable = "id",
-    time.plot = 1980:2006
+RunVotediff<- function(treated.indices){
+  # pick v by cross validation
+  dataprep.out<-
+    dataprep(
+      foo = fg.ads.synth[fg.ads.synth$num %in% c(votediff.controls.samp, treated.indices),],
+      dependent = "votediff",
+      unit.variable = "num",
+      time.variable = "year",
+      special.predictors = list(
+        list("votediff",1989:1993,c("mean")),
+        list("votediff",1994:1998,c("mean")),
+        list("votediff",1995:1999,c("mean")),
+        list("votediff",2000:2004,c("mean"))),
+      treatment.identifier = treated.indices,
+      controls.identifier = votediff.controls.samp[!votediff.controls.samp %in% treated.indices],
+      time.predictors.prior = c(1945:2004),
+      time.optimize.ssr = c(2002:2004),
+      unit.names.variable = "id",
+      time.plot = 1980:2006
+    )
+  
+  synth.out.votediff.cv <- synth(
+    data.prep.obj = dataprep.out,
+    Margin.ipop=.005,Sigf.ipop=7,Bound.ipop=6
   )
-
-# synth.out.v <- 
-#   synth(
-#     data.prep.obj=dataprep.out,
-#     Margin.ipop=.005,Sigf.ipop=7,Bound.ipop=6
-#   )
-
-dataprep.out<-
-  dataprep(
-    foo = fg.ads.synth,
-    predictors = c("logvotetotal"),
-    predictors.op = "mean",
-    dependent = "votediff",
-    unit.variable = "num",
-    time.variable = "year",
-    special.predictors = list(
-      list("votediff",2000:2004,c("mean"))),
-    treatment.identifier = 999,
-    controls.identifier = sort(unique(fg.ads.synth$num[!fg.ads.synth$num %in% c(999)])),
-    time.predictors.prior = c(1945:2004),
-    time.optimize.ssr = c(2000:2004),
-    unit.names.variable = "id",
-    time.plot = 1980:2006
+  
+  dataprep.out<-
+    dataprep(
+      foo = fg.ads.synth[fg.ads.synth$num %in% c(votediff.controls.samp, treated.indices),],
+      dependent = "votediff",
+      unit.variable = "num",
+      time.variable = "year",
+      special.predictors = list(
+        list("votediff",1989:1993,c("mean")),
+        list("votediff",1994:1998,c("mean")),
+        list("votediff",1995:1999,c("mean")),
+        list("votediff",2000:2004,c("mean"))),
+      treatment.identifier = treated.indices,
+      controls.identifier = votediff.controls.samp[!votediff.controls.samp %in% treated.indices],
+      time.predictors.prior = c(1945:2004),
+      time.optimize.ssr = c(2000:2004),
+      unit.names.variable = "id",
+      time.plot = 1980:2006
+    )
+  
+  synth.out.votediff <- synth(
+    data.prep.obj = dataprep.out,
+    custom.v=as.numeric(synth.out.votediff.cv$solution.v)
   )
+  
+  synth.results <- data.frame('y.true'=dataprep.out$Y1plot[,1],
+                              'y.pred'= dataprep.out$Y0plot%*%synth.out.votediff$solution.w[,1])
+  return(synth.results)
+}
 
-## run the synth command to identify the weights
-## that create the best possible synthetic
-## control unit for the treated.
-# synth.out <- synth(dataprep.out, 
-#                    custom.v=as.numeric(synth.out.v$solution.v))
-# 
-# saveRDS(synth.out, paste0(data.directory, "synth-out.rds"))
+# Run for all possible controls 
 
-synth.out <- readRDS(paste0(data.directory, "synth-out.rds"))
+votediff.controls <- unique(fg.ads.synth$num[! fg.ads.synth$num%in% fg.ads.synth.treat$num])
+votediff.controls.samp <- sample(votediff.controls,ceiling(length(votediff.controls)*0.05)) # randomly sample 5% of controls
+  
+synth.results.controls <- lapply(votediff.controls.samp, RunVotediff)
 
-## there are two ways to summarize the results
-## we can either access the output from synth.out directly
-round(synth.out$solution.w,2)
+synth.votediff.controls.preds <- sapply(synth.results.controls, '[[', 2)
 
-# contains the unit weights or
-synth.out$solution.v
-## contains the predictor weights.
-## the output from synth opt
-## can be flexibly combined with
-## the output from dataprep to
-## compute other quantities of interest
-## for example, the period by period
-## discrepancies between the
-## treated unit and its synthetic control unit
-## can be computed by typing
-gaps<- dataprep.out$Y1plot-(
-  dataprep.out$Y0plot%*%synth.out$solution.w
-) ; gaps
-## also there are three convenience functions to summarize results.
-## to get summary tables for all information
-## (V and W weights plus balance btw.
-## treated and synthetic control) use the
-## synth.tab() command
-synth.tables <- synth.tab(
-  dataprep.res = dataprep.out,
-  synth.res = synth.out)
-print(synth.tables)
-## to get summary plots for outcome trajectories
-## of the treated and the synthetic control unit use the
-## path.plot() and the gaps.plot() commands
-## plot in levels (treated and synthetic)
-path.plot(dataprep.res = dataprep.out,synth.res = synth.out)
-## plot the gaps (treated - synthetic)
-gaps.plot(dataprep.res = dataprep.out,synth.res = synth.out)
+# Run for treated
 
-# Bootstrap estimate for prediction
+synth.results.treat <- lapply(unique(fg.ads.synth.treat$num), RunVotediff) # treat num 999
 
-bopt <- b.star(dataprep.out$Y0plot%*%synth.out$solution.w, round=TRUE)[[1]]  # get optimal bootstrap block lengths
+synth.votediff.treat.preds <- sapply(synth.results.treat, '[[', 2)
 
-synth.results <- data.frame('y.true'=dataprep.out$Y1plot[,1],
-                            'y.pred'= dataprep.out$Y0plot%*%synth.out$solution.w[,1])
-# GetPointwise <- function(x){
-#    # Calculate pointwise impact
-#    return(x['y.true']- x['y.pred'])
-# }
-#  
-# votediff.boot <- tsboot(ts(synth.results), GetPointwise, R = 1000, l = bopt, 
-#                          sim = "geom") # block resampling with block lengths having a geometric distribution with mean bopt
+# Post-period MSE (all controls)
 
-votediff.boot <- tsbootstrap(synth.results$y.pred, nb=1000, type="block", b = bopt) # block resampling with block lengths bopt
+votediff.x.synth <- fg.ads.synth[fg.ads.synth$num %in% c(votediff.controls.samp),]
+votediff.x.synth <- reshape(data.frame(votediff.x.synth)[c("year","id","votediff")], idvar = "year", timevar = "id", direction = "wide")
+votediff.x.synth <- votediff.x.synth[!colnames(votediff.x.synth) %in% "year"]
 
-sd  <- rowSds(votediff.boot) # get Sds
+votediff.control.forecast <- as.matrix(synth.votediff.controls.preds[(nrow(synth.votediff.controls.preds)-1):nrow(synth.votediff.controls.preds),])
+votediff.control.true <- as.matrix(votediff.x.synth[(nrow(votediff.x.synth)-1):nrow(votediff.x.synth),])
 
-synth.results <- cbind(synth.results, sd)
+votediff.synth.mse <- error(forecast=votediff.control.forecast, true=votediff.control.true, method = "mse") # post-intervention MSE
+votediff.synth.mse
 
-synth.results$pointwise <- synth.results$y.true- synth.results$y.pred
-synth.results$y.pred.min <- synth.results$y.pred-(synth.results$sd*1.96)
-synth.results$y.pred.max <- synth.results$y.pred+(synth.results$sd*1.96)
-synth.results$pointwise.min <- synth.results$y.true- synth.results$y.pred.max
-synth.results$pointwise.max <- synth.results$y.true- synth.results$y.pred.min
+# Calculate real treated pooled intervention effect
 
-# Plot actual versus predicted
+votediff.treat.forecast <- as.matrix(synth.votediff.treat.preds)[26:27,]
 
-theme.blank <- theme(axis.text=element_text(size=12)
-                     , axis.title.x=element_blank()
-                     , plot.title = element_text(hjust = 0.5)
-                     , axis.ticks.x=element_blank()
-                     , axis.ticks.y=element_blank()
-                     , legend.text=element_text(size=12)
-                     , legend.title = element_blank()
-                     , legend.position = c(0.25,0.9)
-                     , legend.justification = c(1,0))
+votediff.treat.true <- as.matrix(rowMeans(votediff.y.imp[-1]))[51:52,]
 
-synth.plot <- ggplot(data=synth.results, aes(x=1980:2006)) +
-  geom_line(aes(y=y.true, colour = "Observed treated outcome"), size=1.2) +
-  geom_line(aes(y=y.pred, colour = "Predicted treated outcome"), size=1.2, linetype=2) +
-  theme_bw() + theme(legend.title = element_blank()) + ylab("Winner margin (ln)") + xlab("") +
-  geom_vline(xintercept=2005, linetype=2) + 
- # geom_ribbon(aes(ymin=y.pred.min, ymax=y.pred.max), fill="grey", alpha=0.5) +
-  ggtitle(paste0("Mayoral elections: Synthetic control (training MSPE = ", round(synth.out$loss.v[[1]],2), ")")) +
-  theme.blank 
+votediff.t.stat <- votediff.treat.true-votediff.treat.forecast # real t stat
+votediff.t.stat[1:2] # 2005/2006
+mean(votediff.t.stat[1:2]) # pooled
 
-ggsave(paste0(results.directory,"plots/synth-plot.png"), synth.plot, width=11, height=8.5)
+(-0.001 - votediff.t.stat[1])**2 # MSPE 2005
+(-0.005 - votediff.t.stat[2])**2 # MSPE 2006
+(0.0005 - mean(votediff.t.stat[1:2]))**2 # MSPE pooled
+
+# P-values for both treated and placebo treated
+
+votediff.n.placebo <- ncol(votediff.x.synth)
+
+votediff.p.values.treated <- PermutationTest(votediff.control.forecast, votediff.control.true, votediff.t.stat, votediff.n.placebo,np=10000)
+
+votediff.p.values.control <- sapply(1:length(votediff.controls.samp), function(c){
+  votediff.t.stat.control <- rowMeans(as.matrix(votediff.control.true[,c])-as.matrix(votediff.control.forecast[,c]))
+  PermutationTest(votediff.control.forecast[,-c], votediff.control.true[,-c], votediff.t.stat.control, votediff.n.placebo-1,np=10000)
+})
+
+synth.votediff.fpr <- sum(votediff.p.values.control <=0.05)/length(votediff.p.values.control) #FPR
+synth.votediff.fpr
+
+# CIs for treated
+
+votediff.CI.treated <- PermutationCI(votediff.control.forecast, votediff.control.true, votediff.t.stat, votediff.n.placebo, np=10000, l=1000)
+votediff.CI.treated[1:2,]
+
+colMeans(votediff.CI.treated[1:2,]) # pooled

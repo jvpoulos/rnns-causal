@@ -25,6 +25,15 @@ germany.lstm.mses <- sapply(1:length(germany.controls), CollectMSPE,
                           forecast=as.matrix(germany.lstm.pred.control),
                           true=germany.x)
 
+votediff.lstm.mses <- sapply(1:votediff.n.placebo, 
+                             function(forecast, true, x){
+                               return(error(forecast=as.matrix(forecast)[(nrow(forecast)-3):nrow(forecast),][,x], 
+                                            true=as.matrix(true[(nrow(true)-3):nrow(true),])[,x], 
+                                            method = "mse"))
+                               }, 
+                            forecast=as.matrix(votediff.lstm.pred.control),
+                            true=votediff.x[-1])
+
 # encoder.decoder
 basque.encoder.decoder.mses <- sapply(1:length(basque.controls), CollectMSPE, 
                            n.pre=14, 
@@ -40,6 +49,15 @@ germany.encoder.decoder.mses <- sapply(1:length(germany.controls), CollectMSPE,
                             n.pre=30, 
                             forecast=as.matrix(germany.encoder.decoder.pred.control),
                             true=germany.x)
+
+votediff.encoder.decoder.mses <- sapply(1:votediff.n.placebo, 
+                             function(forecast, true, x){
+                               return(error(forecast=as.matrix(forecast)[(nrow(forecast)-3):nrow(forecast),][,x], 
+                                            true=as.matrix(true[(nrow(true)-3):nrow(true),])[,x], 
+                                            method = "mse"))
+                             }, 
+                             forecast=as.matrix(votediff.encoder.decoder.pred.control),
+                             true=votediff.x[-1])
 
 # synth
 basque.synth.mses <- sapply(1:length(basque.controls), CollectMSPE, 
@@ -57,18 +75,27 @@ germany.synth.mses <- sapply(1:length(germany.controls), CollectMSPE,
                              forecast=synth.germany.controls.preds[(30+1):nrow(synth.germany.controls.preds),],
                              true=germany.x)
 
+votediff.synth.mses <- sapply(1:ncol(votediff.x.synth), 
+                                        function(forecast, true, x){
+                                          return(error(forecast=as.matrix(forecast)[(nrow(forecast)-3):nrow(forecast),][,x], 
+                                                       true=as.matrix(true[(nrow(true)-3):nrow(true),])[,x], 
+                                                       method = "mse"))
+                                        }, 
+                                        forecast=as.matrix(votediff.control.forecast),
+                                        true=votediff.x.synth)
+
 # Compile MSPEs
-gans.causal.benchmark <- data.frame("Model"=rep(c("LSTM","Encoder-decoder","SCM"),each=3),
-                                    "Data"=rep(c("Basque", "California","Germany"),3),
-                                    "MSPE"= c(basque.lstm.mse, california.lstm.mse, germany.lstm.mse,
-                                              basque.encoder.decoder.mse, california.encoder.decoder.mse, germany.encoder.decoder.mse,
-                                              basque.synth.mse, california.synth.mse, germany.synth.mse),
-                                    "MSPE.hi"= c(basque.lstm.mse+1.96*sd(basque.lstm.mses),california.lstm.mse+1.96*sd(california.lstm.mses),germany.lstm.mse+1.96*sd(germany.lstm.mses),
-                                                 basque.encoder.decoder.mse+1.96*sd(basque.encoder.decoder.mses),california.encoder.decoder.mse+1.96*sd(california.encoder.decoder.mses),germany.encoder.decoder.mse+1.96*sd(germany.encoder.decoder.mses),
-                                                 basque.synth.mse+1.96*sd(basque.synth.mses),california.synth.mse+1.96*sd(california.synth.mses),germany.synth.mse+1.96*sd(germany.synth.mses)),
-                                    "MSPE.lo"= c(basque.lstm.mse-1.96*sd(basque.lstm.mses),california.lstm.mse-1.96*sd(california.lstm.mses),germany.lstm.mse-1.96*sd(germany.lstm.mses),
-                                                 basque.encoder.decoder.mse-1.96*sd(basque.encoder.decoder.mses),california.encoder.decoder.mse-1.96*sd(california.encoder.decoder.mses),germany.encoder.decoder.mse-1.96*sd(germany.encoder.decoder.mses),
-                                                 basque.synth.mse-1.96*sd(basque.synth.mses),california.synth.mse-1.96*sd(california.synth.mses),germany.synth.mse-1.96*sd(germany.synth.mses))
+gans.causal.benchmark <- data.frame("Model"=rep(c("LSTM","Encoder-decoder","SCM"),each=4),
+                                    "Data"=rep(c("Basque", "California","Elections", "Germany"),3),
+                                    "MSPE"= c(basque.lstm.mse, california.lstm.mse, votediff.lstm.mse, germany.lstm.mse,
+                                              basque.encoder.decoder.mse, california.encoder.decoder.mse, votediff.encoder.decoder.mse, germany.encoder.decoder.mse,
+                                              basque.synth.mse, california.synth.mse, votediff.synth.mse, germany.synth.mse),
+                                    "MSPE.hi"= c(basque.lstm.mse+1*sd(basque.lstm.mses),california.lstm.mse+1*sd(california.lstm.mses),votediff.lstm.mse+1*sd(votediff.lstm.mses),germany.lstm.mse+1*sd(germany.lstm.mses),
+                                                 basque.encoder.decoder.mse+1*sd(basque.encoder.decoder.mses),california.encoder.decoder.mse+1*sd(california.encoder.decoder.mses),votediff.encoder.decoder.mse+1*sd(votediff.encoder.decoder.mses),germany.encoder.decoder.mse+1*sd(germany.encoder.decoder.mses),
+                                                 basque.synth.mse+1*sd(basque.synth.mses),california.synth.mse+1*sd(california.synth.mses),votediff.synth.mse+1*sd(votediff.synth.mses),germany.synth.mse+1*sd(germany.synth.mses)),
+                                    "MSPE.lo"= c(basque.lstm.mse-1*sd(basque.lstm.mses),california.lstm.mse-1*sd(california.lstm.mses),votediff.lstm.mse-1*sd(votediff.lstm.mses),germany.lstm.mse-1*sd(germany.lstm.mses),
+                                                 basque.encoder.decoder.mse-1*sd(basque.encoder.decoder.mses),california.encoder.decoder.mse-1*sd(california.encoder.decoder.mses),votediff.encoder.decoder.mse-1*sd(votediff.encoder.decoder.mses),germany.encoder.decoder.mse-1*sd(germany.encoder.decoder.mses),
+                                                 basque.synth.mse-1*sd(basque.synth.mses),california.synth.mse-1*sd(california.synth.mses),votediff.synth.mse-1*sd(votediff.synth.mses),germany.synth.mse-1*sd(germany.synth.mses))
 )
 
 # Plot
@@ -83,7 +110,7 @@ theme.blank <- theme(axis.text=element_text(size=12)
                      , legend.justification = c(1,0)
                      , legend.background=element_blank())
 
-benchmarks.plot.mspe <- ggplot(gans.causal.benchmark, aes(Data, MSPE, shape = Model, colour = Model)) + 
+benchmarks.plot.mspe <- ggplot(gans.causal.benchmark[-3,], aes(Data, MSPE, shape = Model, colour = Model)) + 
   geom_pointrange(size=1.2, alpha=0.9,position=position_dodge(width=0.5), aes(ymin=MSPE.lo, ymax=MSPE.hi)) +
   scale_shape_manual("Model",values=c("Encoder-decoder"=4,"LSTM"=5,"SCM"=6),
                         labels=c("Encoder-decoder","LSTM","SCM")) +
@@ -96,11 +123,11 @@ benchmarks.plot.mspe <- ggplot(gans.causal.benchmark, aes(Data, MSPE, shape = Mo
 ggsave(paste0(results.directory,"plots/benchmark-mspe.png"), benchmarks.plot.mspe, width=11, height=8.5)
 
 # Compile FPRs
-rnns.causal.fpr <- data.frame("Model"=rep(c("LSTM","Encoder-decoder","SCM"),each=3),
-                                    "Data"=rep(c("Basque", "California","Germany"),3),
-                                    "FPR"= c(lstm.basque.fpr, lstm.california.fpr, lstm.germany.fpr,
-                                             encoder.decoder.basque.fpr, encoder.decoder.california.fpr, encoder.decoder.germany.fpr,
-                                              synth.basque.fpr, synth.california.fpr, synth.germany.fpr))
+rnns.causal.fpr <- data.frame("Model"=rep(c("LSTM","Encoder-decoder","SCM"),each=4),
+                                    "Data"=rep(c("Basque", "California","Elections","Germany"),3),
+                                    "FPR"= c(lstm.basque.fpr, lstm.california.fpr, lstm.votediff.fpr, lstm.germany.fpr,
+                                             encoder.decoder.basque.fpr, encoder.decoder.california.fpr,encoder.decoder.votediff.fpr,encoder.decoder.germany.fpr,
+                                              synth.basque.fpr, synth.california.fpr, synth.votediff.fpr, synth.germany.fpr))
 
 benchmarks.plot.fpr <- ggplot(rnns.causal.fpr, aes(Data, FPR, shape = Model, colour = Model)) + 
   geom_point(size=5, stroke=2,position=position_dodge(width=0.5)) +

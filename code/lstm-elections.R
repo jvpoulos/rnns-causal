@@ -1,5 +1,5 @@
 #####################################
-### LSTM                      ### 
+### lstm ### 
 #####################################
 
 library(dplyr)
@@ -8,48 +8,63 @@ library(dplyr)
 library(tidyr)
 library(reshape2)
 library(readr)
+library(ftsa)
+
+votediff.n.pre <- 47
+votediff.n.placebo <- 778
+votediff.n.treated <- 24
 
 # import predictions
 
-votediff.lstm.preds <- read_csv(paste0(results.directory, "lstm/votediff/weights.4795-4.678.hdf5-votediff-test.csv"), col_names = FALSE)
-votediff.lstm.preds <- rowMeans(votediff.lstm.preds)
+votediff.lstm.pred.treated <- read_csv(paste0(results.directory, "lstm/votediff/treated/weights.9930-3.764.hdf5-votediff-test.csv"), col_names = FALSE)
+votediff.lstm.pred.control <- read_csv(paste0(results.directory, "lstm/votediff/control/weights.300-145.691.hdf5-votediff-test.csv"), col_names = FALSE)
 
 # Actual versus predicted
 votediff.lstm <- data.frame(
-  "y.pred" = c(rep(NA,nrow(votediff.y.train)), votediff.lstm.preds),
-  "y.true" = rowMeans(votediff.y[colnames(votediff.y) %in% colnames(votediff.y.test)][-1], na.rm=TRUE), # nonimputed
-  "year" =  votediff.y$year
+  "y.pred" = rbind(matrix(NA, votediff.n.pre, votediff.n.placebo+votediff.n.treated), as.matrix(cbind(votediff.lstm.pred.treated, votediff.lstm.pred.control))),
+  "y.true" = cbind(votediff.y.imp[!colnames(votediff.y.imp) %in% c("year")], votediff.x), 
+  "year" =  votediff.y.imp$year
 )
 
-votediff.lstm$pointwise <- votediff.lstm$y.true-votediff.lstm$y.pred
+# Post-period MSE and MAPE (all controls)
 
-# Post-period MSPE
+votediff.control.forecast <- as.matrix(votediff.lstm.pred.control)
+votediff.control.true <- as.matrix(votediff.x[!colnames(votediff.x) %in% c("year")][(votediff.n.pre+1):nrow(votediff.x),])
 
-# Post
-votediff.lstm.MSPE <- filter(votediff.lstm, year %in% c(2005:2010)) %>% summarise(MSPE=mean((y.true-y.pred)**2))
-votediff.lstm.MSPE
+votediff.lstm.mse <- error(forecast=votediff.control.forecast, true=votediff.control.true, method = "mse") # post-intervention MSE
+votediff.lstm.mse
 
-votediff.lstm.APE <- filter(votediff.lstm, year %in% c(2005:2010)) %>% mutate(APE=abs(y.pred-y.true)/abs(y.true))
-mean(votediff.lstm.APE$APE)
+votediff.lstm.preds <- rbind(matrix(NA, votediff.n.pre, votediff.n.placebo+votediff.n.treated), as.matrix(cbind(votediff.lstm.pred.treated, votediff.lstm.pred.control))) # pad pre-period for plot
 
-# Plot actual versus predicted with credible intervals for the holdout period
+# Calculate real treated pooled intervention effect ## maybe change this to imputed
 
-theme.blank <- theme(axis.text=element_text(size=12)
-                     , axis.title.x=element_blank()
-                     , plot.title = element_text(hjust = 0.5)
-                     , axis.ticks.x=element_blank()
-                     , axis.ticks.y=element_blank()
-                     , legend.text=element_text(size=12)
-                     , legend.title = element_blank()
-                     , legend.position = c(0.35,0.25)
-                     , legend.justification = c(1,0))
+votediff.treat.forecast <-  as.matrix(votediff.lstm.pred.treated)
 
-elections.lstm.plot <- ggplot(data=votediff.lstm, aes(x=year)) +
-  geom_line(aes(y=y.true, colour = "Observed treated outcome"), size=1.2) +
-  geom_line(aes(y=y.pred, colour = "Predicted treated outcome"), size=1.2, linetype=2) +
-  theme_bw() + theme(legend.title = element_blank()) + ylab("Winner margin (ln)") + xlab("") +
-  geom_vline(xintercept=2005, linetype=2) + 
-  ggtitle("Mayoral elections: LSTM (validation MSPE = 4.678)") +
-  theme.blank 
+votediff.treat.true <- as.matrix(votediff.y.imp[!colnames(votediff.y.imp) %in% c("year")][(votediff.n.pre+1):nrow(votediff.y.imp[!colnames(votediff.y.imp) %in% c("year")]),])
 
-ggsave(paste0(results.directory,"plots/lstm-votediff.png"), elections.lstm.plot, width=11, height=8.5)
+votediff.t.stat <- rowMeans(votediff.treat.true-votediff.treat.forecast, na.rm = TRUE) # real t stat
+votediff.t.stat[1:2] # 2005/2006
+mean(votediff.t.stat[1:2]) # pooled
+
+(-0.001 - votediff.t.stat[1])**2 # MSPE 2005
+(-0.005 - votediff.t.stat[2])**2 # MSPE 2006
+(0.0005 - mean(votediff.t.stat[1:2]))**2 # MSPE pooled
+
+# P-values for both treated and placebo treated
+
+votediff.p.values.treated <- PermutationTest(votediff.control.forecast, votediff.control.true, votediff.t.stat, votediff.n.placebo, np=10000)
+
+votediff.p.values.control <- sapply(1:votediff.n.placebo, function(c){
+  votediff.t.stat.control <- rowMeans(as.matrix(votediff.control.true[,c])-as.matrix(votediff.control.forecast[,c]), na.rm = TRUE)
+  PermutationTest(votediff.control.forecast[,-c], votediff.control.true[,-c], votediff.t.stat.control, votediff.n.placebo-votediff.n.treated, np=10000)
+})
+
+lstm.votediff.fpr <- sum(votediff.p.values.control <=0.05)/length(votediff.p.values.control) #FPR
+lstm.votediff.fpr
+
+# CIs for treated
+
+votediff.CI.treated <- PermutationCI(votediff.control.forecast, votediff.control.true, votediff.t.stat, votediff.n.placebo, np=10000, l=500, c.range=c(-10,10))
+votediff.CI.treated[1:2,]
+
+colMeans(votediff.CI.treated[1:2,]) # pooled
