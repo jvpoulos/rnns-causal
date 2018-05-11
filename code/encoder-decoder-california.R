@@ -138,7 +138,7 @@ encoder.decoder.plot.pvalues.california <- ggplot(data=california.encoder.decode
   ggtitle("Encoder-decoder p-values: California Dataset") +
   theme.blank + guides(colour=FALSE)
 
-ggsave(paste0(results.directory,"plots/encoder-decoder-plot-pvalues-california-no-predictors.png"), encoder.decoder.plot.pvalues.california, width=11, height=8.5)
+ggsave(paste0(results.directory,"plots/encoder-decoder-plot-pvalues-california.png"), encoder.decoder.plot.pvalues.california, width=11, height=8.5)
 
 # Plot actual versus predicted
 

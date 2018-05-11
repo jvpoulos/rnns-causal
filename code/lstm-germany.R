@@ -138,7 +138,7 @@ lstm.plot.pvalues.germany <- ggplot(data=germany.lstm.long, aes(x=year, y=value,
   ggtitle("LSTM p-values: West Germany Dataset") +
   theme.blank + guides(colour=FALSE)
 
-ggsave(paste0(results.directory,"plots/lstm-plot-pvalues-germany-no-predictors.png"), lstm.plot.pvalues.germany, width=11, height=8.5)
+ggsave(paste0(results.directory,"plots/lstm-plot-pvalues-germany.png"), lstm.plot.pvalues.germany, width=11, height=8.5)
 
 # Plot actual versus predicted with credible intervals for the holdout period
 
