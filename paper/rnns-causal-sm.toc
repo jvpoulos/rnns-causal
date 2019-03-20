@@ -1,0 +1,7 @@
+\contentsline {section}{\numberline {1}RNNs architecture}{1}{section.1}
+\contentsline {section}{\numberline {2}RNNs training history: SCM datasets}{3}{section.2}
+\contentsline {section}{\numberline {3}Estimates on Basque Country data}{6}{section.3}
+\contentsline {section}{\numberline {4}Estimates on California data}{9}{section.4}
+\contentsline {section}{\numberline {5}Estimates on West Germany data}{12}{section.5}
+\contentsline {section}{\numberline {6}RNNs training history: Education spending data}{15}{section.6}
+\contentsline {section}{\numberline {7}Estimates on education spending data}{15}{section.7}

@@ -1,0 +1,56 @@
+This is BibTeX, Version 0.99d (TeX Live 2019/dev/Debian)
+Capacity: max_strings=100000, hash_size=100000, hash_prime=85009
+The top-level auxiliary file: rnns-causal.aux
+The style file: rss.bst
+Database file #1: references.bib
+Repeated entry---line 3105 of file references.bib
+ : @misc{ferman2016revisiting
+ :                           ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 3119 of file references.bib
+ : @article{xu2017generalized
+ :                           ,
+I'm skipping whatever remains of this entry
+Warning--empty note in dube2015pooling
+You've used 34 entries,
+            2705 wiz_defined-function locations,
+            750 strings with 10704 characters,
+and the built_in function-call counts, 17352 in all, are:
+= -- 1688
+> -- 940
+< -- 16
++ -- 366
+- -- 327
+* -- 1454
+:= -- 3226
+add.period$ -- 69
+call.type$ -- 34
+change.case$ -- 293
+chr.to.int$ -- 33
+cite$ -- 35
+duplicate$ -- 788
+empty$ -- 1087
+format.name$ -- 446
+if$ -- 3386
+int.to.chr$ -- 2
+int.to.str$ -- 1
+missing$ -- 25
+newline$ -- 143
+num.names$ -- 136
+pop$ -- 361
+preamble$ -- 1
+purify$ -- 244
+quote$ -- 0
+skip$ -- 505
+stack$ -- 0
+substring$ -- 717
+swap$ -- 203
+text.length$ -- 1
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 303
+warning$ -- 1
+while$ -- 127
+width$ -- 0
+write$ -- 394
+(There were 2 error messages)

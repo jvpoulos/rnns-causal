@@ -1,0 +1,203 @@
+\begin{thebibliography}{34}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+\expandafter\ifx\csname url\endcsname\relax
+  \def\url#1{\texttt{#1}}\fi
+\expandafter\ifx\csname urlprefix\endcsname\relax\def\urlprefix{URL: }\fi
+
+\bibitem[{Abadie et~al.(2010)Abadie, Diamond and
+  Hainmueller}]{abadie2010synthetic}
+Abadie, A., Diamond, A. and Hainmueller, J. (2010) Synthetic control methods
+  for comparative case studies: Estimating the effect of california’s tobacco
+  control program.
+\newblock \textit{Journal of the American Statistical Association},
+  \textbf{105}, 493--505.
+
+\bibitem[{Abadie et~al.(2015)Abadie, Diamond and
+  Hainmueller}]{abadie2015comparative}
+--- (2015) Comparative politics and the synthetic control method.
+\newblock \textit{American Journal of Political Science}, \textbf{59},
+  495--510.
+
+\bibitem[{Abadie and Gardeazabal(2003)}]{abadie2003economic}
+Abadie, A. and Gardeazabal, J. (2003) The economic costs of conflict: A case
+  study of the basque country.
+\newblock \textit{The American Economic Review}, \textbf{93}, 113--132.
+
+\bibitem[{{Athey} et~al.(2017){Athey}, {Bayati}, {Doudchenko}, {Imbens} and
+  {Khosravi}}]{athey2017matrix}
+{Athey}, S., {Bayati}, M., {Doudchenko}, N., {Imbens}, G. and {Khosravi}, K.
+  (2017) {Matrix Completion Methods for Causal Panel Data Models}.
+\newblock \textit{ArXiv e-prints}.
+
+\bibitem[{{Bahdanau} et~al.(2014){Bahdanau}, {Cho} and
+  {Bengio}}]{bahdanau2014neural}
+{Bahdanau}, D., {Cho}, K. and {Bengio}, Y. (2014) {Neural Machine Translation
+  by Jointly Learning to Align and Translate}.
+\newblock \textit{ArXiv e-prints}.
+
+\bibitem[{Bowman et~al.(2015)Bowman, Vilnis, Vinyals, Dai, Jozefowicz and
+  Bengio}]{bowman2015generating}
+Bowman, S.~R., Vilnis, L., Vinyals, O., Dai, A.~M., Jozefowicz, R. and Bengio,
+  S. (2015) Generating sentences from a continuous space.
+\newblock \textit{arXiv:1511.06349}.
+
+\bibitem[{Brodersen et~al.(2015)Brodersen, Gallusser, Koehler, Remy and
+  Scott}]{brodersen2015inferring}
+Brodersen, K.~H., Gallusser, F., Koehler, J., Remy, N. and Scott, S.~L. (2015)
+  Inferring causal impact using bayesian structural time-series models.
+\newblock \textit{The Annals of Applied Statistics}, \textbf{9}, 247--274.
+
+\bibitem[{Cavallo et~al.(2013)Cavallo, Galiani, Noy and
+  Pantano}]{cavallo2013catastrophic}
+Cavallo, E., Galiani, S., Noy, I. and Pantano, J. (2013) Catastrophic natural
+  disasters and economic growth.
+\newblock \textit{Review of Economics and Statistics}, \textbf{95}, 1549--1561.
+
+\bibitem[{{Cho} et~al.(2014){Cho}, {van Merrienboer}, {Gulcehre}, {Bahdanau},
+  {Bougares}, {Schwenk} and {Bengio}}]{cho2014learning}
+{Cho}, K., {van Merrienboer}, B., {Gulcehre}, C., {Bahdanau}, D., {Bougares},
+  F., {Schwenk}, H. and {Bengio}, Y. (2014) {Learning Phrase Representations
+  using RNN Encoder-Decoder for Statistical Machine Translation}.
+\newblock \textit{ArXiv e-prints}.
+
+\bibitem[{Chollet et~al.(2015)}]{chollet2015keras}
+Chollet, F. et~al. (2015) Keras.
+\newblock \url{https://keras.io}.
+
+\bibitem[{Chorowski et~al.(2015)Chorowski, Bahdanau, Serdyuk, Cho and
+  Bengio}]{chorowski2015attention}
+Chorowski, J.~K., Bahdanau, D., Serdyuk, D., Cho, K. and Bengio, Y. (2015)
+  Attention-based models for speech recognition.
+\newblock In \textit{Advances in Neural Information Processing Systems},
+  577--585.
+
+\bibitem[{{Chung} et~al.(2014){Chung}, {Gulcehre}, {Cho} and
+  {Bengio}}]{chung2014}
+{Chung}, J., {Gulcehre}, C., {Cho}, K. and {Bengio}, Y. (2014) {Empirical
+  Evaluation of Gated Recurrent Neural Networks on Sequence Modeling}.
+\newblock \textit{ArXiv e-prints}.
+
+\bibitem[{Chung et~al.(2015)Chung, Kastner, Dinh, Goel, Courville and
+  Bengio}]{chung2015recurrent}
+Chung, J., Kastner, K., Dinh, L., Goel, K., Courville, A.~C. and Bengio, Y.
+  (2015) A recurrent latent variable model for sequential data.
+\newblock In \textit{Advances in Neural Information Processing Systems},
+  2980--2988.
+
+\bibitem[{Cinar et~al.(2017)Cinar, Mirisaee, Goswami, Gaussier, A{\"i}t-Bachir
+  and Strijov}]{cinar2017position}
+Cinar, Y.~G., Mirisaee, H., Goswami, P., Gaussier, E., A{\"i}t-Bachir, A. and
+  Strijov, V. (2017) Position-based content attention for time series
+  forecasting with sequence-to-sequence rnns.
+\newblock In \textit{International Conference on Neural Information
+  Processing}, 533--544. Springer.
+
+\bibitem[{{Doudchenko} and {Imbens}(2016)}]{doudchenko2016balancing}
+{Doudchenko}, N. and {Imbens}, G.~W. (2016) {Balancing, Regression,
+  Difference-In-Differences and Synthetic Control Methods: A Synthesis}.
+\newblock \textit{ArXiv e-prints}.
+
+\bibitem[{Dube and Zipperer(2015)}]{dube2015pooling}
+Dube, A. and Zipperer, B. (2015) Pooling multiple case studies using synthetic
+  controls: An application to minimum wage policies.
+
+\bibitem[{El~Hihi and Bengio(1995)}]{el1995}
+El~Hihi, S. and Bengio, Y. (1995) Hierarchical recurrent neural networks for
+  long-term dependencies.
+\newblock In \textit{Neural Information Processing Systems}, vol. 400, 409.
+
+\bibitem[{Fabius and van Amersfoort(2014)}]{fabius2014variational}
+Fabius, O. and van Amersfoort, J.~R. (2014) Variational recurrent
+  auto-encoders.
+\newblock \textit{arXiv:1412.6581}.
+
+\bibitem[{Ferman and Pinto(2016)}]{ferman2016revisiting}
+Ferman, B. and Pinto, C. (2016) Revisiting the synthetic control estimator.
+\newblock Available at \url{https://mpra.ub.uni-muenchen.de/81941/}.
+
+\bibitem[{Ferman et~al.(2018)Ferman, Pinto and Possebom}]{ferman2018cherry}
+Ferman, B., Pinto, C. and Possebom, V. (2018) Cherry picking with synthetic
+  controls.
+\newblock Available at:
+  \url{https://mpra.ub.uni-muenchen.de/85138/1/MPRA_paper_85138.pdf}.
+
+\bibitem[{Goodfellow et~al.(2016)Goodfellow, Bengio and
+  Courville}]{goodfellow2016deep}
+Goodfellow, I., Bengio, Y. and Courville, A. (2016) \textit{Deep Learning}.
+\newblock Cambridge, MA: MIT press.
+
+\bibitem[{Haines(2010)}]{haines2010}
+Haines, M.~R. (2010) {H}istorical, {D}emographic, {E}conomic, and {S}ocial
+  {D}ata: The {U}nited {S}tates, 1790-2002.
+\newblock Ann Arbor, MI: Inter-university Consortium for Political and Social
+  Research [distributor], 2010-05-21. \url{doi.org/10.3886/ICPSR02896.v3}.
+
+\bibitem[{Kaul et~al.(2015)Kaul, Kl{\"o}{\ss}ner, Pfeifer and
+  Schieler}]{kaul2015synthetic}
+Kaul, A., Kl{\"o}{\ss}ner, S., Pfeifer, G. and Schieler, M. (2015) Synthetic
+  control methods: Never use all pre-intervention outcomes together with
+  covariates.
+\newblock Available at:
+  \url{http://www.oekonometrie.uni-saarland.de/papers/SCM_Predictors.pdf}.
+
+\bibitem[{{Kingma} and {Ba}(2014)}]{kingma2014adam}
+{Kingma}, D.~P. and {Ba}, J. (2014) {Adam: A Method for Stochastic
+  Optimization}.
+\newblock \textit{ArXiv e-prints}.
+
+\bibitem[{Kingma and Welling(2013)}]{kingma2013auto}
+Kingma, D.~P. and Welling, M. (2013) Auto-encoding variational bayes.
+\newblock \textit{arXiv:1312.6114}.
+
+\bibitem[{{Poulos} and {Valle}(2017)}]{2017arXiv171204046P}
+{Poulos}, J. and {Valle}, R. (2017) {Attention networks for image-to-text}.
+\newblock \textit{arXiv e-prints}, arXiv:1712.04046.
+
+\bibitem[{Schmidhuber and Hochreiter(1997)}]{schmidhuber1997long}
+Schmidhuber, J. and Hochreiter, S. (1997) Long short-term memory.
+\newblock \textit{Neural Computation}, \textbf{9}, 1735--1780.
+
+\bibitem[{Sylla et~al.(1993)Sylla, Legler and Wallis}]{sylla1993sources}
+Sylla, R.~E., Legler, J.~B. and Wallis, J. (1993) {S}ources and {U}ses of
+  {F}unds in {S}tate and {L}ocal {G}overnments, 1790-1915: [{U}nited {S}tates].
+\newblock Ann Arbor, MI: Inter-university Consortium for Political and Social
+  Research, 2017-05-21. \url{doi.org/10.3886/ICPSR06304.v1}.
+
+\bibitem[{Sylla et~al.(1995{\natexlab{a}})Sylla, Legler and
+  Wallis}]{sylla1995sourcesa}
+--- (1995{\natexlab{a}}) {S}tate and {L}ocal {G}overnment [{U}nited {S}tates]:
+  {S}ources and {U}ses of {F}unds, {C}ensus {S}tatistics, {T}wentieth {C}entury
+  [{T}hrough 1982].
+\newblock Ann Arbor, MI: Inter-university Consortium for Political and Social
+  Research, 2017-05-21. \url{doi.org/10.3886/ICPSR06304.v1}.
+
+\bibitem[{Sylla et~al.(1995{\natexlab{b}})Sylla, Legler and
+  Wallis}]{sylla1995sourcesb}
+--- (1995{\natexlab{b}}) {S}tate and {L}ocal {G}overnment [{U}nited {S}tates]:
+  {S}ources and {U}ses of {F}unds, {S}tate {F}inancial {S}tatistics, 1933-1937.
+\newblock Ann Arbor, MI: Inter-university Consortium for Political and Social
+  Research, 2017-05-21. http://doi.org/10.3886/ICPSR06306.v1.
+
+\bibitem[{{Vinyals} et~al.(2014){Vinyals}, {Kaiser}, {Koo}, {Petrov},
+  {Sutskever} and {Hinton}}]{vinyals2014grammar}
+{Vinyals}, O., {Kaiser}, L., {Koo}, T., {Petrov}, S., {Sutskever}, I. and
+  {Hinton}, G. (2014) {Grammar as a Foreign Language}.
+\newblock \textit{ArXiv e-prints}.
+
+\bibitem[{Williamson(2017)}]{williamson2017seven}
+Williamson, S.~H. (2017) Seven ways to compute the relative value of a us
+  dollar amount, 1774 to present.
+\newblock \url{MeasuringWorth.com}.
+\newblock [Online; accessed 01-October-2017].
+
+\bibitem[{Xu(2017)}]{xu2017generalized}
+Xu, Y. (2017) Generalized synthetic control method: Causal inference with
+  interactive fixed effects models.
+\newblock \textit{Political Analysis}, \textbf{25}, 57--76.
+
+\bibitem[{{Zhu} and {Laptev}(2017)}]{zhu2017deep}
+{Zhu}, L. and {Laptev}, N. (2017) {Deep and Confident Prediction for Time
+  Series at Uber}.
+\newblock \textit{ArXiv e-prints}.
+
+\end{thebibliography}
