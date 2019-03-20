@@ -17,6 +17,8 @@ data.directory <- "~/Dropbox/github/rnns-causal/data/"
 code.directory <-"~/Dropbox/github/rnns-causal/code/"
 results.directory <-"~/Dropbox/github/rnns-causal/results/"
 
+source('~/Dropbox/github/gans-causal/code/utils.R')
+
 # Causal impact estimates: basque country
 
 # First run synth-basque.R in gans-causal/code with predictors=TRUE
