@@ -1,15 +1,16 @@
 \BOOKMARK [1][-]{section.1}{Introduction}{}% 1
-\BOOKMARK [1][-]{section.2}{RNNs for counterfactual prediction}{}% 2
-\BOOKMARK [2][-]{subsection.2.1}{RNNs}{section.2}% 3
-\BOOKMARK [2][-]{subsection.2.2}{Encoder-decoder networks}{section.2}% 4
-\BOOKMARK [2][-]{subsection.2.3}{Variational autoencoder}{section.2}% 5
-\BOOKMARK [1][-]{section.3}{Predictive accuracy and statistical significance}{}% 6
-\BOOKMARK [2][-]{subsection.3.1}{Randomization confidence intervals}{section.3}% 7
-\BOOKMARK [1][-]{section.4}{SCM placebo tests}{}% 8
-\BOOKMARK [2][-]{subsection.4.1}{RNNs implementation details}{section.4}% 9
-\BOOKMARK [2][-]{subsection.4.2}{Basque Country}{section.4}% 10
-\BOOKMARK [2][-]{subsection.4.3}{California}{section.4}% 11
-\BOOKMARK [2][-]{subsection.4.4}{West Germany}{section.4}% 12
-\BOOKMARK [2][-]{subsection.4.5}{Discussion}{section.4}% 13
-\BOOKMARK [1][-]{section.5}{Application: Homestead acts and education spending}{}% 14
-\BOOKMARK [1][-]{section.6}{Conclusion}{}% 15
+\BOOKMARK [1][-]{section.2}{Counterfactual prediction}{}% 2
+\BOOKMARK [2][-]{subsection.2.1}{Relationship to covariate shift and domain adaptation}{section.2}% 3
+\BOOKMARK [1][-]{section.3}{RNNs for counteractual prediction}{}% 4
+\BOOKMARK [2][-]{subsection.3.1}{Encoder-decoder networks}{section.3}% 5
+\BOOKMARK [2][-]{subsection.3.2}{Variational autoencoder}{section.3}% 6
+\BOOKMARK [1][-]{section.4}{Predictive accuracy and statistical significance}{}% 7
+\BOOKMARK [2][-]{subsection.4.1}{Randomization confidence intervals}{section.4}% 8
+\BOOKMARK [1][-]{section.5}{SCM placebo tests}{}% 9
+\BOOKMARK [2][-]{subsection.5.1}{RNNs implementation details}{section.5}% 10
+\BOOKMARK [2][-]{subsection.5.2}{Basque Country}{section.5}% 11
+\BOOKMARK [2][-]{subsection.5.3}{California}{section.5}% 12
+\BOOKMARK [2][-]{subsection.5.4}{West Germany}{section.5}% 13
+\BOOKMARK [2][-]{subsection.5.5}{Discussion}{section.5}% 14
+\BOOKMARK [1][-]{section.6}{Application: Homestead acts and state capacity}{}% 15
+\BOOKMARK [1][-]{section.7}{Conclusion}{}% 16

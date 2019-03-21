@@ -1,4 +1,4 @@
-\begin{thebibliography}{34}
+\begin{thebibliography}{40}
 \expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
 \expandafter\ifx\csname url\endcsname\relax
   \def\url#1{\texttt{#1}}\fi
@@ -23,6 +23,11 @@ Abadie, A. and Gardeazabal, J. (2003) The economic costs of conflict: A case
   study of the basque country.
 \newblock \textit{The American Economic Review}, \textbf{93}, 113--132.
 
+\bibitem[{Amjad et~al.(2018)Amjad, Shah and Shen}]{amjad2018robust}
+Amjad, M., Shah, D. and Shen, D. (2018) Robust synthetic control.
+\newblock \textit{The Journal of Machine Learning Research}, \textbf{19},
+  802--852.
+
 \bibitem[{{Athey} et~al.(2017){Athey}, {Bayati}, {Doudchenko}, {Imbens} and
   {Khosravi}}]{athey2017matrix}
 {Athey}, S., {Bayati}, M., {Doudchenko}, N., {Imbens}, G. and {Khosravi}, K.
@@ -46,6 +51,12 @@ Bowman, S.~R., Vilnis, L., Vinyals, O., Dai, A.~M., Jozefowicz, R. and Bengio,
 Brodersen, K.~H., Gallusser, F., Koehler, J., Remy, N. and Scott, S.~L. (2015)
   Inferring causal impact using bayesian structural time-series models.
 \newblock \textit{The Annals of Applied Statistics}, \textbf{9}, 247--274.
+
+\bibitem[{Carvalho et~al.(2018)Carvalho, Masini and
+  Medeiros}]{carvalho2018arco}
+Carvalho, C., Masini, R. and Medeiros, M.~C. (2018) Arco: an artificial
+  counterfactual approach for high-dimensional panel time-series data.
+\newblock \textit{Journal of Econometrics}, \textbf{207}, 352--380.
 
 \bibitem[{Cavallo et~al.(2013)Cavallo, Galiani, Noy and
   Pantano}]{cavallo2013catastrophic}
@@ -121,10 +132,19 @@ Ferman, B., Pinto, C. and Possebom, V. (2018) Cherry picking with synthetic
 \newblock Available at:
   \url{https://mpra.ub.uni-muenchen.de/85138/1/MPRA_paper_85138.pdf}.
 
+\bibitem[{Firpo and Possebom(2018)}]{firpo2018synthetic}
+Firpo, S. and Possebom, V. (2018) Synthetic control method: Inference,
+  sensitivity analysis and confidence sets.
+\newblock \textit{Journal of Causal Inference}, \textbf{6}.
+
 \bibitem[{Goodfellow et~al.(2016)Goodfellow, Bengio and
   Courville}]{goodfellow2016deep}
 Goodfellow, I., Bengio, Y. and Courville, A. (2016) \textit{Deep Learning}.
 \newblock Cambridge, MA: MIT press.
+
+\bibitem[{Hahn and Shi(2017)}]{hahn2017synthetic}
+Hahn, J. and Shi, R. (2017) Synthetic control and inference.
+\newblock \textit{Econometrics}, \textbf{5}, 52.
 
 \bibitem[{Haines(2010)}]{haines2010}
 Haines, M.~R. (2010) {H}istorical, {D}emographic, {E}conomic, and {S}ocial
@@ -148,6 +168,18 @@ Kaul, A., Kl{\"o}{\ss}ner, S., Pfeifer, G. and Schieler, M. (2015) Synthetic
 \bibitem[{Kingma and Welling(2013)}]{kingma2013auto}
 Kingma, D.~P. and Welling, M. (2013) Auto-encoding variational bayes.
 \newblock \textit{arXiv:1312.6114}.
+
+\bibitem[{Kl{\"o}{\ss}ner et~al.(2017)Kl{\"o}{\ss}ner, Kaul, Pfeifer and
+  Schieler}]{klossner2017comparative}
+Kl{\"o}{\ss}ner, S., Kaul, A., Pfeifer, G. and Schieler, M. (2017) Comparative
+  politics and the synthetic control method revisited: A note on {A}badie et
+  al. (2015).
+\newblock \textit{Swiss Journal of Economics and Statistics}.
+
+\bibitem[{{Poulos}(2019)}]{2019arXiv190308028P}
+{Poulos}, J. (2019) {State-Building through Public Land Disposal? An
+  Application of Matrix Completion for Counterfactual Prediction}.
+\newblock \textit{arXiv e-prints}, arXiv:1903.08028.
 
 \bibitem[{{Poulos} and {Valle}(2017)}]{2017arXiv171204046P}
 {Poulos}, J. and {Valle}, R. (2017) {Attention networks for image-to-text}.
