@@ -12,45 +12,45 @@ Repeated entry---line 3179 of file references.bib
  :                           ,
 I'm skipping whatever remains of this entry
 Warning--empty note in dube2015pooling
-You've used 40 entries,
+You've used 42 entries,
             2705 wiz_defined-function locations,
-            787 strings with 11816 characters,
-and the built_in function-call counts, 20484 in all, are:
-= -- 2009
-> -- 1072
-< -- 19
-+ -- 417
-- -- 372
-* -- 1696
-:= -- 3777
-add.period$ -- 81
-call.type$ -- 40
-change.case$ -- 338
-chr.to.int$ -- 39
-cite$ -- 41
-duplicate$ -- 954
-empty$ -- 1296
-format.name$ -- 511
-if$ -- 4025
+            795 strings with 12075 characters,
+and the built_in function-call counts, 21322 in all, are:
+= -- 2092
+> -- 1108
+< -- 22
++ -- 431
+- -- 384
+* -- 1765
+:= -- 3933
+add.period$ -- 85
+call.type$ -- 42
+change.case$ -- 352
+chr.to.int$ -- 41
+cite$ -- 43
+duplicate$ -- 994
+empty$ -- 1355
+format.name$ -- 533
+if$ -- 4190
 int.to.chr$ -- 2
 int.to.str$ -- 1
-missing$ -- 31
-newline$ -- 167
-num.names$ -- 160
-pop$ -- 417
+missing$ -- 33
+newline$ -- 175
+num.names$ -- 168
+pop$ -- 437
 preamble$ -- 1
-purify$ -- 283
+purify$ -- 295
 quote$ -- 0
-skip$ -- 626
+skip$ -- 652
 stack$ -- 0
-substring$ -- 871
-swap$ -- 263
-text.length$ -- 1
+substring$ -- 895
+swap$ -- 273
+text.length$ -- 2
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 357
+type$ -- 372
 warning$ -- 1
-while$ -- 151
+while$ -- 157
 width$ -- 0
-write$ -- 465
+write$ -- 488
 (There were 2 error messages)

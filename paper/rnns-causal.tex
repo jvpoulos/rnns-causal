@@ -134,7 +134,7 @@
 \pagenumbering{roman}% Roman-numbered pages (start from i)
 \begin{abstract}  % abstract of 150 to 250 words
 \noindent 
-This paper proposes an alternative to the synthetic control method (SCM) for estimating the effect of a policy intervention on an outcome over time. Recurrent neural networks (RNNs) are used to predict counterfactual time-series of treated units using only the outcomes of control units as model inputs. The proposed method does not rely on pre-period covariates to construct the synthetic control and is consequently less susceptible to $p$-hacking. RNNs are also capable of handling multiple treated units and can learn nonconvex combinations of control units. In placebo tests, RNNs outperform SCM in predicting the post-intervention time-series of control units, while yielding a comparable proportion of false positives. The RNN-based approach contributes to a new generation of data-driven machine learning techniques such as matrix completion and the Lasso for generating counterfactual predictions.
+This paper proposes an alternative to the synthetic control method (SCM) for estimating the effect of a policy intervention on an outcome over time. Recurrent neural networks (RNNs) are used to predict counterfactual time-series of treated units using only the outcomes of control units as model inputs. The proposed method does not rely on pre-intervention covariates to construct the synthetic control and is consequently less susceptible to $p$-hacking. RNNs are also capable of handling multiple treated units and can learn nonconvex combinations of control units. In placebo tests, RNNs outperform the SCM in predicting the post-intervention time-series of control units, while yielding a comparable proportion of false positives. The RNN-based approach contributes to a new generation of data-driven machine learning techniques such as matrix completion and the Lasso for generating counterfactual predictions.
 \\
 \begin{singlespace}
 	\emph{Keywords:} Counterfactual Prediction; Recurrent Neural Networks; Randomization Inference; Synthetic Controls; Time-Series Cross-Section Data
@@ -151,42 +151,65 @@ An important problem in the social sciences is estimating the effect of a policy
 
 The synthetic control method (SCM) \citep{abadie2010synthetic} is a popular method for making causal inferences on observational time-series. The method compares a single treated unit with a synthetic control that combines the outcomes of multiple control units on the basis of their pre-intervention similarity with the treated unit. Specifically, the synthetic control is constructed by choosing a convex combination of weights $\mathbf{w} = (w_1, \ldots, w_j), w_j \geq 0, \sum w_j =1$, of control time-series that minimizes $\|\mathbf{X_1} - \mathbf{X_0} \mathbf{w}\|_\mathbf{v}$, where $\mathbf{X_1}$ and $\mathbf{X_0}$ are the pre-intervention covariates of the treated and control units, respectively, and $\mathbf{v}= (v_1, \ldots, v_J)$ are importance weights chosen to minimize the prediction error produced by $\mathbf{w}^{*} \mathbf{v}$ during cross-validation. 
 
-The SCM has several limitations. First, the convexity restriction of the synthetic control estimator precludes dynamic, nonlinear interactions between multiple control units. Intuitively, one can expect that the treated unit may exhibit nonlinear or negative correlations with the control units. \citet{ferman2016revisiting} demonstrate that the convexity restriction implies that the SCM estimator may be biased even if selection into treatment is only correlated with time-invariant unobserved covariates. Second, SCM is generally biased if treatment assignment is correlated with unobserved confounders, even when the number of pre-intervention periods approaches infinity \citep{ferman2018synthetic}. Third, while SCM can be generalized to handle multiple treated units \citep[e.g.,][]{dube2015pooling,xu2017generalized}, the generalized SCM is not capable of sharing model weights when predicting the outcomes of multiple treated units. 
+The SCM has several limitations. First, the convexity restriction of the synthetic control estimator precludes dynamic, nonlinear interactions between multiple control units. Intuitively, one can expect that the treated unit may exhibit nonlinear or negative correlations with the control units. \citet{ferman2016revisiting} demonstrate that the convexity restriction implies that the SCM estimator may be biased even if selection into treatment is only correlated with time-invariant unobserved covariates. Second, \citet{ferman2018synthetic} demonstrate that the SCM is generally biased if treatment assignment is correlated with unobserved confounders, even when the number of pre-intervention periods grows \citep{ferman2018synthetic}. Moreover, the authors show that while the SCM minimizes imbalance in pre-period outcomes, the likelihood of finding exact balancing weights vanishes as the number of time periods increase, which results in bias. 
 
-While the strength of SCM lies in its simplicity in setup and implementation, several problems arise from the lack of guidance on how to specify the SCM estimator. The specification of the estimator can produce very different results: \citet{ferman2018cherry} show, for example, how cherry-picking between common SCM specifications can facilitate $p$-hacking.\citet{kaul2015synthetic} show that the common practice of including lagged versions of the outcome variable as separate predictors can render all other covariates irrelevant. \citet{klossner2017comparative} demonstrates that the common practice of using cross-validation to select importance weights can yield multiple values and consequently different results. 
+While the strength of the SCM lies in its simplicity in setup and implementation, several problems arise from the lack of guidance on how to specify the SCM estimator. The specification of the estimator can produce very different results: \citet{ferman2018cherry} show, for example, how cherry-picking between common SCM specifications can facilitate $p$-hacking.\citet{kaul2015synthetic} show that the common practice of including lagged versions of the outcome variable as separate predictors can render all other covariates irrelevant. \citet{klossner2017comparative} demonstrates that the common practice of using cross-validation to select importance weights can yield multiple values and consequently different results. 
 
-This paper proposes an alternative to SCM that is capable of automatically selecting appropriate control units at each time-step, allows for nonconvex combinations of control units, and does not rely on pre-intervention covariates. The method uses recurrent neural networks (RNNs) to predict a counterfactual time-series of treated units using only control unit outcomes as model inputs. RNNs are a class of neural networks that take advantage of the sequential nature of time-series data by sharing model parameters across multiple time-steps \citep{el1995}. Non-parametric models such as RNNs are useful for prediction problems because we do not have to assume a functional form on the data. In addition, RNNs can learn the most useful nonconvex combination of control unit outcomes at each time-step for generating counterfactual predictions. Relaxing the convexity restriction is useful when the data-generating process underlying the outcome of interest depends nonlinearly on the history of its inputs. RNNs have been shown to outperform various linear models on time-series prediction tasks \citep{cinar2017position}. 
+This paper proposes an alternative to the SCM that is capable of automatically selecting appropriate control units at each time-step, allows for nonconvex combinations of control units, and does not rely on pre-intervention covariates. The method uses recurrent neural networks (RNNs) to predict a counterfactual time-series of treated units using only control unit outcomes as model inputs. RNNs are a class of neural networks that take advantage of the sequential nature of time-series data by sharing model parameters across multiple time-steps \citep{el1995}. Non-parametric models such as RNNs are useful for prediction problems because we do not have to assume a functional form on the data. In addition, RNNs can learn the most useful nonconvex combination of control unit outcomes at each time-step for generating counterfactual predictions. Relaxing the convexity restriction is useful when the data-generating process underlying the outcome of interest depends nonlinearly on the history of its inputs. RNNs have been shown to outperform various linear models on time-series prediction tasks \citep{cinar2017position}. 
 
 The proposed method builds on a new literature that uses machine learning methods for data-driven synthetic controls, such as matrix completion \citep{athey2017matrix,2019arXiv190308028P}, or two-stage estimators that reduces data dimensionality via L1-regularized regression \citep{doudchenko2016balancing,carvalho2018arco} or matrix factorization \citep{amjad2018robust} prior to regressing the outcomes on the reduced data. These methods are data-driven in the sense that they are capable of finding an appropriate subset of control units for comparison in the absence of domain knowledge or pre-intervention covariates. 
 
-RNNs are end-to-end trainable and very flexible to a given sequential prediction problem. For example, they are capable of sharing learned parameters across time-steps and multiple treated units. Regularization methods such as dropout can easily be used to prevent overfitting during the training process, which is problematic when the networks learn an overreliance on a few model inputs. Moreover, an attention mechanism can be included in the model in order to discern the contribution of each model input to the predicted counterfactual. 
+RNNs are end-to-end trainable and very flexible to a given sequential prediction problem. For example, they are capable of sharing learned parameters across time-steps and multiple treated units. while the SCM can be generalized to handle multiple treated units \citep[e.g.,][]{dube2015pooling,xu2017generalized}, the generalized the SCM is not capable of sharing model weights when predicting the outcomes of multiple treated units. Regularization methods such as dropout can easily be incorporated into RNN architectures to prevent overfitting during the training process, which is problematic when the networks learn an overreliance on a few model inputs. Moreover, an attention mechanism can be included in the model in order to discern the contribution of each model input to the predicted counterfactual. 
 
-In the section immediately below, I describe the approach of using RNNs for counterfactual time-series prediction; Section \ref{eval} details the procedure for evaluating the models in terms of predictive accuracy and statistical significance; Section \ref{placebo} presents the results of the placebo tests and discusses when the proposed method is expected to outperform SCM; Section \ref{conclusion} concludes by discussing the contributions of the paper and offering potential avenues for future research. 
+In the section immediately below, I describe the approach of using RNNs for counterfactual time-series prediction; Section \ref{eval} details the procedure for evaluating the models in terms of predictive accuracy and statistical significance; Section \ref{placebo} presents the results of the placebo tests and discusses when the proposed method is expected to outperform the SCM; Section \ref{conclusion} concludes by discussing the contributions of the paper and offering potential avenues for future research. 
 
 %\setcounter{section}{1}
 \section{Counterfactual prediction} \label{prediction}
 
-The proposed method estimates the causal effect of a discrete intervention in observational time-series data; i.e., settings in which treatment is not randomly assigned and there exists both pre- and post-intervention period observations of the outcome of interest. \citet{brodersen2015inferring} originally propose an alternative to SCM that uses the pre-period time-series of control units to train a model to predict the counterfactual time-series of the treated unit. The key assumption of this approach is that the relationship between predictors $\mathbf{x}^{(1)}, \ldots, \mathbf{x}^{(\tau)}$ and the treated time-series $\mathbf{y}^{(1)}, \ldots, \mathbf{y}^{(\tau)}$ modeled prior to the intervention persists after the intervention. Similar to other methods of causal inference, the approach also assumes that the control units are not themselves affected by the intervention; i.e., there is no spillover effect that would indeterminately bias the estimate and possibly lead to a false positive. 
+The proposed method estimates the causal effect of a discrete intervention in observational time-series data; i.e., settings in which treatment is not randomly assigned and there exists both pre- and post-period observations of the outcome of interest. A straightforward approach for counterfactual prediction, originally proposed by \citet{brodersen2015inferring}, is to train a model on the pre-period time-series of control units and use the weights of the trained model to predict the counterfactual time-series of the treated units. 
 
-In its most basic form, the pre-period relationship can be modeled by linear regression, 
+Let  $\mathbf{x}^{(t)}= \mathbf{x}^{(1)}, \ldots, \mathbf{x}^{(\tau)}$ denote a multivariate time-series of control unit outcomes and  $\mathbf{y}^{(t)}= \mathbf{y}^{(1)}, \ldots, \mathbf{y}^{(\tau)}$ be the time-series of treated unit outcomes, both with the temporal ordering $t = 1, \ldots, \tau$. In its most basic form, the pre-period relationship between treated and control unit outcomes can be modeled by nonparametric regression, 
 
 \begin{equation}
-  \mathbf{y}^{(t)} =  \alpha_0 + \beta \mathbf{x}^{(t)} + \epsilon^{(t)} \hspace{10mm} \forall \, t = 1, \ldots, n, 
+  \mathbf{y}^{(t)} =  f_0 \left(\mathbf{x}^{(t)}\right) + \epsilon^{(t)} \hspace{10mm} t = 1, \ldots, n, 
 \end{equation}
 \noindent
-where time-step $t = 1, \ldots, n, \ldots, \tau$ is the temporal ordering of the time-series and $n$ denotes the end of the pre-period. As long as $\mathbf{x}^{(t)}$ was not impacted by the intervention, it is plausible that the modeled relationship persists after the intervention. The fitted model is then used to predict the counterfactual time-series of the treated group in the post-period: 
+where $n < \tau$ denotes the last time-step prior to a discrete intervention and the noise variables $\epsilon^{(t)}$ are assumed to be i.i.d. standard normal and independent of $\mathbf{x}^{(t)}$. The statistical problem is to recover the nonlinear function $f_0$ from $\left(\mathbf{x}^{(t)}, \mathbf{y}^{(t)}\right)$.
+
+The fitted model is then used to predict the counterfactual time-series of the treated group in the post-period: 
 
 \begin{equation}
-  \mathbf{\hat{y}}^{(t)} =  \alpha_1 + \beta \mathbf{x}^{(t)} + \zeta^{(t)}  \hspace{10mm} \forall \, t = n+1. \ldots, \tau, 
+  \mathbf{\hat{y}}^{(t)} =  \alpha_1 + \beta \mathbf{x}^{(t)} + \zeta^{(t)}  \hspace{10mm} t = n+1. \ldots, \tau, 
 \end{equation}
 
-The key assumption of this model is that the relationship between controls $\mathbf{x}^{(t)}$ and the treated time-series $\mathbf{y}^{(t)}$ modeled prior to the intervention persists after the intervention. Under this assumption, the inferred causal effect of the intervention on the treated group is the difference between the observed time-series of the treated units and the counterfactual time-series that would have been observed in the absence of the intervention:
+The key assumption of this model is that the relationship between controls $\mathbf{x}^{(t)}$ and the treated time-series $\mathbf{y}^{(t)}$ modeled prior to the intervention persists after the intervention. Similar to other methods of causal inference, the approach also assumes that the control units are not themselves affected by the intervention; i.e., there is no spillover effect that would indeterminately bias the estimate and possibly lead to a false positive. As long as $\mathbf{x}^{(t)}$ was not impacted by the intervention, it is plausible that the modeled relationship persists after the intervention. Under both assumptions, the inferred causal effect of the intervention on the treated group is the difference between the observed time-series of the treated units and the counterfactual time-series that would have been observed in the absence of the intervention:
 
 \begin{equation}
-  \mathbf{\hat{\phi}}^{(t)} = \mathbf{y}^{(t)} - \mathbf{\hat{y}}^{(t)} \hspace{10mm} \forall \, t = n+1, \ldots, \tau. \label{eq:pointwise}
+  \mathbf{\hat{\phi}}^{(t)} = \mathbf{y}^{(t)} - \mathbf{\hat{y}}^{(t)} \hspace{10mm} t = n+1, \ldots, \tau. \label{eq:pointwise}
 \end{equation}
 
 This treatment effect is calculated at every post-period time-step and is thus useful for understanding the temporal evolution of the causal effect.
+
+
+\subsection{Autoregression}
+
+The counterfactual time-series of treated can simply be modeled as an autoregressive process in which $\mathbf{y}^{(t)}$ is linearly related to values at $p$ previous time-steps and a series of imperfectly predictable shocks \citep[pp. 246][]{little2014statistical}:
+
+\begin{equation}
+(\mathbf{y}^{(t)} |  \mathbf{y}^{(1)}, \mathbf{y}^{(2)}, \ldots, \mathbf{y}^{(t-1)}, \theta) \sim \mathcal{N}(\alpha + \beta_1 \mathbf{y}^{(t-1)} + \ldots + \beta_p \mathbf{y}^{(t-p)}, \sigma^2), \label{eq:ar}
+\end{equation}
+
+where $\theta$ is a set of estimable parameters consisting of constant term $\alpha$, regression coefficients $\beta_1, \beta_2, \ldots, \beta_p$, and error variance $\sigma^2$. Least squares estimates of the parameters can be recovered by regressing 
+
+\begin{equation}
+\mathbf{y}^{(t)} = \mathbf{x}^{(t)} = (\mathbf{y}^{(t-1)}, \mathbf{y}^{(t-2)}, \ldots, \mathbf{y}^{(t-p)}) \hspace{10mm} t = p, p+1, \ldots, \tau-1. \label{eq:ar-pre}
+\end{equation}
+
+The estimated parameters are then used to predict the counterfactual time-series of treated unit outcomes: 
+
+\begin{equation}
+\mathbf{\hat{y}}^{(t)} = \mathbf{x}^{(t)} \hspace{10mm}  t = n+1, \ldots, \tau, \label{eq:ar-post}
+\end{equation} 
 
 \subsection{Relationship to covariate shift and domain adaptation}
 
@@ -201,7 +224,30 @@ This treatment effect is calculated at every post-period time-step and is thus u
 %huang2007correcting,cortes2008sample,cortes2010learning,bickel2009discriminative
 
 %*cortes2008sample - importance weighting of loss fn to address the problem of covariate shift.
-%\citet{athey2017matrix} note that their estimator penalizes the errors for each observed value equally without regard to the fact that the probability of missingness (i.e., the propensity score), $\Pr (M_{it} = 1 | \mathbf{Y_{\mathrm{obs}}}, \phi)$, increases with $t$. The authors suggest weighting the loss function by the propensity score, which is similar to the importance weighting scheme proposed by \citet{cortes2008sample} to address the problem of covariate shift.
+	%points are drawn according to the test distribution but not all of them are made available to the learner. This is called the sample
+	%selection bias problem. Remarkably, it is often possible to correct this bias by using
+	%large amounts of unlabeled data.
+	%The problem of sample selection bias correction for linear regression has been extensively studied in econometrics and statistics (heckman1979sample)
+	%The main correction technique used in all of these publications consists of reweighting the cost of training point errors to more closely reflect that of the test distribution.
+	%This is in fact a technique commonly used in statistics and machine learning for a variety of problems of this type (Little & Rubin, 1986). With the exact weights, this reweighting could optimally correct the bias, but, in practice, the weights are based on an estimate of the sampling probability from finite data sets.
+	
+	%\citet{athey2017matrix} note that their estimator penalizes the errors for each observed value equally without regard to the fact that the probability of missingness (i.e., the propensity score), $\Pr (M_{it} = 1 | \mathbf{Y_{\mathrm{obs}}}, \phi)$, increases with $t$. The authors suggest weighting the loss function by the propensity score, which is similar to the importance weighting scheme proposed by \citet{cortes2008sample} to address the problem of covariate shift.
+
+%johansson2016learning
+	%formulate the problem of counterfactual inference as a domain adaptation problem, and more specifically a covariate shift problem
+	%learning representations that encourage similarity (balance) between the treated and control populations leads to better counterfactual inference
+	% recent work:learning representations for transfer learning (ben2007analysis; 2015arXiv150507818G)
+	%the problem of causal inference by counterfactual prediction might require inference over a different distribution than the one from which samples are given
+	%In machine learning terms, this means that the feature distribution of the test set differs from that of the train set. This is a case of covariate shift, which is a special case of domain adaptation
+	
+	% The fundamental problem of causal inference is that only one potential outcome is observed for a given context x
+	%In observational studies, which are the focus of this work, the treatment assignment mechanism is not un- der our control and in general will not be independent of the context x. Therefore, in general, the counterfactual distribution will be different from the factual distribution.
+	
+	%Intuitively, representations that reduce the discrepancy between the treated and control populations prevent the learner from using “unreliable” aspects of the data when trying to generalize from the factual to counterfactual do- mains. For example, if in our sample almost no men ever received medication A, inferring how men would react to medication A is highly prone to error and a more conservative use of the gender feature might be warranted.
+	
+	% minimizing the so-called discrepancy distance, introduced by Mansour et al. (2009), which is a hypothesis class dependent distance measure tailored for domain adaptation
+
+%\citet{schnabel2016recommendations} first connected the matrix completion problem with causal inference in an observational setting in the context of recommender systems under selection bias. 
 
 \section{RNNs for counteractual prediction}
 
@@ -209,8 +255,8 @@ Unlike linear models, RNNs are non-parametric and are structured for time-series
 
 \begin{align}
 \mathbf{h}^{(t)} &= g^{(t)} \left(\mathbf{x}^{(1)}, \ldots, \mathbf{x}^{(t)} \right) \nonumber \\ 
-&= f \left( \mathbf{h}^{(t-1)}, \mathbf{x}^{(t)} \right), \label{eq:hidden}
-\end{align} where $f(\cdot)$ is a nonlinear function that operates on all time-steps and input lengths. The updated hidden layer is used to generate a sequence of output values $\mathbf{o}^{(t)}$ in the form of log probabilities that correspond to $\mathbf{x}^{(t)}$. The loss function computes $\mathbf{\hat{y}}^{(t)} = \mathrm{linear} (\mathbf{o}^{(t)})$ and compares this value to $\mathbf{y}^{(t)}$.
+&= f_1 \left( \mathbf{h}^{(t-1)}, \mathbf{x}^{(t)} \right), \label{eq:hidden}
+\end{align} where $f_1(\cdot)$ is a nonlinear function that operates on all time-steps and input lengths. The updated hidden layer is used to generate a sequence of output values $\mathbf{o}^{(t)}$ in the form of log probabilities that correspond to $\mathbf{x}^{(t)}$. The loss function computes $\mathbf{\hat{y}}^{(t)} = \mathrm{linear} (\mathbf{o}^{(t)})$ and compares this value to $\mathbf{y}^{(t)}$.
 
 \subsection{Encoder-decoder networks}
 
@@ -270,7 +316,7 @@ RNN weights are learned with stochastic gradient descent on mean squared predict
 
 \citet{abadie2003economic} estimate the economic impact of terrorism in the Basque Country during the period of 1968 to 1997 by comparing per-capita gross domestic product (GDP) in the Basque Country against a synthetic control region without terrorism. The synthetic control is constructed using pre-period measures of illiteracy, educational attainment, investment, and means of GDP. The time series begins in 1955, which leaves only $n = 14$ pre-period time-steps. 
 
-Figs. SM-\ref{basque-plot-effects} plots estimated treatment effects on control units for each model. We observe considerable variability in the SCM estimates and not as much variability in the RNNs. This is explained by the fact that SCM cannot handle multiple (placebo) treated units and thus a separate model has to be run for each (placebo) treated unit. RNNs can handle multiple treated units and thus benefit from parameter sharing across treated units. The standard deviation from the mean MPSE, which is reported in the first column of Panel A of Table \ref{fig:benchmark-table}, indicates that SCM is comparatively more variable in terms of its predictive accuracy. The baseline LSTM yields the lowest mean MSPE, $0.007 \pm 0.002$. 
+Figs. SM-\ref{basque-plot-effects} plots estimated treatment effects on control units for each model. We observe considerable variability in the SCM estimates and not as much variability in the RNNs. This is explained by the fact that the SCM cannot handle multiple (placebo) treated units and thus a separate model has to be run for each (placebo) treated unit. RNNs can handle multiple treated units and thus benefit from parameter sharing across treated units. The standard deviation from the mean MPSE, which is reported in the first column of Panel A of Table \ref{fig:benchmark-table}, indicates that the SCM is comparatively more variable in terms of its predictive accuracy. The baseline LSTM yields the lowest mean MSPE, $0.007 \pm 0.002$. 
 
 \begin{table}[htbp]
 \begin{center}
@@ -281,11 +327,11 @@ Figs. SM-\ref{basque-plot-effects} plots estimated treatment effects on control 
 \end{center}
 \end{table}
 
-Fig. SM-\ref{basque-plot-pvalues} plots the per-period randomization $p$-values corresponding to treatment effects on treated and control units. $p$-values corresponding to treatment effects on the actual treated unit (i.e., Basque Country) are made by comparing the per-period treatment effects on Basque Country against the null distribution of average placebo effects. SCM has the comparatively lowest FPR (Panel B of Table \ref{fig:benchmark-table}) among all models: the model falsely rejects the null hypothesis about a quarter of the time. Note that the reported $p$-values are not adjusted for multiple comparisons.
+Fig. SM-\ref{basque-plot-pvalues} plots the per-period randomization $p$-values corresponding to treatment effects on treated and control units. $p$-values corresponding to treatment effects on the actual treated unit (i.e., Basque Country) are made by comparing the per-period treatment effects on Basque Country against the null distribution of average placebo effects. The SCM has the comparatively lowest FPR (Panel B of Table \ref{fig:benchmark-table}) among all models: the model falsely rejects the null hypothesis about a quarter of the time. Note that the reported $p$-values are not adjusted for multiple comparisons.
 
 \subsection{California} 
 
-\citet{abadie2010synthetic} applies SCM to estimate the effects of a large-scale tobacco control program implemented in California in 1988. The study spans the period of 1970 to 2000, providing $n=19$ pre-period time-steps.  The synthetic control is constructed using pre-period covariates including income, beer sales, demographics, and means of the dependent variable, which is log per-capita cigarette consumption. 
+\citet{abadie2010synthetic} applies the SCM to estimate the effects of a large-scale tobacco control program implemented in California in 1988. The study spans the period of 1970 to 2000, providing $n=19$ pre-period time-steps.  The synthetic control is constructed using pre-period covariates including income, beer sales, demographics, and means of the dependent variable, which is log per-capita cigarette consumption. 
 
 Fig. SM-\ref{california-plot-effects} shows that for RNNs, control unit treatment effects are tightly centered around zero --- as expected --- whereas SCM control treatment effects (Fig. SM-\ref{california-plot-effects-synth}) are more dispersed. Encoder-decoder networks yield the lowest mean MSPE, $0.005 \pm 0.004$, while yielding comparatively higher FPR.  
 
@@ -293,22 +339,21 @@ Fig. SM-\ref{california-plot-effects} shows that for RNNs, control unit treatmen
 
 Lastly, \citet{abadie2015comparative} constructs a synthetic West Germany in order to estimate the impact of the 1990 German reunification on log real per-capita GDP during a post-period that extends to 2003. The time-series begins in 1960, which leaves $n=30$ pre-period time-steps. The synthetic control is constructed using pre-period means of GDP, trade, industry, schooling, and investment. 
 
-SCM and RNN-based approaches both assume the absence of spillover effects. \citet{abadie2015comparative} acknowledge that spillover effects is a valid concern in their study because German reunification likely have effects on GDP in the 16 OECD member countries that serve as controls. Indeed, Fig. SM-\ref{germany-plot-effects} shows that RNNs estimate mostly positive (and increasing) treatment effects on control units, which suggests that reunification might have had a less negative impact on German GDP than the authors' estimates suggest.
+The SCM and RNN-based approaches both assume the absence of spillover effects. \citet{abadie2015comparative} acknowledge that spillover effects is a valid concern in their study because German reunification likely have effects on GDP in the 16 OECD member countries that serve as controls. Indeed, Fig. SM-\ref{germany-plot-effects} shows that RNNs estimate mostly positive (and increasing) treatment effects on control units, which suggests that reunification might have had a less negative impact on German GDP than the authors' estimates suggest.
 
-Overall, the baseline LSTM yields the lowest error in terms of mean MSPE, $0.02 \pm 0.01$, with a FRP comparable to SCM.
+Overall, the baseline LSTM yields the lowest error in terms of mean MSPE, $0.02 \pm 0.01$, with a FRP comparable to the SCM.
 
 \subsection{Discussion}
 
-I compare the predictive accuracy of the RNN-based approach against SCM by running a series of placebo tests using data from three datasets common to the SCM literature. The models are evaluated primarily on their ability to produce low error rates on control units (i.e., estimating treatment effects of zero); a secondary evaluation criteria is minimizing the probability of falsely rejecting the null hypothesis of the randomization test. 
+I compare the predictive accuracy of the RNN-based approach against the SCM by running a series of placebo tests using data from three datasets common to the SCM literature. The models are evaluated primarily on their ability to produce low error rates on control units (i.e., estimating treatment effects of zero); a secondary evaluation criteria is minimizing the probability of falsely rejecting the null hypothesis of the randomization test. 
 
-I find that either encoder-decoder networks or LSTM outperform SCM on each of the three datasets in terms of having the lowest MSPE, with FPRs comparable to SCM. The baseline LSTM outperforms encoder-decoder networks in two of the three datasets. When applied to datasets with low-dimensional predictor sets, the LSTM performs well but deeper networks such as encoder-decoder networks are susceptible to overfitting. Overfitting in this case means that the networks learn dependencies on a small subset of predictors and cannot generalize well to unseen data. Overfitting occurs when training encoder-decoder networks on the Basque Country dataset (Fig. SM-\ref{encoder-decoder-loss-basque-treated}), which is has the lowest dimensions of the three SCM datasets. Even in this case of obvious overfitting, model check-pointing is employed so that the model with the lowest validation error is used to produce counterfactual time-series.
+I find that either encoder-decoder networks or LSTM outperform the SCM on each of the three datasets in terms of having the lowest MSPE, with FPRs comparable to the SCM. The baseline LSTM outperforms encoder-decoder networks in two of the three datasets. When applied to datasets with low-dimensional predictor sets, the LSTM performs well but deeper networks such as encoder-decoder networks are susceptible to overfitting. Overfitting in this case means that the networks learn dependencies on a small subset of predictors and cannot generalize well to unseen data. Overfitting occurs when training encoder-decoder networks on the Basque Country dataset (Fig. SM-\ref{encoder-decoder-loss-basque-treated}), which is has the lowest dimensions of the three SCM datasets. Even in this case of obvious overfitting, model check-pointing is employed so that the model with the lowest validation error is used to produce counterfactual time-series.
 
-The results suggest that RNNs should outperform SCM in all cases as long as the complexity of the network architecture is proportional to the dimension of the predictor set. Encoder-decoder networks outperform the other models when the predictor set is comparatively large (i.e., $J=38$ in the California dataset), while the baseline LSTM outperforms all other models on smaller predictor sets ($J=16$ for Basque Country and West Germany datasets). 
+The results suggest that RNNs should outperform the SCM in all cases as long as the complexity of the network architecture is proportional to the dimension of the predictor set. Encoder-decoder networks outperform the other models when the predictor set is comparatively large (i.e., $J=38$ in the California dataset), while the baseline LSTM outperforms all other models on smaller predictor sets ($J=16$ for Basque Country and West Germany datasets). 
 
 \section{Application: Homestead acts and state capacity} \label{state-capacity}
 
-%motivate: Dube - education/nation-building
-In this section, I estimate the causal impacts of homestead policies on state government education spending. I create a state-level measure of state government education spending from the records of 48 state governments during the period of 1783 to 1932 \citep{sylla1993sources} and the records of 16 state governments during the period of 1933 to 1937 \citep{sylla1995sourcesa,sylla1995sourcesb}. Comparable measures for 48 states are drawn from U.S. Census special reports for the years 1902, 1913, 1932, 1942, 1962, 1972, and 1982 \citep{haines2010}.
+In this section, I estimate the causal impacts of homestead acts on state government education spending. I create a state-level measure of state government education spending from the records of 48 state governments during the period of 1783 to 1932 \citep{sylla1993sources} and the records of 16 state governments during the period of 1933 to 1937 \citep{sylla1995sourcesa,sylla1995sourcesb}. Comparable measures for 48 states are drawn from U.S. Census special reports for the years 1902, 1913, 1932, 1942, 1962, 1972, and 1982 \citep{haines2010}.
 
 The data pre-processing steps are as follows. The measure is inflation-adjusted according to the U.S. Consumer Price Index \citep{williamson2017seven} and scaled by the total free population in the decennial census \citep{haines2010}. Missing values are imputed separately in the pre- and -post-periods by carrying the last observation forward and remaining missing values are imputed by carrying the next observation backward. The raw outcomes data are log-transformed to alleviate exponential effects. Lastly, I remove states with no variance in the pre-period outcomes, resulting in complete $\text{N} \times \text{T}$ matrices of size $33 \times 159$ and $34 \times 158$ for the expenditures and revenues outcomes, respectively. 
 
@@ -337,16 +382,30 @@ The attention mechanism embedded within the networks provides clues as to which 
 		networks. Attention is the normalized (softmax) distribution of the importance of each time-step regarding a predictor.\label{attn-plot}} 
 \end{figure}
 
+\subsection{Discussion}
+
+% bandiera2018nation
+% states adopted compulsory schooling laws as a nation-building tool to instill civic values to the tens of millions of culturally diverse migrants who arrived during the ‘Age of Mass Migration’ between 1850 and 1914.
+
+%alesina2013nation
+% provision of mass primary education as nation-building policy
+% means to homogenize the population
+
+%meyer1979public
+% we argue that the spread of schooling in the rural North and West can best be understood as a social movement implementing a commonly held ideology of nation-building
+% The rapid spread of public schooling across the continent during the 19th century is one of the most dramatic examples of institution-building in American history. 
+
+%Galor et al. [2009] show that state schooling expenditures are significantly correlated to land inequality
+
 \section{Conclusion} \label{conclusion}
 
+This paper makes a methodological contribution in proposing a novel alternative to the SCM for estimating the effect of a policy intervention on an outcome over time in settings where appropriate control units are unavailable. The SCM is growing in popularity in the social sciences despite its limitations --- the most obvious being that the choice of specification can lead to different results, and thus facilitate $p$-hacking. By inputting only control unit outcomes and not relying on pre-period covariates, the proposed method offers a more principled approach than the SCM. 
 
-This paper makes a methodological contribution in proposing a novel alternative to SCM for estimating the effect of a policy intervention on an outcome over time in settings where appropriate control units are unavailable. The SCM is growing in popularity in the social sciences despite its limitations --- the most obvious being that the choice of specification can lead to different results, and thus facilitate $p$-hacking. By inputting only control unit outcomes and not relying on pre-period covariates, the proposed method offers a more principled approach than SCM. 
+In placebo tests, RNN-based models outperform the SCM in terms of predictive accuracy while yielding a comparable proportion of false positives. RNNs have advantages over the SCM in that they are structured for sequential data and can learn nonconvex combinations of predictors, which is beneficial when the data-generating process underlying the outcome of interest depends nonlinearly on the history of its inputs. RNNs are also capable of handling multiple treated units and can learn nonconvex combinations of control units, which is useful because the model can share parameters across treated units, and thus generate more precise predictions in settings in which treated units share similar data-generating processes.
 
-In placebo tests, RNN-based models outperform SCM in terms of predictive accuracy while yielding a comparable proportion of false positives. RNNs have advantages over SCM in that they are structured for sequential data and can learn nonconvex combinations of predictors, which is beneficial when the data-generating process underlying the outcome of interest depends nonlinearly on the history of its inputs. RNNs are also capable of handling multiple treated units and can learn nonconvex combinations of control units, which is useful because the model can share parameters across treated units, and thus generate more precise predictions in settings in which treated units share similar data-generating processes.
+The RNN-based approach joins a new generation of data-driven machine learning techniques for generating counterfactual predictions. Machine learning techniques in general have an advantage over the SCM in that they automatically choose appropriate predictors without relying on pretreatment covariates; this capability limits ``researcher degrees of freedom'' that arises from choices on how to specify the model. RNNs have an advantage over alternative machine learning algorithms because they are specifically structured to exploit the sequential nature of time-series data by sharing model parameters across time-steps.
 
-The RNN-based approach joins a new generation of data-driven machine learning techniques for generating counterfactual predictions. Machine learning techniques in general have an advantage over SCM in that they automatically choose appropriate predictors without relying on pretreatment covariates; this capability limits ``researcher degrees of freedom'' that arises from choices on how to specify the model. RNNs have an advantage over alternative machine learning algorithms because they are specifically structured to exploit the sequential nature of time-series data by sharing model parameters across time-steps.
-
-Future research might investigate through simulations how the interaction between RNN complexity (as determined by the number of hidden layers or nodes) and data dimensionality impacts predictive accuracy. Simulations will also allow us to assess the exact impact of data dimensionality, the proportion of treated units, convexity versus non-convexity in the modeled relationship, and the length of the pre-period on the choice between RNNs and SCM. % Future work might formalize a set of assumptions necessary for the approach to be valid and provide further proof of consistency of the estimator under these assumptions.
+Future research might investigate through simulations how the interaction between RNN complexity (as determined by the number of hidden layers or nodes) and data dimensionality impacts predictive accuracy. Simulations will also allow us to assess the exact impact of data dimensionality, the proportion of treated units, convexity versus non-convexity in the modeled relationship, and the length of the pre-period on the choice between RNNs and the SCM. % Future work might formalize a set of assumptions necessary for the approach to be valid and provide further proof of consistency of the estimator under these assumptions.
 
 \newpage
 

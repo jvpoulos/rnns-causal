@@ -1,4 +1,4 @@
-\begin{thebibliography}{40}
+\begin{thebibliography}{42}
 \expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
 \expandafter\ifx\csname url\endcsname\relax
   \def\url#1{\texttt{#1}}\fi
@@ -126,6 +126,11 @@ Fabius, O. and van Amersfoort, J.~R. (2014) Variational recurrent
 Ferman, B. and Pinto, C. (2016) Revisiting the synthetic control estimator.
 \newblock Available at \url{https://mpra.ub.uni-muenchen.de/81941/}.
 
+\bibitem[{Ferman and Pinto(2018)}]{ferman2018synthetic}
+--- (2018) Synthetic controls with imperfect pre-treatment fit.
+\newblock Available at:
+  \url{https://sites.google.com/site/brunoferman/research}.
+
 \bibitem[{Ferman et~al.(2018)Ferman, Pinto and Possebom}]{ferman2018cherry}
 Ferman, B., Pinto, C. and Possebom, V. (2018) Cherry picking with synthetic
   controls.
@@ -175,6 +180,11 @@ Kl{\"o}{\ss}ner, S., Kaul, A., Pfeifer, G. and Schieler, M. (2017) Comparative
   politics and the synthetic control method revisited: A note on {A}badie et
   al. (2015).
 \newblock \textit{Swiss Journal of Economics and Statistics}.
+
+\bibitem[{Little and Rubin(2014)}]{little2014statistical}
+Little, R.~J. and Rubin, D.~B. (2014) \textit{Statistical Analysis with Missing
+  Data}, vol. 333.
+\newblock John Wiley \& Sons.
 
 \bibitem[{{Poulos}(2019)}]{2019arXiv190308028P}
 {Poulos}, J. (2019) {State-Building through Public Land Disposal? An
