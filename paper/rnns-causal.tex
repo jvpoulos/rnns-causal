@@ -168,48 +168,45 @@ In the section immediately below, I describe the approach of using RNNs for coun
 
 The proposed method estimates the causal effect of a discrete intervention in observational time-series data; i.e., settings in which treatment is not randomly assigned and there exists both pre- and post-period observations of the outcome of interest. A straightforward approach for counterfactual prediction, originally proposed by \citet{brodersen2015inferring}, is to train a model on the pre-period time-series of control units and use the weights of the trained model to predict the counterfactual time-series of the treated units. 
 
-Let  $\mathbf{x}^{(t)}= \mathbf{x}^{(1)}, \ldots, \mathbf{x}^{(\tau)}$ denote a multivariate time-series of control unit outcomes and  $\mathbf{y}^{(t)}= \mathbf{y}^{(1)}, \ldots, \mathbf{y}^{(\tau)}$ be the time-series of treated unit outcomes, both with the temporal ordering $t = 1, \ldots, \tau$. In its most basic form, the pre-period relationship between treated and control unit outcomes can be modeled by nonparametric regression, 
+\subsection{Nonparametric regression}
 
-\begin{equation}
+Let $\mathbf{x}^{(t)}= \mathbf{x}^{(1)}, \ldots, \mathbf{x}^{(\tau)}$ denote a multivariate time-series of control unit outcomes and  $\mathbf{y}^{(t)}= \mathbf{y}^{(1)}, \ldots, \mathbf{y}^{(\tau)}$ be the time-series of treated unit outcomes, both with the temporal ordering $t = 1, \ldots, \tau$. In its most basic form, the pre-period relationship between treated and control unit outcomes can be modeled by nonparametric regression, 
+
+\begin{equation}\label{eq:pre}
   \mathbf{y}^{(t)} =  f_0 \left(\mathbf{x}^{(t)}\right) + \epsilon^{(t)} \hspace{10mm} t = 1, \ldots, n, 
 \end{equation}
 \noindent
-where $n < \tau$ denotes the last time-step prior to a discrete intervention and the noise variables $\epsilon^{(t)}$ are assumed to be i.i.d. standard normal and independent of $\mathbf{x}^{(t)}$. The statistical problem is to recover the nonlinear function $f_0$ from $\left(\mathbf{x}^{(t)}, \mathbf{y}^{(t)}\right)$.
+where $n < \tau$ denotes the last time-step prior to a discrete intervention. The noise variables $\epsilon^{(t)}$ are assumed to be i.i.d. standard normal and independent of $\mathbf{x}^{(t)}$. The statistical problem is to nonparametrically estimate the regression function $f_0(\cdot)$ from $\left(\mathbf{x}^{(t)}, \mathbf{y}^{(t)}\right)$. 
 
-The fitted model is then used to predict the counterfactual time-series of the treated group in the post-period: 
+In this paper, I consider fitting different variants of RNNs to the data. The fitted model is used to predict the counterfactual time-series of the treated group in the post-period: 
 
-\begin{equation}
-  \mathbf{\hat{y}}^{(t)} =  \alpha_1 + \beta \mathbf{x}^{(t)} + \zeta^{(t)}  \hspace{10mm} t = n+1. \ldots, \tau, 
+\begin{equation}\label{eq:post}
+  \mathbf{\hat{y}}^{(t)} =  \hat{f_0} \left(\mathbf{x}^{(t)}\right) + \zeta^{(t)}  \hspace{10mm} t = n+1. \ldots, \tau, 
 \end{equation}
 
-The key assumption of this model is that the relationship between controls $\mathbf{x}^{(t)}$ and the treated time-series $\mathbf{y}^{(t)}$ modeled prior to the intervention persists after the intervention. Similar to other methods of causal inference, the approach also assumes that the control units are not themselves affected by the intervention; i.e., there is no spillover effect that would indeterminately bias the estimate and possibly lead to a false positive. As long as $\mathbf{x}^{(t)}$ was not impacted by the intervention, it is plausible that the modeled relationship persists after the intervention. Under both assumptions, the inferred causal effect of the intervention on the treated group is the difference between the observed time-series of the treated units and the counterfactual time-series that would have been observed in the absence of the intervention:
+The key assumption of this model is that the modeled relationship (\ref{eq:pre}) persists after the intervention. The approach also assumes that the control units are not themselves affected by the intervention; i.e., there is no spillover effect that would indeterminately bias the estimate and possibly lead to a false positive. As long as $\mathbf{x}^{(t)}$ was not impacted by the intervention, it is plausible that the modeled relationship persists after the intervention. 
 
-\begin{equation}
-  \mathbf{\hat{\phi}}^{(t)} = \mathbf{y}^{(t)} - \mathbf{\hat{y}}^{(t)} \hspace{10mm} t = n+1, \ldots, \tau. \label{eq:pointwise}
+Under both identification assumptions, the inferred causal effect of the intervention on the treated group is the difference between the observed time-series of the treated units and the counterfactual time-series that would have been observed in the absence of the intervention. This treatment effect is calculated at every post-period time-step and is thus useful for understanding the temporal evolution of the causal effect:
+
+\begin{equation}\label{eq:pointwise}
+  \mathbf{\hat{\phi}}^{(t)} = \mathbf{y}^{(t)} - \mathbf{\hat{y}}^{(t)} \hspace{10mm} t = n+1, \ldots, \tau. 
 \end{equation}
 
-This treatment effect is calculated at every post-period time-step and is thus useful for understanding the temporal evolution of the causal effect.
+\subsection{Nonparametric autoregression}
 
+Appropriate control units are not always available, either because their pre-period distribution is too dissimilar to the pre-period distribution of treated units, or due to spillover effects. In this scenario, the counterfactual time-series of treated can simply be modeled as an autoregressive process in which $\mathbf{y}^{(t)}$ is nonlinearly related to values at $p$ previous time-steps:
 
-\subsection{Autoregression}
+\begin{equation}\label{eq:ar-pre}
+\mathbf{y}^{(t)} =  f_1 \left(\mathbf{y}^{(t-1)}, \ldots, \mathbf{y}^{(t-p)}\right) + \upsilon^{(t)} \hspace{10mm} 1 \leq t \leq n, 
+\end{equation} %\hspace{5mm} \mathbf{y}^{(0)}, \ldots, \mathbf{y}^{(-p+1)} \text{ given,}
+\noindent
+where $f_1 (\cdot)$ is a nonlinear function to be estimated. The model weights are then used to predict the post-period treated unit outcomes
 
-The counterfactual time-series of treated can simply be modeled as an autoregressive process in which $\mathbf{y}^{(t)}$ is linearly related to values at $p$ previous time-steps and a series of imperfectly predictable shocks \citep[pp. 246][]{little2014statistical}:
-
-\begin{equation}
-(\mathbf{y}^{(t)} |  \mathbf{y}^{(1)}, \mathbf{y}^{(2)}, \ldots, \mathbf{y}^{(t-1)}, \theta) \sim \mathcal{N}(\alpha + \beta_1 \mathbf{y}^{(t-1)} + \ldots + \beta_p \mathbf{y}^{(t-p)}, \sigma^2), \label{eq:ar}
+\begin{equation}\label{eq:ar-post}
+\mathbf{\hat{y}}^{(t)} =  \hat{f_1} \left(\mathbf{y}^{(t-1)}, \ldots, \mathbf{y}^{(t-p)}\right) + \upsilon^{(t)} \hspace{10mm} n+1 \leq t \leq \tau, 
 \end{equation}
-
-where $\theta$ is a set of estimable parameters consisting of constant term $\alpha$, regression coefficients $\beta_1, \beta_2, \ldots, \beta_p$, and error variance $\sigma^2$. Least squares estimates of the parameters can be recovered by regressing 
-
-\begin{equation}
-\mathbf{y}^{(t)} = \mathbf{x}^{(t)} = (\mathbf{y}^{(t-1)}, \mathbf{y}^{(t-2)}, \ldots, \mathbf{y}^{(t-p)}) \hspace{10mm} t = p, p+1, \ldots, \tau-1. \label{eq:ar-pre}
-\end{equation}
-
-The estimated parameters are then used to predict the counterfactual time-series of treated unit outcomes: 
-
-\begin{equation}
-\mathbf{\hat{y}}^{(t)} = \mathbf{x}^{(t)} \hspace{10mm}  t = n+1, \ldots, \tau, \label{eq:ar-post}
-\end{equation} 
+\noindent 
+and the pointwise causal effect is calculated by (\ref{eq:pointwise}).
 
 \subsection{Relationship to covariate shift and domain adaptation}
 
@@ -249,14 +246,14 @@ The estimated parameters are then used to predict the counterfactual time-series
 
 %\citet{schnabel2016recommendations} first connected the matrix completion problem with causal inference in an observational setting in the context of recommender systems under selection bias. 
 
-\section{RNNs for counteractual prediction}
+\section{RNNs for counteractual prediction} \label{RNNs-section}
 
 Unlike linear models, RNNs are non-parametric and are structured for time-series data. RNNs consist of a hidden state $\mathbf{h}^{(t)}$ and an output $\mathbf{y}^{(t)}$ which operate on a sequence $\mathbf{x}^{(t)}$. At each time-step $t$, RNNs input $\mathbf{x}^{(t)}$ and pass it to the hidden state, which is updated with a function $g^{(t)}$ using the entire history of the sequence \citep[pp. 337][]{goodfellow2016deep}:
 
 \begin{align}
 \mathbf{h}^{(t)} &= g^{(t)} \left(\mathbf{x}^{(1)}, \ldots, \mathbf{x}^{(t)} \right) \nonumber \\ 
-&= f_1 \left( \mathbf{h}^{(t-1)}, \mathbf{x}^{(t)} \right), \label{eq:hidden}
-\end{align} where $f_1(\cdot)$ is a nonlinear function that operates on all time-steps and input lengths. The updated hidden layer is used to generate a sequence of output values $\mathbf{o}^{(t)}$ in the form of log probabilities that correspond to $\mathbf{x}^{(t)}$. The loss function computes $\mathbf{\hat{y}}^{(t)} = \mathrm{linear} (\mathbf{o}^{(t)})$ and compares this value to $\mathbf{y}^{(t)}$.
+&= f_2 \left( \mathbf{h}^{(t-1)}, \mathbf{x}^{(t)} \right), \label{eq:hidden}
+\end{align} where $f_2(\cdot)$ is a nonlinear function that operates on all time-steps and input lengths. The updated hidden layer is used to generate a sequence of output values $\mathbf{o}^{(t)}$ in the form of log probabilities that correspond to $\mathbf{x}^{(t)}$. The loss function computes $\mathbf{\hat{y}}^{(t)} = \mathrm{linear} (\mathbf{o}^{(t)})$ and compares this value to $\mathbf{y}^{(t)}$.
 
 \subsection{Encoder-decoder networks}
 
@@ -358,6 +355,8 @@ In this section, I estimate the causal impacts of homestead acts on state govern
 The data pre-processing steps are as follows. The measure is inflation-adjusted according to the U.S. Consumer Price Index \citep{williamson2017seven} and scaled by the total free population in the decennial census \citep{haines2010}. Missing values are imputed separately in the pre- and -post-periods by carrying the last observation forward and remaining missing values are imputed by carrying the next observation backward. The raw outcomes data are log-transformed to alleviate exponential effects. Lastly, I remove states with no variance in the pre-period outcomes, resulting in complete $\text{N} \times \text{T}$ matrices of size $33 \times 159$ and $34 \times 158$ for the expenditures and revenues outcomes, respectively. 
 
 In this application, public land states are the treated units and state land states --- i.e., states that were not crafted from the public domain and were therefore not directly affected by homestead policies --- serve as control units. This group includes states of the original 13 colonies, Maine, Tennessee, Texas, Vermont, and West Virginia. Aggregating to the state level approximately 1.46 million individual land patent records authorized under the HSA,\footnote{Land patent records provide information on the initial transfer of land titles from the federal government and are made accessible online by the U.S. General Land Office (\url{https://glorecords.blm.gov}).} I determine that the earliest homestead entries occurred in 1869 in about half of the western frontier states, about seven years following the enactment of the HSA.
+
+%States that were not crafted from the public domain and were therefore not directly affected by the homestead acts --- the states of the original 13 colonies, Maine, Tennessee, Texas, Vermont, and West Virginia --- are not appropriate control units because their governments and markets had already been well-developed by the time of the passage of the homestead laws. Additionally, it is likely that state land states were indirectly affected by the out-migration of homesteaders from frontier states. 
 
 I train a encoder-decoder network to predict the counterfactual time-series of public land states, using only their previous history to generate predictions. Similar to the placebo tests on the SCM datasets, I evaluate the models two ways: first, I monitor the loss over 2,000 training epochs and save the model weights with the lowest error on a validation set consisting of the final 10\% of the time-series.\footnote{The models use both dropout and L2 regularization to control for overfitting on the training set. Figs. SM-\ref{encoder-decoder-loss-capacity-south} and SM-\ref{encoder-decoder-loss-capacity-west} record the training history of each model.} Second, I calculate MSPE (Eq.~\ref{mspe}) on $J=18$ state land states that serve as placebo treated units. Encoder-decoder networks outperform the baseline LSTM in terms of minimizing the MSPE in placebo tests (Tables SM-\ref{encoder-decoder-mpse} and SM-\ref{lstm-mpse}).
 
