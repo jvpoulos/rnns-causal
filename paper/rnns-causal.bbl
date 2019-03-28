@@ -1,4 +1,4 @@
-\begin{thebibliography}{44}
+\begin{thebibliography}{49}
 \expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
 \expandafter\ifx\csname url\endcsname\relax
   \def\url#1{\texttt{#1}}\fi
@@ -39,6 +39,13 @@ Amjad, M., Shah, D. and Shen, D. (2018) Robust synthetic control.
 {Bahdanau}, D., {Cho}, K. and {Bengio}, Y. (2014) {Neural Machine Translation
   by Jointly Learning to Align and Translate}.
 \newblock \textit{ArXiv e-prints}.
+
+\bibitem[{Bickel et~al.(2009)Bickel, Br{\"u}ckner and
+  Scheffer}]{bickel2009discriminative}
+Bickel, S., Br{\"u}ckner, M. and Scheffer, T. (2009) Discriminative learning
+  under covariate shift.
+\newblock \textit{Journal of Machine Learning Research}, \textbf{10},
+  2137--2155.
 
 \bibitem[{Bowman et~al.(2015)Bowman, Vilnis, Vinyals, Dai, Jozefowicz and
   Bengio}]{bowman2015generating}
@@ -97,6 +104,19 @@ Cinar, Y.~G., Mirisaee, H., Goswami, P., Gaussier, E., A{\"i}t-Bachir, A. and
 \newblock In \textit{International Conference on Neural Information
   Processing}, 533--544. Springer.
 
+\bibitem[{Cortes et~al.(2010)Cortes, Mansour and Mohri}]{cortes2010learning}
+Cortes, C., Mansour, Y. and Mohri, M. (2010) Learning bounds for importance
+  weighting.
+\newblock In \textit{Advances in Neural Information Processing Systems},
+  442--450.
+
+\bibitem[{Cortes et~al.(2008)Cortes, Mohri, Riley and
+  Rostamizadeh}]{cortes2008sample}
+Cortes, C., Mohri, M., Riley, M. and Rostamizadeh, A. (2008) Sample selection
+  bias correction theory.
+\newblock In \textit{International Conference on Algorithmic Learning Theory},
+  38--53. Springer.
+
 \bibitem[{{Doudchenko} and {Imbens}(2016)}]{doudchenko2016balancing}
 {Doudchenko}, N. and {Imbens}, G.~W. (2016) {Balancing, Regression,
   Difference-In-Differences and Synthetic Control Methods: A Synthesis}.
@@ -151,6 +171,13 @@ Haines, M.~R. (2010) {H}istorical, {D}emographic, {E}conomic, and {S}ocial
 \newblock Ann Arbor, MI: Inter-university Consortium for Political and Social
   Research [distributor], 2010-05-21. \url{doi.org/10.3886/ICPSR02896.v3}.
 
+\bibitem[{Huang et~al.(2007)Huang, Gretton, Borgwardt, Sch{\"o}lkopf and
+  Smola}]{huang2007correcting}
+Huang, J., Gretton, A., Borgwardt, K.~M., Sch{\"o}lkopf, B. and Smola, A.~J.
+  (2007) Correcting sample selection bias by unlabeled data.
+\newblock In \textit{Advances in Neural Information Processing Systems},
+  601--608.
+
 \bibitem[{Imbens and Rubin(2015)}]{imbens2015causal}
 Imbens, G.~W. and Rubin, D.~B. (2015) \textit{Causal Inference in Statistics,
   Social, and Biomedical Sciences}.
@@ -203,6 +230,12 @@ Rubin, D.~B. (1990) Comment: Neyman (1923) and causal inference in experiments
 \bibitem[{Schmidhuber and Hochreiter(1997)}]{schmidhuber1997long}
 Schmidhuber, J. and Hochreiter, S. (1997) Long short-term memory.
 \newblock \textit{Neural Computation}, \textbf{9}, 1735--1780.
+
+\bibitem[{Schnabel et~al.(2016)Schnabel, Swaminathan, Singh, Chandak and
+  Joachims}]{schnabel2016recommendations}
+Schnabel, T., Swaminathan, A., Singh, A., Chandak, N. and Joachims, T. (2016)
+  Recommendations as treatments: Debiasing learning and evaluation.
+\newblock \textit{arXiv:1602.05352}.
 
 \bibitem[{Splawa-Neyman et~al.(1990)Splawa-Neyman, Dabrowska, Speed
   et~al.}]{splawa1990}

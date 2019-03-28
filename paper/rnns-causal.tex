@@ -162,7 +162,7 @@ This paper proposes an alternative to the synthetic control method (SCM) for est
 
 \section{Introduction} 
 
-An important problem in the social sciences is estimating the effect of a binary intervention on an outcome over time. When interventions take place at an aggregate level (e.g., a state), researchers make causal inferences by comparing the post-intervention (``post-period'') outcomes of affected (``treated'') units against the outcomes of unaffected  (``control'') units. A common approach to the problem is the synthetic control method (SCM) \citep{abadie2010synthetic}, which predicts the counterfactual outcomes of treated units by finding a convex combination of control units that match the treated units in term of lagged outcomes. Correlations across units are assumed to remain constant over time. 
+An important problem in the social sciences is estimating the effect of a binary intervention on an outcome over time. When interventions take place at an aggregate level (e.g., a state), researchers make causal inferences by comparing the post-intervention (``post-period'') outcomes of affected (``treated'') units against the outcomes of unaffected  (``control'') units. A common approach to the problem is the synthetic control method (SCM) \citep{abadie2010synthetic}, which predicts the counterfactual outcomes of treated units by finding a convex combination of control units that match the treated units in term of lagged outcomes. Correlations across units are assumed to remain constant stable time. 
 
 The SCM has several limitations. First, the convexity restriction of the synthetic control estimator precludes dynamic, nonlinear interactions between multiple control units. Intuitively, one can expect that the treated unit may exhibit nonlinear or negative correlations with the control units. \citet{ferman2016revisiting} demonstrate that the convexity restriction implies that the SCM estimator may be biased even if selection into treatment is only correlated with time-invariant unobserved covariates. Second, \citet{ferman2018synthetic} demonstrate that the SCM is generally biased if treatment assignment is correlated with unobserved confounders, even when the number of pre-intervention periods grows \citep{ferman2018synthetic}. Moreover, the authors show that while the SCM minimizes imbalance in pre-period outcomes, the likelihood of finding exact balancing weights vanishes as the number of time periods increase, which results in bias. 
 
@@ -190,28 +190,30 @@ Y_{it}(1) 	& \mbox{if } W_{it} = 1  \text{ and } t > \text{T}_0.
 \end{cases} 
 \end{align} 
 
-The problem of counterfactual prediction is that we cannot directly observe the missing potential outcomes and instead wish to impute the missing values in $\mathbf{Y}(0)$ for treated units with $W_{it} =1$. However, the potential outcomes framework explicitly requires unconfoundedness: $(\mathbf{Y}(0), \mathbf{Y}(1)) \independent \mathbf{W}|\mathbf{X}$, where $\mathbf{X}$ is a $\text{N} \times \text{T}$ matrix of predictors, which can include observed outcomes for units with similar values or observed outcomes in previous periods. Note that the potential outcomes framework also implicitly assumes treatment is well-defined to ensure that each unit has the same number of potential outcomes \citep{imbens2015causal}. It also excludes interference between units, which would undermine the framework by creating more than two potential outcomes per unit, depending on the treatment status of other units \citep{rubin1990}.
+The problem of counterfactual prediction is that we cannot directly observe the missing potential outcomes and instead wish to impute the missing values in $\mathbf{Y}(0)$ for treated units with $W_{it} =1$.  The potential outcomes framework explicitly assumes unconfoundedness. In an observational setting, this assumption requires $(\mathbf{Y}(0), \mathbf{Y}(1)) \independent \mathbf{W}| \mathbf{Y}(\mathcal{O})$, where $\mathbf{Y}(\mathcal{O})$ is the observed data. % which can include observed outcomes for units with similar values or observed outcomes in previous periods
 
-\subsection{Relationship to covariate shift and domain adaptation}
+The potential outcomes framework also implicitly assumes treatment is well-defined to ensure that each unit has the same number of potential outcomes \citep{imbens2015causal}. It also excludes interference between units, which would undermine the framework by creating more than two potential outcomes per unit, depending on the treatment status of other units \citep{rubin1990}.
 
-In observational studies, the mechanism that determines which units are exposed to treatment via policy intervention is not randomized and in general will not be independent of the predictors; i.e., the inputs to functions $f_0$ and $f_1$ in (\ref{eq:pre}) and (\ref{eq:ar-post}), respectively. The counterfactual distribution of treated unit outcomes will therefore differ from the observed distribution. 
+\subsection{Relationship to matrix completion and covariate shift}
+
+The proposed approach is similar to the method of matrix completion via nuclear norm minimization (MC-NNM) proposed by \citet{athey2017matrix} to predict counterfactual outcomes. Matrix completion methods attempt to impute missing entries in a low-rank matrix by solving a convex optimization problem via NNM, even when relatively few values are observed in $\mathbf{Y}$ \citep{candes2009exact,candes2010matrix}. The estimator recovers a $\text{N} \times \text{T}$ low-rank matrix by minimizing the sum of squared errors via nuclear norm regularized least squares. The estimator reconstructs the matrix by iteratively replacing missing values with those recovered from a singular value decomposition \citep{mazumder2010spectral}. 
+
+\citet{athey2017matrix} note two drawbacks of MC-NNM. First, the errors may be autocorrelated because the estimator does not account for time-series dependencies in the observed data. The estimator estimate patterns row- and column-wise, but treat the data as perfectly synchronized \citep{yoon2018estimating}. In contrast, the RNN-based approach described in Section \ref{RNNs-section} is exploits the temporal component of the data and therefore does not have the problem of autocorrelated errors. Second, the MC-NNM estimator penalizes the errors for each observed value equally without regard to the fact that the probability of missingness (i.e, the propensity score), increases with $t$. \citet{athey2017matrix} suggest weighting the loss function by the propensity score, which is similar to the importance weighting scheme proposed by \citet{cortes2008sample} to address the problem of covariate shift, which is a special case of domain adaptation \citep{huang2007correcting,bickel2009discriminative,cortes2010learning}. 
+
+In machine learning terms, the covariate shift problem occurs when training and test data are drawn from different distributions. \citet{schnabel2016recommendations} first connected the matrix completion problem with causal inference in observational settings in the context of recommender systems under confounding.
+
+
 
 %the problem of causal inference by counterfactual prediction might require inference over a different distribution than the one from which samples are given
-%In machine learning terms, this means that the feature distribution of the test set differs from that of the train set. This is a case of covariate shift, which is a special case of domain adaptation
-
-In an observational setting, units are part of the assignment mechanism that generates $\mathbf{W}$. Selection biases arise because the probability of missingness may depend on the unobserved data. 
-
-In the literature on causal inference under unconfoundedness  \citep{imbens2015causal}
+%
 
 %1. Train on X_c to predict Y_c
 %2. Fit model weights on X_t to predict Y_t
 
 %(Use both outcomes or observational controls as X_c, X_t) 
 
-%*Relate to covariate shift/domain adaptation
 %Domain adaptation - assume distribution of X_c similar to X_t (might be violated in the application)
-%in the context of domain adaptation and covariate shift, where training and test data are drawn from different distributions 
-%huang2007correcting,cortes2008sample,cortes2010learning,bickel2009discriminative
+
 
 %*cortes2008sample - importance weighting of loss fn to address the problem of covariate shift.
 %points are drawn according to the test distribution but not all of them are made available to the learner. This is called the sample
@@ -220,7 +222,6 @@ In the literature on causal inference under unconfoundedness  \citep{imbens2015c
 %The main correction technique used in all of these publications consists of reweighting the cost of training point errors to more closely reflect that of the test distribution.
 %This is in fact a technique commonly used in statistics and machine learning for a variety of problems of this type (Little & Rubin, 1986). With the exact weights, this reweighting could optimally correct the bias, but, in practice, the weights are based on an estimate of the sampling probability from finite data sets.
 
-%\citet{athey2017matrix} note that their estimator penalizes the errors for each observed value equally without regard to the fact that the probability of missingness (i.e., the propensity score), $\Pr (M_{it} = 1 | \mathbf{Y_{\mathrm{obs}}}, \phi)$, increases with $t$. The authors suggest weighting the loss function by the propensity score, which is similar to the importance weighting scheme proposed by \citet{cortes2008sample} to address the problem of covariate shift.
 
 %johansson2016learning
 %formulate the problem of counterfactual inference as a domain adaptation problem, and more specifically a covariate shift problem
