@@ -3,54 +3,55 @@ Capacity: max_strings=100000, hash_size=100000, hash_prime=85009
 The top-level auxiliary file: rnns-causal.aux
 The style file: rss.bst
 Database file #1: references.bib
-Repeated entry---line 3165 of file references.bib
+Repeated entry---line 3158 of file references.bib
  : @misc{ferman2016revisiting
  :                           ,
 I'm skipping whatever remains of this entry
-Repeated entry---line 3179 of file references.bib
+Repeated entry---line 3172 of file references.bib
  : @article{xu2017generalized
  :                           ,
 I'm skipping whatever remains of this entry
+Warning--I didn't find a database entry for "little2014"
 Warning--empty note in dube2015pooling
-You've used 42 entries,
+You've used 44 entries,
             2705 wiz_defined-function locations,
-            795 strings with 12075 characters,
-and the built_in function-call counts, 21322 in all, are:
-= -- 2092
-> -- 1108
-< -- 22
-+ -- 431
-- -- 384
-* -- 1765
-:= -- 3933
-add.period$ -- 85
-call.type$ -- 42
-change.case$ -- 352
-chr.to.int$ -- 41
-cite$ -- 43
-duplicate$ -- 994
-empty$ -- 1355
-format.name$ -- 533
-if$ -- 4190
+            807 strings with 12372 characters,
+and the built_in function-call counts, 22061 in all, are:
+= -- 2174
+> -- 1120
+< -- 23
++ -- 436
+- -- 387
+* -- 1807
+:= -- 4080
+add.period$ -- 90
+call.type$ -- 44
+change.case$ -- 363
+chr.to.int$ -- 43
+cite$ -- 45
+duplicate$ -- 1036
+empty$ -- 1420
+format.name$ -- 538
+if$ -- 4341
 int.to.chr$ -- 2
 int.to.str$ -- 1
-missing$ -- 33
-newline$ -- 175
-num.names$ -- 168
-pop$ -- 437
+missing$ -- 35
+newline$ -- 184
+num.names$ -- 176
+pop$ -- 443
 preamble$ -- 1
-purify$ -- 295
+purify$ -- 303
 quote$ -- 0
-skip$ -- 652
+skip$ -- 679
 stack$ -- 0
-substring$ -- 895
-swap$ -- 273
-text.length$ -- 2
+substring$ -- 944
+swap$ -- 276
+text.length$ -- 1
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 372
+type$ -- 390
 warning$ -- 1
-while$ -- 157
+while$ -- 165
 width$ -- 0
-write$ -- 488
+write$ -- 513
 (There were 2 error messages)

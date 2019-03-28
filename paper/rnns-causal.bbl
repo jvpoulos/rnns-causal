@@ -1,4 +1,4 @@
-\begin{thebibliography}{42}
+\begin{thebibliography}{44}
 \expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
 \expandafter\ifx\csname url\endcsname\relax
   \def\url#1{\texttt{#1}}\fi
@@ -45,12 +45,6 @@ Amjad, M., Shah, D. and Shen, D. (2018) Robust synthetic control.
 Bowman, S.~R., Vilnis, L., Vinyals, O., Dai, A.~M., Jozefowicz, R. and Bengio,
   S. (2015) Generating sentences from a continuous space.
 \newblock \textit{arXiv:1511.06349}.
-
-\bibitem[{Brodersen et~al.(2015)Brodersen, Gallusser, Koehler, Remy and
-  Scott}]{brodersen2015inferring}
-Brodersen, K.~H., Gallusser, F., Koehler, J., Remy, N. and Scott, S.~L. (2015)
-  Inferring causal impact using bayesian structural time-series models.
-\newblock \textit{The Annals of Applied Statistics}, \textbf{9}, 247--274.
 
 \bibitem[{Carvalho et~al.(2018)Carvalho, Masini and
   Medeiros}]{carvalho2018arco}
@@ -157,6 +151,11 @@ Haines, M.~R. (2010) {H}istorical, {D}emographic, {E}conomic, and {S}ocial
 \newblock Ann Arbor, MI: Inter-university Consortium for Political and Social
   Research [distributor], 2010-05-21. \url{doi.org/10.3886/ICPSR02896.v3}.
 
+\bibitem[{Imbens and Rubin(2015)}]{imbens2015causal}
+Imbens, G.~W. and Rubin, D.~B. (2015) \textit{Causal Inference in Statistics,
+  Social, and Biomedical Sciences}.
+\newblock Cambridge: Cambridge University Press.
+
 \bibitem[{Kaul et~al.(2015)Kaul, Kl{\"o}{\ss}ner, Pfeifer and
   Schieler}]{kaul2015synthetic}
 Kaul, A., Kl{\"o}{\ss}ner, S., Pfeifer, G. and Schieler, M. (2015) Synthetic
@@ -181,10 +180,11 @@ Kl{\"o}{\ss}ner, S., Kaul, A., Pfeifer, G. and Schieler, M. (2017) Comparative
   al. (2015).
 \newblock \textit{Swiss Journal of Economics and Statistics}.
 
-\bibitem[{Little and Rubin(2014)}]{little2014statistical}
-Little, R.~J. and Rubin, D.~B. (2014) \textit{Statistical Analysis with Missing
-  Data}, vol. 333.
-\newblock John Wiley \& Sons.
+\bibitem[{Neyman(1923)}]{neyman1923}
+Neyman, J. (1923) On the application of probability theory to agricultural
+  experiments.
+\newblock \textit{Annals of Agricultural Sciences}, \textbf{51}.
+\newblock Reprinted in \cite{splawa1990}.
 
 \bibitem[{{Poulos}(2019)}]{2019arXiv190308028P}
 {Poulos}, J. (2019) {State-Building through Public Land Disposal? An
@@ -195,9 +195,21 @@ Little, R.~J. and Rubin, D.~B. (2014) \textit{Statistical Analysis with Missing
 {Poulos}, J. and {Valle}, R. (2017) {Attention networks for image-to-text}.
 \newblock \textit{arXiv e-prints}, arXiv:1712.04046.
 
+\bibitem[{Rubin(1990)}]{rubin1990}
+Rubin, D.~B. (1990) Comment: Neyman (1923) and causal inference in experiments
+  and observational studies.
+\newblock \textit{Statistical Science}, \textbf{5}, 472--480.
+
 \bibitem[{Schmidhuber and Hochreiter(1997)}]{schmidhuber1997long}
 Schmidhuber, J. and Hochreiter, S. (1997) Long short-term memory.
 \newblock \textit{Neural Computation}, \textbf{9}, 1735--1780.
+
+\bibitem[{Splawa-Neyman et~al.(1990)Splawa-Neyman, Dabrowska, Speed
+  et~al.}]{splawa1990}
+Splawa-Neyman, J., Dabrowska, D., Speed, T. et~al. (1990) On the application of
+  probability theory to agricultural experiments. essay on principles. section
+  9.
+\newblock \textit{Statistical Science}, \textbf{5}, 465--472.
 
 \bibitem[{Sylla et~al.(1993)Sylla, Legler and Wallis}]{sylla1993sources}
 Sylla, R.~E., Legler, J.~B. and Wallis, J. (1993) {S}ources and {U}ses of

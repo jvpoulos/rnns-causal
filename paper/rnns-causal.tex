@@ -14,7 +14,7 @@
 \def\Plus{\texttt{+}}
 \def\Minus{\texttt{-}}
 
-\title{RNN-Based Counterfactual Time-Series Prediction} 
+\title{RNN-Based Counterfactual Prediction} 
 \author[ ]{Jason Poulos\thanks{PhD Candidate, Department of Political Science, 210 Barrows Hall \#1950, Berkeley, CA 94720-1950. \emph{Email:} \href{mailto:poulos@berkeley.edu}{\nolinkurl{poulos@berkeley.edu}}. \emph{Telephone:} \Plus 1\Minus 510\Minus 642\Minus 6323. I acknowledge support of the National Science Foundation Graduate Research Fellowship (DGE 1106400). This work used the computer resources of Stampede2 at the Texas Advanced Computing Center (TACC) under an Extreme Science and Engineering Discovery Environment (XSEDE) startup allocation (TG-SES180010). The Titan Xp GPU used for this research was donated by the NVIDIA Corporation.}}
 \affil[ ]{University of California, Berkeley}
 \date{}
@@ -103,6 +103,21 @@
 % Set Spacing
 \doublespacing
 
+% Number assumptions
+\newtheorem*{assumption*}{\assumptionnumber}
+\providecommand{\assumptionnumber}{}
+\makeatletter
+\newenvironment{assumption}[2]
+{%
+	\renewcommand{\assumptionnumber}{Assumption #1}%
+	\begin{assumption*}%
+		\protected@edef\@currentlabel{#1}%
+	}
+	{%
+	\end{assumption*}
+}
+\makeatother
+
 % Macros
 \newcommand{\Adv}{{\mathbf{Adv}}}       
 \newcommand{\prp}{{\mathrm{prp}}}                  % How to define new commands 
@@ -147,13 +162,11 @@ This paper proposes an alternative to the synthetic control method (SCM) for est
 
 \section{Introduction} 
 
-An important problem in the social sciences is estimating the effect of a policy intervention on an outcome over time. When interventions take place at an aggregate level (e.g., city or state), researchers make causal inferences by comparing the post-intervention outcomes of affected (``treated'') units against the outcomes of unaffected units (``controls'').
-
-The synthetic control method (SCM) \citep{abadie2010synthetic} is a popular method for making causal inferences on observational time-series. The method compares a single treated unit with a synthetic control that combines the outcomes of multiple control units on the basis of their pre-intervention similarity with the treated unit. Specifically, the synthetic control is constructed by choosing a convex combination of weights $\mathbf{w} = (w_1, \ldots, w_j), w_j \geq 0, \sum w_j =1$, of control time-series that minimizes $\|\mathbf{X_1} - \mathbf{X_0} \mathbf{w}\|_\mathbf{v}$, where $\mathbf{X_1}$ and $\mathbf{X_0}$ are the pre-intervention covariates of the treated and control units, respectively, and $\mathbf{v}= (v_1, \ldots, v_J)$ are importance weights chosen to minimize the prediction error produced by $\mathbf{w}^{*} \mathbf{v}$ during cross-validation. 
+An important problem in the social sciences is estimating the effect of a binary intervention on an outcome over time. When interventions take place at an aggregate level (e.g., a state), researchers make causal inferences by comparing the post-intervention (``post-period'') outcomes of affected (``treated'') units against the outcomes of unaffected  (``control'') units. A common approach to the problem is the synthetic control method (SCM) \citep{abadie2010synthetic}, which predicts the counterfactual outcomes of treated units by finding a convex combination of control units that match the treated units in term of lagged outcomes. Correlations across units are assumed to remain constant over time. 
 
 The SCM has several limitations. First, the convexity restriction of the synthetic control estimator precludes dynamic, nonlinear interactions between multiple control units. Intuitively, one can expect that the treated unit may exhibit nonlinear or negative correlations with the control units. \citet{ferman2016revisiting} demonstrate that the convexity restriction implies that the SCM estimator may be biased even if selection into treatment is only correlated with time-invariant unobserved covariates. Second, \citet{ferman2018synthetic} demonstrate that the SCM is generally biased if treatment assignment is correlated with unobserved confounders, even when the number of pre-intervention periods grows \citep{ferman2018synthetic}. Moreover, the authors show that while the SCM minimizes imbalance in pre-period outcomes, the likelihood of finding exact balancing weights vanishes as the number of time periods increase, which results in bias. 
 
-While the strength of the SCM lies in its simplicity in setup and implementation, several problems arise from the lack of guidance on how to specify the SCM estimator. The specification of the estimator can produce very different results: \citet{ferman2018cherry} show, for example, how cherry-picking between common SCM specifications can facilitate $p$-hacking.\citet{kaul2015synthetic} show that the common practice of including lagged versions of the outcome variable as separate predictors can render all other covariates irrelevant. \citet{klossner2017comparative} demonstrates that the common practice of using cross-validation to select importance weights can yield multiple values and consequently different results. 
+While the strength of the SCM lies in its simplicity in setup and implementation, several problems arise from the lack of guidance on how to specify the SCM estimator. The specification of the estimator can produce very different results: \citet{ferman2018cherry} show, for example, how cherry-picking between common SCM specifications can facilitate $p$-hacking.\citet{kaul2015synthetic} show that the common practice of including lagged versions of the outcome variable as model inputs can render all other covariates irrelevant. \citet{klossner2017comparative} demonstrates that the common practice of using cross-validation to select importance weights can yield multiple values and consequently different results. 
 
 This paper proposes an alternative to the SCM that is capable of automatically selecting appropriate control units at each time-step, allows for nonconvex combinations of control units, and does not rely on pre-intervention covariates. The method uses recurrent neural networks (RNNs) to predict a counterfactual time-series of treated units using only control unit outcomes as model inputs. RNNs are a class of neural networks that take advantage of the sequential nature of time-series data by sharing model parameters across multiple time-steps \citep{el1995}. Non-parametric models such as RNNs are useful for prediction problems because we do not have to assume a functional form on the data. In addition, RNNs can learn the most useful nonconvex combination of control unit outcomes at each time-step for generating counterfactual predictions. Relaxing the convexity restriction is useful when the data-generating process underlying the outcome of interest depends nonlinearly on the history of its inputs. RNNs have been shown to outperform various linear models on time-series prediction tasks \citep{cinar2017position}. 
 
@@ -166,49 +179,29 @@ In the section immediately below, I describe the approach of using RNNs for coun
 %\setcounter{section}{1}
 \section{Counterfactual prediction} \label{prediction}
 
-The proposed method estimates the causal effect of a discrete intervention in observational time-series data; i.e., settings in which treatment is not randomly assigned and there exists both pre- and post-period observations of the outcome of interest. A straightforward approach for counterfactual prediction, originally proposed by \citet{brodersen2015inferring}, is to train a model on the pre-period time-series of control units and use the weights of the trained model to predict the counterfactual time-series of the treated units. 
+The proposed method estimates the causal effect of a discrete intervention in observational panel data; i.e., settings in which treatment is not randomly assigned and there exists both pre- and post-period observations of the outcome of interest. Let $\mathbf{Y}$ denote a $\text{N} \times \text{T}$ matrix of outcomes for each unit $i =1, \ldots, \text{N}$ at time $t = 1, \ldots, \text{T}$. $\mathbf{Y}$ is incomplete because we observe each element $Y_{it}$ for only the control units and the treated units prior to time of initial treatment exposure, $\text{T}_0 < \text{T}$. Let $\mathcal{O}$ denote the set of $(it)$ values that are observed and $\mathcal{M}$ the set of $(it)$ missing values. Let the values of the $\text{N} \times \text{T}$ complete matrix $\mathbf{W}$ be $W_{it} =1$ if $(it) \in \mathcal{M}$ and $W_{it} = 0$ if $(it) \in \mathcal{O}$. Note that the process that generates $W_{it}$ is referred to the treatment assignment mechanism in the causal inference literature \citep{imbens2015causal} and the missing data mechanism in missing data analysis \citep{little2014}. The pattern of missing data is assumed to follow from the simultaneous treatment adoption setting, where treated units are exposed to treatment at time $\text{T}_0$ and every subsequent period. 
 
-\subsection{Nonparametric regression}
+This setup is motivated by the \citet{neyman1923} potential outcomes framework, where for each $it$ value there exists a pair of potential outcomes, $Y_{it}(1)$ and $Y_{it}(0)$, which represents the response to treated and control regimes, respectively. The observed outcomes are 
 
-Let $\mathbf{x}^{(t)}= \mathbf{x}^{(1)}, \ldots, \mathbf{x}^{(\tau)}$ denote a multivariate time-series of control unit outcomes and  $\mathbf{y}^{(t)}= \mathbf{y}^{(1)}, \ldots, \mathbf{y}^{(\tau)}$ be the time-series of treated unit outcomes, both with the temporal ordering $t = 1, \ldots, \tau$. In its most basic form, the pre-period relationship between treated and control unit outcomes can be modeled by nonparametric regression, 
+\begin{align} 
+Y_{it}(\mathbf{W}) = \begin{cases}
+Y_{it}(0) 	& \mbox{if } W_{it} = 0  \text{ or } t \leq \text{T}_0 \\
+Y_{it}(1) 	& \mbox{if } W_{it} = 1  \text{ and } t > \text{T}_0.
+\end{cases} 
+\end{align} 
 
-\begin{equation}\label{eq:pre}
-  \mathbf{y}^{(t)} =  f_0 \left(\mathbf{x}^{(t)}\right) + \epsilon^{(t)} \hspace{10mm} t = 1, \ldots, n, 
-\end{equation}
-\noindent
-where $n < \tau$ denotes the last time-step prior to a discrete intervention. The noise variables $\epsilon^{(t)}$ are assumed to be i.i.d. standard normal and independent of $\mathbf{x}^{(t)}$. The statistical problem is to nonparametrically estimate the regression function $f_0(\cdot)$ from $\left(\mathbf{x}^{(t)}, \mathbf{y}^{(t)}\right)$. 
-
-In this paper, I consider fitting different variants of RNNs to the data. The fitted model is used to predict the counterfactual time-series of the treated group in the post-period: 
-
-\begin{equation}\label{eq:post}
-  \mathbf{\hat{y}}^{(t)} =  \hat{f_0} \left(\mathbf{x}^{(t)}\right) + \zeta^{(t)}  \hspace{10mm} t = n+1. \ldots, \tau, 
-\end{equation}
-
-The key assumption of this model is that the modeled relationship (\ref{eq:pre}) persists after the intervention. The approach also assumes that the control units are not themselves affected by the intervention; i.e., there is no spillover effect that would indeterminately bias the estimate and possibly lead to a false positive. As long as $\mathbf{x}^{(t)}$ was not impacted by the intervention, it is plausible that the modeled relationship persists after the intervention. 
-
-Under both identification assumptions, the inferred causal effect of the intervention on the treated group is the difference between the observed time-series of the treated units and the counterfactual time-series that would have been observed in the absence of the intervention. This treatment effect is calculated at every post-period time-step and is thus useful for understanding the temporal evolution of the causal effect:
-
-\begin{equation}\label{eq:pointwise}
-  \mathbf{\hat{\phi}}^{(t)} = \mathbf{y}^{(t)} - \mathbf{\hat{y}}^{(t)} \hspace{10mm} t = n+1, \ldots, \tau. 
-\end{equation}
-
-\subsection{Nonparametric autoregression}
-
-Appropriate control units are not always available, either because their pre-period distribution is too dissimilar to the pre-period distribution of treated units, or due to spillover effects. In this scenario, the counterfactual time-series of treated can simply be modeled as an autoregressive process in which $\mathbf{y}^{(t)}$ is nonlinearly related to values at $p$ previous time-steps:
-
-\begin{equation}\label{eq:ar-pre}
-\mathbf{y}^{(t)} =  f_1 \left(\mathbf{y}^{(t-1)}, \ldots, \mathbf{y}^{(t-p)}\right) + \upsilon^{(t)} \hspace{10mm} 1 \leq t \leq n, 
-\end{equation} %\hspace{5mm} \mathbf{y}^{(0)}, \ldots, \mathbf{y}^{(-p+1)} \text{ given,}
-\noindent
-where $f_1 (\cdot)$ is a nonlinear function to be estimated. The model weights are then used to predict the post-period treated unit outcomes
-
-\begin{equation}\label{eq:ar-post}
-\mathbf{\hat{y}}^{(t)} =  \hat{f_1} \left(\mathbf{y}^{(t-1)}, \ldots, \mathbf{y}^{(t-p)}\right) + \upsilon^{(t)} \hspace{10mm} n+1 \leq t \leq \tau, 
-\end{equation}
-\noindent 
-and the pointwise causal effect is calculated by (\ref{eq:pointwise}).
+The problem of counterfactual prediction is that we cannot directly observe the missing potential outcomes and instead wish to impute the missing values in $\mathbf{Y}(0)$ for treated units with $W_{it} =1$. However, the potential outcomes framework explicitly requires unconfoundedness: $(\mathbf{Y}(0), \mathbf{Y}(1)) \independent \mathbf{W}|\mathbf{X}$, where $\mathbf{X}$ is a $\text{N} \times \text{T}$ matrix of predictors, which can include observed outcomes for units with similar values or observed outcomes in previous periods. Note that the potential outcomes framework also implicitly assumes treatment is well-defined to ensure that each unit has the same number of potential outcomes \citep{imbens2015causal}. It also excludes interference between units, which would undermine the framework by creating more than two potential outcomes per unit, depending on the treatment status of other units \citep{rubin1990}.
 
 \subsection{Relationship to covariate shift and domain adaptation}
+
+In observational studies, the mechanism that determines which units are exposed to treatment via policy intervention is not randomized and in general will not be independent of the predictors; i.e., the inputs to functions $f_0$ and $f_1$ in (\ref{eq:pre}) and (\ref{eq:ar-post}), respectively. The counterfactual distribution of treated unit outcomes will therefore differ from the observed distribution. 
+
+%the problem of causal inference by counterfactual prediction might require inference over a different distribution than the one from which samples are given
+%In machine learning terms, this means that the feature distribution of the test set differs from that of the train set. This is a case of covariate shift, which is a special case of domain adaptation
+
+In an observational setting, units are part of the assignment mechanism that generates $\mathbf{W}$. Selection biases arise because the probability of missingness may depend on the unobserved data. 
+
+In the literature on causal inference under unconfoundedness  \citep{imbens2015causal}
 
 %1. Train on X_c to predict Y_c
 %2. Fit model weights on X_t to predict Y_t
@@ -221,77 +214,111 @@ and the pointwise causal effect is calculated by (\ref{eq:pointwise}).
 %huang2007correcting,cortes2008sample,cortes2010learning,bickel2009discriminative
 
 %*cortes2008sample - importance weighting of loss fn to address the problem of covariate shift.
-	%points are drawn according to the test distribution but not all of them are made available to the learner. This is called the sample
-	%selection bias problem. Remarkably, it is often possible to correct this bias by using
-	%large amounts of unlabeled data.
-	%The problem of sample selection bias correction for linear regression has been extensively studied in econometrics and statistics (heckman1979sample)
-	%The main correction technique used in all of these publications consists of reweighting the cost of training point errors to more closely reflect that of the test distribution.
-	%This is in fact a technique commonly used in statistics and machine learning for a variety of problems of this type (Little & Rubin, 1986). With the exact weights, this reweighting could optimally correct the bias, but, in practice, the weights are based on an estimate of the sampling probability from finite data sets.
-	
-	%\citet{athey2017matrix} note that their estimator penalizes the errors for each observed value equally without regard to the fact that the probability of missingness (i.e., the propensity score), $\Pr (M_{it} = 1 | \mathbf{Y_{\mathrm{obs}}}, \phi)$, increases with $t$. The authors suggest weighting the loss function by the propensity score, which is similar to the importance weighting scheme proposed by \citet{cortes2008sample} to address the problem of covariate shift.
+%points are drawn according to the test distribution but not all of them are made available to the learner. This is called the sample
+%selection bias problem. 
+%The problem of sample selection bias correction for linear regression has been extensively studied in econometrics and statistics (heckman1979sample)
+%The main correction technique used in all of these publications consists of reweighting the cost of training point errors to more closely reflect that of the test distribution.
+%This is in fact a technique commonly used in statistics and machine learning for a variety of problems of this type (Little & Rubin, 1986). With the exact weights, this reweighting could optimally correct the bias, but, in practice, the weights are based on an estimate of the sampling probability from finite data sets.
+
+%\citet{athey2017matrix} note that their estimator penalizes the errors for each observed value equally without regard to the fact that the probability of missingness (i.e., the propensity score), $\Pr (M_{it} = 1 | \mathbf{Y_{\mathrm{obs}}}, \phi)$, increases with $t$. The authors suggest weighting the loss function by the propensity score, which is similar to the importance weighting scheme proposed by \citet{cortes2008sample} to address the problem of covariate shift.
 
 %johansson2016learning
-	%formulate the problem of counterfactual inference as a domain adaptation problem, and more specifically a covariate shift problem
-	%learning representations that encourage similarity (balance) between the treated and control populations leads to better counterfactual inference
-	% recent work:learning representations for transfer learning (ben2007analysis; 2015arXiv150507818G)
-	%the problem of causal inference by counterfactual prediction might require inference over a different distribution than the one from which samples are given
-	%In machine learning terms, this means that the feature distribution of the test set differs from that of the train set. This is a case of covariate shift, which is a special case of domain adaptation
-	
-	% The fundamental problem of causal inference is that only one potential outcome is observed for a given context x
-	%In observational studies, which are the focus of this work, the treatment assignment mechanism is not un- der our control and in general will not be independent of the context x. Therefore, in general, the counterfactual distribution will be different from the factual distribution.
-	
-	%Intuitively, representations that reduce the discrepancy between the treated and control populations prevent the learner from using “unreliable” aspects of the data when trying to generalize from the factual to counterfactual do- mains. For example, if in our sample almost no men ever received medication A, inferring how men would react to medication A is highly prone to error and a more conservative use of the gender feature might be warranted.
-	
-	% minimizing the so-called discrepancy distance, introduced by Mansour et al. (2009), which is a hypothesis class dependent distance measure tailored for domain adaptation
+%formulate the problem of counterfactual inference as a domain adaptation problem, and more specifically a covariate shift problem
+%learning representations that encourage similarity (balance) between the treated and control populations leads to better counterfactual inference
+% recent work:learning representations for transfer learning (ben2007analysis; 2015arXiv150507818G)
+
+%Intuitively, representations that reduce the discrepancy between the treated and control populations prevent the learner from using “unreliable” aspects of the data when trying to generalize from the factual to counterfactual do- mains. For example, if in our sample almost no men ever received medication A, inferring how men would react to medication A is highly prone to error and a more conservative use of the gender feature might be warranted.
+
+% minimizing the so-called discrepancy distance, introduced by Mansour et al. (2009), which is a hypothesis class dependent distance measure tailored for domain adaptation
 
 %\citet{schnabel2016recommendations} first connected the matrix completion problem with causal inference in an observational setting in the context of recommender systems under selection bias. 
 
+\subsection{Nonparametric regression}
+
+Let $\mathbf{X}^{(t)}= \mathbf{X}^{(1)}, \ldots, \mathbf{X}^{(\text{T})}$ denote the $\text{N} \times \text{T}$ matrix of control unit outcomes and  $\mathbf{Y}^{(t)}= \mathbf{Y}^{(1)}, \ldots, \mathbf{Y}^{(\text{T})}$ be the time-series of treated unit outcomes. In its most basic form, the pre-period relationship between treated and control unit outcomes can be modeled by nonparametric regression, 
+
+\begin{equation}\label{eq:pre}
+  \mathbf{X}^{(t)} =  f_0 \left(\mathbf{X}^{(t)}\right) + \upepsilon^{(t)} \hspace{10mm} t = 1 \leq t < T_0, 
+\end{equation}
+\noindent
+where $n < \text{T}$ denotes the last time-step prior to a discrete intervention. The noise variables $\epsilon^{(t)}$ are assumed to be i.i.d. standard normal and independent of $\mathbf{X}^{(t)}$. The statistical problem is to nonparametrically estimate the regression function $f_0(\cdot)$ from $\left(\mathbf{X}^{(t)}, \mathbf{X}^{(t)}\right)$. 
+
+In this paper, I consider fitting different variants of RNNs to the data. The fitted model is used to predict the counterfactual time-series of the treated group in the post-period: 
+
+\begin{equation}\label{eq:post}
+  \mathbf{\hat{y}}^{(t)} =  \hat{f_0} \left(\mathbf{X}^{(t)}\right) + \zeta^{(t)}  \hspace{10mm} t = n+1. \ldots, \text{T}, 
+\end{equation}
+
+The key assumption of this model is that the modeled relationship (\ref{eq:pre}) persists after the intervention. The approach also assumes that the control units are not themselves affected by the intervention; i.e., there is no spillover effect that would indeterminately bias the estimate and possibly lead to a false positive. As long as $\mathbf{X}^{(t)}$ was not impacted by the intervention, it is plausible that the modeled relationship persists after the intervention. 
+
+Under both identification assumptions, the inferred causal effect of the intervention on the treated group is the difference between the observed time-series of the treated units and the counterfactual time-series that would have been observed in the absence of the intervention. This treatment effect is calculated at every post-period time-step and is thus useful for understanding the temporal evolution of the causal effect:
+
+\begin{equation}\label{eq:pointwise}
+  \mathbf{\hat{\phi}}^{(t)} = \mathbf{X}^{(t)} - \mathbf{\hat{y}}^{(t)} \hspace{10mm} t = n+1, \ldots, \text{T}. 
+\end{equation}
+
+\subsection{Nonparametric autoregression}
+
+Appropriate control units are not always available, either because their pre-period distribution is too dissimilar to the pre-period distribution of treated units, or due to spillover effects. In this scenario, the counterfactual time-series of treated can simply be modeled as an autoregressive process in which $\mathbf{X}^{(t)}$ is nonlinearly related to values at $p$ previous time-steps:
+
+\begin{equation}\label{eq:ar-pre}
+\mathbf{X}^{(t)} =  f_1 \left(\mathbf{X}^{(t-1)}, \ldots, \mathbf{X}^{(t-p)}\right) + \upsilon^{(t)} \hspace{10mm} 1 \leq t \leq n, 
+\end{equation} %\hspace{5mm} \mathbf{X}^{(0)}, \ldots, \mathbf{X}^{(-p+1)} \text{ given,}
+\noindent
+where $f_1 (\cdot)$ is a nonlinear function to be estimated. The model weights are then used to predict the post-period treated unit outcomes
+
+\begin{equation}\label{eq:ar-post}
+\mathbf{\hat{y}}^{(t)} =  \hat{f_1} \left(\mathbf{X}^{(t-1)}, \ldots, \mathbf{X}^{(t-p)}\right) + \upsilon^{(t)} \hspace{10mm} n+1 \leq t \leq \text{T}, 
+\end{equation}
+\noindent 
+and the pointwise causal effect is calculated by (\ref{eq:pointwise}).
+
 \section{RNNs for counteractual prediction} \label{RNNs-section}
 
-Unlike linear models, RNNs are non-parametric and are structured for time-series data. RNNs consist of a hidden state $\mathbf{h}^{(t)}$ and an output $\mathbf{y}^{(t)}$ which operate on a sequence $\mathbf{x}^{(t)}$. At each time-step $t$, RNNs input $\mathbf{x}^{(t)}$ and pass it to the hidden state, which is updated with a function $g^{(t)}$ using the entire history of the sequence \citep[pp. 337][]{goodfellow2016deep}:
+Unlike linear models, RNNs are non-parametric and are structured for time-series data. RNNs consist of a hidden state $\mathbf{h}^{(t)}$ and an output $\mathbf{X}^{(t)}$ which operate on a sequence $\mathbf{X}^{(t)}$. At each time-step $t$, RNNs input $\mathbf{X}^{(t)}$ and pass it to the hidden state, which is updated with a function $g^{(t)}$ using the entire history of the sequence \citep[pp. 337][]{goodfellow2016deep}:
 
 \begin{align}
-\mathbf{h}^{(t)} &= g^{(t)} \left(\mathbf{x}^{(1)}, \ldots, \mathbf{x}^{(t)} \right) \nonumber \\ 
-&= f_2 \left( \mathbf{h}^{(t-1)}, \mathbf{x}^{(t)} \right), \label{eq:hidden}
-\end{align} where $f_2(\cdot)$ is a nonlinear function that operates on all time-steps and input lengths. The updated hidden layer is used to generate a sequence of output values $\mathbf{o}^{(t)}$ in the form of log probabilities that correspond to $\mathbf{x}^{(t)}$. The loss function computes $\mathbf{\hat{y}}^{(t)} = \mathrm{linear} (\mathbf{o}^{(t)})$ and compares this value to $\mathbf{y}^{(t)}$.
+\mathbf{h}^{(t)} &= g^{(t)} \left(\mathbf{X}^{(1)}, \ldots, \mathbf{X}^{(t)} \right) \nonumber \\ 
+&= f_2 \left( \mathbf{h}^{(t-1)}, \mathbf{X}^{(t)} \right), \label{eq:hidden}
+\end{align} where $f_2(\cdot)$ is a nonlinear function that operates on all time-steps and input lengths. The updated hidden layer is used to generate a sequence of output values $\mathbf{o}^{(t)}$ in the form of log probabilities that correspond to $\mathbf{X}^{(t)}$. The loss function computes $\mathbf{\hat{y}}^{(t)} = \mathrm{linear} (\mathbf{o}^{(t)})$ and compares this value to $\mathbf{X}^{(t)}$.
 
 \subsection{Encoder-decoder networks}
 
 A special variant of RNNs that are suitable for handling variable-length sequential data are encoder-decoder networks \citep{cho2014learning}. Encoder-decoder networks are the standard for neural machine translation \citep{bahdanau2014neural,vinyals2014grammar} and are also widely used for predictive tasks, including speech recognition \citep{chorowski2015attention} and time-series forecasting \citep{zhu2017deep}. 
 
-Encoder-decoder networks are trained to estimate the conditional distribution of the output sequence given the past input sequence, e.g., $p (\mathbf{y}^{(1)}, \ldots, \mathbf{y}^{(t)} | \mathbf{x}^{(1)}, \ldots, \mathbf{x}^{(t)})$, where the input and output sequence lengths can differ. The encoder RNN reads in $\mathbf{x}^{(t)}$ sequentially and the hidden state of the network updates according to Eq. \ref{eq:hidden}. The hidden state of the encoder is a context vector $\mathbf{c}$ that summarizes the input sequence, which is copied over to the decoder RNN. The decoder generates a variable-length output sequence by predicting $\mathbf{y}^{(t)}$ given the encoder hidden state and the previous element of the output sequence. Thus, the hidden state of the decoder is updated recursively by
+Encoder-decoder networks are trained to estimate the conditional distribution of the output sequence given the past input sequence, e.g., $p (\mathbf{X}^{(1)}, \ldots, \mathbf{X}^{(t)} | \mathbf{X}^{(1)}, \ldots, \mathbf{X}^{(t)})$, where the input and output sequence lengths can differ. The encoder RNN reads in $\mathbf{X}^{(t)}$ sequentially and the hidden state of the network updates according to Eq. \ref{eq:hidden}. The hidden state of the encoder is a context vector $\mathbf{c}$ that summarizes the input sequence, which is copied over to the decoder RNN. The decoder generates a variable-length output sequence by predicting $\mathbf{X}^{(t)}$ given the encoder hidden state and the previous element of the output sequence. Thus, the hidden state of the decoder is updated recursively by
 
 \begin{equation}
-\mathbf{h}^{(t)} = f \left( \mathbf{h}^{(t-1)}, \mathbf{y}^{(t-1)}, \mathbf{c} \right), \label{eq:decoder}
+\mathbf{h}^{(t)} = f \left( \mathbf{h}^{(t-1)}, \mathbf{X}^{(t-1)}, \mathbf{c} \right), \label{eq:decoder}
 \end{equation} and the conditional probability of the next element of the sequence is 
 
 \begin{equation}
-P (\mathbf{y}^{(t)} | \mathbf{y}^{(1)}, \ldots, \mathbf{y}^{(t-1)}, \mathbf{c}) =  f \left( \mathbf{h}^{(t)}, \mathbf{y}^{(t-1)}, \mathbf{c} \right).
-\end{equation}  Effectively, the decoder learns to generate outputs $\mathbf{y}^{(t)}$ given the previous outputs, conditioned on the input sequence. 
+P (\mathbf{X}^{(t)} | \mathbf{X}^{(1)}, \ldots, \mathbf{X}^{(t-1)}, \mathbf{c}) =  f \left( \mathbf{h}^{(t)}, \mathbf{X}^{(t-1)}, \mathbf{c} \right).
+\end{equation}  Effectively, the decoder learns to generate outputs $\mathbf{X}^{(t)}$ given the previous outputs, conditioned on the input sequence. 
 
 \subsection{Variational autoencoder}
 
-The encoder-decoder model described above predicts the next element of a sequence conditioned on the previous element and an evolving hidden state. While this architecture is effective for many sequence-based predictive tasks, the model does not learn a vector representation of the full sequence. The variational autoencoder (VAE) \citep{kingma2013auto} is a generative model that learns a latent variable model for input sequences such that new sequences can be generated from sampling from the latent space. Similar to encoder-decoder networks, the VAE has an encoder that learns a latent representation of the input sequence and a decoder that maps the representation back to the inputs. The VAE architecture differs from encoder-decoder networks in that the VAE doesn't have a final dense layer that compares the decoder outputs to output sequences $\mathbf{y}^{(t)}$ (i.e., it is a ``self-supervised'' technique).\footnote{Fig. SM-\ref{encoder-decoder} and Fig. SM-\ref{vae} illustrates the architectures of encoder-decoder networks and the VAE, respectively.} The other difference is that the VAE maps the inputs to a distribution over latent variables. 
+The encoder-decoder model described above predicts the next element of a sequence conditioned on the previous element and an evolving hidden state. While this architecture is effective for many sequence-based predictive tasks, the model does not learn a vector representation of the full sequence. The variational autoencoder (VAE) \citep{kingma2013auto} is a generative model that learns a latent variable model for input sequences such that new sequences can be generated from sampling from the latent space. Similar to encoder-decoder networks, the VAE has an encoder that learns a latent representation of the input sequence and a decoder that maps the representation back to the inputs. The VAE architecture differs from encoder-decoder networks in that the VAE doesn't have a final dense layer that compares the decoder outputs to output sequences $\mathbf{X}^{(t)}$ (i.e., it is a ``self-supervised'' technique).\footnote{Fig. SM-\ref{encoder-decoder} and Fig. SM-\ref{vae} illustrates the architectures of encoder-decoder networks and the VAE, respectively.} The other difference is that the VAE maps the inputs to a distribution over latent variables. 
 
-The RNN-based VAE proposed by several researchers \citep{fabius2014variational, chung2015recurrent,bowman2015generating} for sequence modeling consists of an encoder RNN that maps $\mathbf{x}^{(t)}$ to a distribution over parameters of a latent space $q$. The model then randomly samples $\mathbf{z}$ from the latent distribution, $q(\mathbf{z} | \mathbf{x}^{(t)}) = q (\mathbf{z}; f(\mathbf{x}^{(t)}; \theta))$, where $f(\cdot)$ is a differentiable function with respect to parameter $\theta$ \citep[pp. 699][]{goodfellow2016deep}.\footnote{In the empirical applications, $f(\cdot)$ take the form of a log-normal distribution.} Finally, a decoder RNN takes the form of a conditional probability model $P (\mathbf{x}^{(t)} | \mathbf{z})$. The parameters of the model are learned by maximizing the loss function, which takes the difference between the log-likelihood between the decoder outputs and $\mathbf{x}^{(t)}$ and the relative entropy between  $q(\mathbf{z} | \mathbf{x}^{(t)})$ and the model prior $p (\mathbf{z})$. The latter component of the loss function acts as regularizer by forcing the learned latent distribution to be similar to the model prior. 
+The RNN-based VAE proposed by several researchers \citep{fabius2014variational, chung2015recurrent,bowman2015generating} for sequence modeling consists of an encoder RNN that maps $\mathbf{X}^{(t)}$ to a distribution over parameters of a latent space $q$. The model then randomly samples $\mathbf{z}$ from the latent distribution, $q(\mathbf{z} | \mathbf{X}^{(t)}) = q (\mathbf{z}; f(\mathbf{X}^{(t)}; \theta))$, where $f(\cdot)$ is a differentiable function with respect to parameter $\theta$ \citep[pp. 699][]{goodfellow2016deep}.\footnote{In the empirical applications, $f(\cdot)$ take the form of a log-normal distribution.} Finally, a decoder RNN takes the form of a conditional probability model $P (\mathbf{X}^{(t)} | \mathbf{z})$. The parameters of the model are learned by maximizing the loss function, which takes the difference between the log-likelihood between the decoder outputs and $\mathbf{X}^{(t)}$ and the relative entropy between  $q(\mathbf{z} | \mathbf{X}^{(t)})$ and the model prior $p (\mathbf{z})$. The latter component of the loss function acts as regularizer by forcing the learned latent distribution to be similar to the model prior. 
 
 \section{Predictive accuracy and statistical significance} \label{eval}
 
 In applications in which the counterfactual time-series is known (i.e., placebo tests) models can be evaluated in terms of the MSPE between the predicted and actual post-intervention time-series among control units. Specifically, I calculate:
 
 \begin{equation}
-	\text{MSPE} = \frac{1}{\tau-n} \sum_{n+1: \tau}^{\tau} \left(\hat{\phi}^{(t)} \right)^2, \label{mspe}
+	\text{MSPE} = \frac{1}{\text{T}-n} \sum_{n+1: \text{T}}^{\text{T}} \left(\hat{\phi}^{(t)} \right)^2, \label{mspe}
 \end{equation} where $\hat{\phi}^{(t)}$ is defined in Eq.~\ref{eq:pointwise}. Eq. \ref{mspe} measures the accuracy of the counterfactual predictions, and consequently the accuracy of the estimated treatment effect. However, this metric does not tell us anything about the statistical significance of estimated treatment effects. 
 
 \citet{abadie2010synthetic} propose a randomization inference approach for calculating the exact distribution of placebo effects under the sharp null hypothesis of no impact. \citet{cavallo2013catastrophic} extends the placebo-based testing approach to the case of multiple (placebo) treated units by constructing a distribution of \emph{average} placebo effects under the null hypothesis. \citet{firpo2018synthetic} derive the conditions under which the randomization inference approach is valid from a finite sample perspective.\footnote{\citet{hahn2017synthetic} analyze the approach from a repeated sampling perspective.} Randomization $p$-values are obtained following these steps:
 
 \begin{enumerate} 
-	\item Estimate the observed test static $\mu^{*}$ by estimating Eq. \ref{mspe} for all $J$, which results in a matrix of dimension $(\tau-n) \times J$. Taking the row-wise mean results in a $\tau-n$-length array of observed average placebo treated effects. 
-	\item Calculate every possible average placebo effect $\mu$ by randomly sampling without replacement which $J-1$ control units are assumed to be treated. There are $\mathcal{Q} = \sum\limits_{g=1}^{J-1} {J \choose g}$ possible average placebo effects. The result is a matrix of dimension $(\tau-n) \times \mathcal{Q}$. Note that $\mathcal{Q}$ can be computationally burdensome when there are many control units. In the applications described below, I set $\mathcal{Q} = 10,000$ in which $J > 16$.
+	\item Estimate the observed test static $\mu^{*}$ by estimating Eq. \ref{mspe} for all $J$, which results in a matrix of dimension $(\text{T}-n) \times J$. Taking the row-wise mean results in a $\text{T}-n$-length array of observed average placebo treated effects. 
+	\item Calculate every possible average placebo effect $\mu$ by randomly sampling without replacement which $J-1$ control units are assumed to be treated. There are $\mathcal{Q} = \sum\limits_{g=1}^{J-1} {J \choose g}$ possible average placebo effects. The result is a matrix of dimension $(\text{T}-n) \times \mathcal{Q}$. Note that $\mathcal{Q}$ can be computationally burdensome when there are many control units. In the applications described below, I set $\mathcal{Q} = 10,000$ in which $J > 16$.
 	\item Take a column-wise sum of the number of $\mu$ that are greater than or equal to $\mu^{*}$.  
 \end{enumerate}
 
-Each element of the $(\tau-n) \times J$ matrix of counts obtained from the last step is divided by $\mathcal{Q}$ to estimate an array of exact two-sided $p$ values, $\hat{p}$. I then calculate a single false positive rate by $\text{FPR} = \frac{\text{FP}}{(\tau-n) \times J}$, where $\text{FP}$ is the number of false positives defined as the number of $p$-values less than or equal to $\alpha=0.5$ and $J$ is the number of placebo treated units.
+Each element of the $(\text{T}-n) \times J$ matrix of counts obtained from the last step is divided by $\mathcal{Q}$ to estimate an array of exact two-sided $p$ values, $\hat{p}$. I then calculate a single false positive rate by $\text{FPR} = \frac{\text{FP}}{(\text{T}-n) \times J}$, where $\text{FP}$ is the number of false positives defined as the number of $p$-values less than or equal to $\alpha=0.5$ and $J$ is the number of placebo treated units.
 
 \subsection{Randomization confidence intervals}
 
@@ -305,7 +332,7 @@ I evaluate the proposed RNN-based approach on three datasets common to the SCM l
 
 In the following application, I train a baseline RNN in the form of a single unidirectional Long Short-Term Memory (LSTM) network \citep{schmidhuber1997long} with output space dimensionality equivalent to the number of treated units. The encoder takes the form of a two-layer bidirectional LSTMs, each with 128 hidden units, and the decoder is a single-layer Gated Recurrent Unit (GRU) \citep{chung2014} also with 128 hidden units. An attention mechanism in the form of a softmax mask is included before the first hidden layer in order to generate a normalized distribution of the importance of each time-step regarding an input. In contrast to attention mechanisms used in neural machine translation to assist networks in learning the correct alignment between image pixels and target characters \citep{cho2014learning,2017arXiv171204046P}, the attention mechanism used in this paper is not expected to help the model perform better, but to help understand which time-steps and inputs contribute to the prediction.
 
-RNN weights are learned with stochastic gradient descent on mean squared prediction error (MSPE), $L^{(t)}_{\text{MSPE}} = \E \left[\left(\mathbf{y}^{(t)} - \mathbf{\hat{y}}^{(t)} \right)^2 \right]$ using \texttt{Adam} stochastic optimization \citep{kingma2014adam}. As a regularization strategy, I apply dropout to the inputs and L2 regularization losses to the network weights. The networks are implemented with the \texttt{Keras} neural network library \citep{chollet2015keras} in Python on top of a TensorFlow backend. RNNs are trained in batches of size four or eight for 5,000 to 10,000 epochs, which takes about 20 minutes to run on a 12GB NVIDIA Titan Xp GPU.
+RNN weights are learned with stochastic gradient descent on mean squared prediction error (MSPE), $L^{(t)}_{\text{MSPE}} = \E \left[\left(\mathbf{X}^{(t)} - \mathbf{\hat{y}}^{(t)} \right)^2 \right]$ using \texttt{Adam} stochastic optimization \citep{kingma2014adam}. As a regularization strategy, I apply dropout to the inputs and L2 regularization losses to the network weights. The networks are implemented with the \texttt{Keras} neural network library \citep{chollet2015keras} in Python on top of a TensorFlow backend. RNNs are trained in batches of size four or eight for 5,000 to 10,000 epochs, which takes about 20 minutes to run on a 12GB NVIDIA Titan Xp GPU.
 
 \subsection{Basque Country} 
 

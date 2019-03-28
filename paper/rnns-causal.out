@@ -1,8 +1,8 @@
 \BOOKMARK [1][-]{section.1}{Introduction}{}% 1
 \BOOKMARK [1][-]{section.2}{Counterfactual prediction}{}% 2
-\BOOKMARK [2][-]{subsection.2.1}{Nonparametric regression}{section.2}% 3
-\BOOKMARK [2][-]{subsection.2.2}{Nonparametric autoregression}{section.2}% 4
-\BOOKMARK [2][-]{subsection.2.3}{Relationship to covariate shift and domain adaptation}{section.2}% 5
+\BOOKMARK [2][-]{subsection.2.1}{Relationship to covariate shift and domain adaptation}{section.2}% 3
+\BOOKMARK [2][-]{subsection.2.2}{Nonparametric regression}{section.2}% 4
+\BOOKMARK [2][-]{subsection.2.3}{Nonparametric autoregression}{section.2}% 5
 \BOOKMARK [1][-]{section.3}{RNNs for counteractual prediction}{}% 6
 \BOOKMARK [2][-]{subsection.3.1}{Encoder-decoder networks}{section.3}% 7
 \BOOKMARK [2][-]{subsection.3.2}{Variational autoencoder}{section.3}% 8
