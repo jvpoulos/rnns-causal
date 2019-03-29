@@ -17,45 +17,45 @@ Warning--I didn't find a database entry for "candes2010matrix"
 Warning--I didn't find a database entry for "mazumder2010spectral"
 Warning--I didn't find a database entry for "yoon2018estimating"
 Warning--empty note in dube2015pooling
-You've used 49 entries,
+You've used 52 entries,
             2705 wiz_defined-function locations,
-            838 strings with 13339 characters,
-and the built_in function-call counts, 25256 in all, are:
-= -- 2484
-> -- 1290
+            853 strings with 14000 characters,
+and the built_in function-call counts, 27670 in all, are:
+= -- 2728
+> -- 1416
 < -- 23
-+ -- 501
-- -- 447
-* -- 2075
-:= -- 4635
-add.period$ -- 101
-call.type$ -- 49
-change.case$ -- 414
-chr.to.int$ -- 48
-cite$ -- 50
-duplicate$ -- 1175
-empty$ -- 1643
-format.name$ -- 613
-if$ -- 4997
++ -- 549
+- -- 492
+* -- 2250
+:= -- 5014
+add.period$ -- 107
+call.type$ -- 52
+change.case$ -- 448
+chr.to.int$ -- 51
+cite$ -- 53
+duplicate$ -- 1296
+empty$ -- 1797
+format.name$ -- 667
+if$ -- 5525
 int.to.chr$ -- 2
 int.to.str$ -- 1
-missing$ -- 40
-newline$ -- 204
-num.names$ -- 196
-pop$ -- 508
+missing$ -- 43
+newline$ -- 216
+num.names$ -- 208
+pop$ -- 553
 preamble$ -- 1
-purify$ -- 343
+purify$ -- 370
 quote$ -- 0
-skip$ -- 778
+skip$ -- 892
 stack$ -- 0
-substring$ -- 1118
-swap$ -- 319
+substring$ -- 1255
+swap$ -- 381
 text.length$ -- 1
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 435
+type$ -- 462
 warning$ -- 1
-while$ -- 191
+while$ -- 207
 width$ -- 0
-write$ -- 573
+write$ -- 609
 (There were 2 error messages)

@@ -1,4 +1,4 @@
-\begin{thebibliography}{49}
+\begin{thebibliography}{52}
 \expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
 \expandafter\ifx\csname url\endcsname\relax
   \def\url#1{\texttt{#1}}\fi
@@ -39,6 +39,13 @@ Amjad, M., Shah, D. and Shen, D. (2018) Robust synthetic control.
 {Bahdanau}, D., {Cho}, K. and {Bengio}, Y. (2014) {Neural Machine Translation
   by Jointly Learning to Align and Translate}.
 \newblock \textit{ArXiv e-prints}.
+
+\bibitem[{Ben-David et~al.(2007)Ben-David, Blitzer, Crammer and
+  Pereira}]{ben2007analysis}
+Ben-David, S., Blitzer, J., Crammer, K. and Pereira, F. (2007) Analysis of
+  representations for domain adaptation.
+\newblock In \textit{Advances in neural information processing systems},
+  137--144.
 
 \bibitem[{Bickel et~al.(2009)Bickel, Br{\"u}ckner and
   Scheffer}]{bickel2009discriminative}
@@ -156,6 +163,13 @@ Firpo, S. and Possebom, V. (2018) Synthetic control method: Inference,
   sensitivity analysis and confidence sets.
 \newblock \textit{Journal of Causal Inference}, \textbf{6}.
 
+\bibitem[{{Ganin} et~al.(2015){Ganin}, {Ustinova}, {Ajakan}, {Germain},
+  {Larochelle}, {Laviolette}, {Marchand} and {Lempitsky}}]{2015arXiv150507818G}
+{Ganin}, Y., {Ustinova}, E., {Ajakan}, H., {Germain}, P., {Larochelle}, H.,
+  {Laviolette}, F., {Marchand}, M. and {Lempitsky}, V. (2015)
+  {Domain-Adversarial Training of Neural Networks}.
+\newblock \textit{arXiv e-prints}, arXiv:1505.07818.
+
 \bibitem[{Goodfellow et~al.(2016)Goodfellow, Bengio and
   Courville}]{goodfellow2016deep}
 Goodfellow, I., Bengio, Y. and Courville, A. (2016) \textit{Deep Learning}.
@@ -182,6 +196,12 @@ Huang, J., Gretton, A., Borgwardt, K.~M., Sch{\"o}lkopf, B. and Smola, A.~J.
 Imbens, G.~W. and Rubin, D.~B. (2015) \textit{Causal Inference in Statistics,
   Social, and Biomedical Sciences}.
 \newblock Cambridge: Cambridge University Press.
+
+\bibitem[{Johansson et~al.(2016)Johansson, Shalit and
+  Sontag}]{johansson2016learning}
+Johansson, F., Shalit, U. and Sontag, D. (2016) Learning representations for
+  counterfactual inference.
+\newblock In \textit{International Conference on Machine Learning}, 3020--3029.
 
 \bibitem[{Kaul et~al.(2015)Kaul, Kl{\"o}{\ss}ner, Pfeifer and
   Schieler}]{kaul2015synthetic}
