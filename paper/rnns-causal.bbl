@@ -1,4 +1,4 @@
-\begin{thebibliography}{52}
+\begin{thebibliography}{54}
 \expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
 \expandafter\ifx\csname url\endcsname\relax
   \def\url#1{\texttt{#1}}\fi
@@ -175,6 +175,11 @@ Firpo, S. and Possebom, V. (2018) Synthetic control method: Inference,
 Goodfellow, I., Bengio, Y. and Courville, A. (2016) \textit{Deep Learning}.
 \newblock Cambridge, MA: MIT press.
 
+\bibitem[{Graves(2012)}]{graves2012}
+Graves, A. (2012) Neural networks.
+\newblock In \textit{Supervised Sequence Labelling with Recurrent Neural
+  Networks}, 15--35. Springer.
+
 \bibitem[{Hahn and Shi(2017)}]{hahn2017synthetic}
 Hahn, J. and Shi, R. (2017) Synthetic control and inference.
 \newblock \textit{Econometrics}, \textbf{5}, 52.
@@ -226,6 +231,14 @@ Kl{\"o}{\ss}ner, S., Kaul, A., Pfeifer, G. and Schieler, M. (2017) Comparative
   politics and the synthetic control method revisited: A note on {A}badie et
   al. (2015).
 \newblock \textit{Swiss Journal of Economics and Statistics}.
+
+\bibitem[{Lamb et~al.(2016)Lamb, Goyal, Zhang, Zhang, Courville and
+  Bengio}]{lamb2016professor}
+Lamb, A.~M., Goyal, A. G. A.~P., Zhang, Y., Zhang, S., Courville, A.~C. and
+  Bengio, Y. (2016) Professor forcing: A new algorithm for training recurrent
+  networks.
+\newblock In \textit{Advances In Neural Information Processing Systems},
+  4601--4609.
 
 \bibitem[{Neyman(1923)}]{neyman1923}
 Neyman, J. (1923) On the application of probability theory to agricultural

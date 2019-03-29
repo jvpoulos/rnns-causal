@@ -214,7 +214,7 @@ In its most basic form, counterfactual prediction can be approached by nonparame
 \noindent
 where the noise variables $\epsilon^{(t)}$ are assumed to be i.i.d. standard normal and independent of the observed data. 
 
-The nonlinear function $\hat{f_0}$ is estimated by minimizing the mean squared error between the observed and predicted outcomes. The estimated causal effect of the intervention is the difference between the observed time-series of the treated units and the counterfactual time-series that would have been observed in the absence of the intervention:
+The nonlinear function $\hat{f_0}$ is estimated by minimizing the mean squared error, $\text{MSE} = \E \left[\left(\boldsymbol{Y} - \boldsymbol{\hat{Y}} \right)^2 \right]$  for $t \geq \text{T}_0$. The estimated causal effect of the intervention is the difference between the observed time-series of the treated units and the counterfactual time-series that would have been observed in the absence of the intervention:
 
 \begin{equation}\label{eq:pointwise}
   \boldsymbol{\hat{\phi}}^{(t)} = \boldsymbol{Y}(\mathcal{M})^{(t)} - \boldsymbol{\hat{Y}}^{(t)} \hspace{10mm} \text{for } t = \text{T}_0, \ldots, \text{T}. 
@@ -224,12 +224,20 @@ This treatment effect is calculated at every post-period time-step and is thus u
 
 \section{RNNs for counteractual prediction} \label{RNNs-section}
 
-Unlike linear models, RNNs are non-parametric and are structured for time-series data. RNNs consist of an input $\boldsymbol{X} = \boldsymbol{x}^(1), \ldots \boldsymbol{x}^(n_x)$, output $\boldsymbol{Y} = \boldsymbol{x}^(1), \ldots \boldsymbol{x}^(n_y)$, and a hidden state $\boldsymbol{h}^{(t)}$, where $n_x, n_y \leq T$. At each $t$, RNNs input $\boldsymbol{x}^{(t)}$ and pass it to the $\boldsymbol{h}^{(t)}$, which is updated with a function $g^{(t)}$ using the entire history of the sequence \citep{goodfellow2016deep}:
+RNNs \citep{graves2012,goodfellow2016deep} consist of an input $\boldsymbol{X} = \left(\boldsymbol{x}^{(1)}, \ldots, \boldsymbol{x}^{(n_x)}\right)$, an output $\boldsymbol{Y} = \left(\boldsymbol{y}^{(1)}, \ldots, \boldsymbol{y}^{(n_y)}\right)$, and a shared hidden state $\boldsymbol{h}^{(t)}$. In the encoder-decoder network architecture described below, $n_x$ and $n_y$ can vary in length; in the plain vanilla RNN it is assumed $n_x = n_y = T$.  
+
+At each $t$, RNNs input $\boldsymbol{x}^{(t)}$ and pass it to the $\boldsymbol{h}^{(t)}$, which is updated with a function $g^{(t)}$ using the entire history of the input, which is unfolded backwards in time:
 %
 \begin{align}
-\boldsymbol{h}^{(t)} &= g^{(t)} \left(\boldsymbol{x}^{(t)}, \ldots, \boldsymbol{x}^{(t)} \right) \nonumber \\ 
-&= f_2 \left( \boldsymbol{h}^{(t-1)}, \boldsymbol{x}^{(t)} \right), \label{eq:hidden}
-\end{align} where $f_1(\cdot)$ is a nonlinear function that operates on all time-steps and input lengths. The updated hidden layer is used to generate a sequence of output values $\boldsymbol{o}^{(t)}$ in the form of log probabilities that correspond to $\boldsymbol{x}^{(t)}$. The loss function computes $\boldsymbol{\hat{y}}^{(t)} = \mathrm{linear} (\boldsymbol{o}^{(t)})$ and compares this value to $\boldsymbol{x}^{(t)}$.
+\boldsymbol{h}^{(t)} &= g^{(t)} \left(\boldsymbol{x}^{(t)}, \boldsymbol{x}^{(t-1)}, \ldots, \boldsymbol{x}^{(1)} \right) \nonumber \\ 
+&= f_1 \left( \boldsymbol{h}^{(t-1)}, \boldsymbol{x}^{(t)}; \theta \right), \label{eq:hidden}
+\end{align} where the nonlinear function $f_1(\cdot)$ and parameter $\theta$ are learned on all $t$ and $\boldsymbol{x}^{(t)}$. Parameter sharing is particularly useful in the current application because it allows for better generalization when the dimension of the training data is relatively small. The updated hidden state (\ref{eq:hidden}) is used to generate a sequence of values $\boldsymbol{o}^{(t)}$ in the form of log probabilities corresponding to the output. The loss function computes $\boldsymbol{\hat{y}}^{(t)} = \mathrm{linear} (\boldsymbol{o}^{(t)})$ and calculates the loss. The total loss for the input-output pair is the sum of the losses over all $t$.
+
+The RNNs are trained to estimate the conditional distribution of $\boldsymbol{y}^{(t)}$ given the past inputs and also the previous output. This is accomplished by offsetting the input-output pairs by one time-step so that the networks receive $\boldsymbol{y}^{(1)}$  as input at $t + 1$ to be conditioned on for predicting subsequent outputs. This popular training procedure is known as teacher forcing because it forces the networks to stay close to the ground-truth output $\boldsymbol{y}^{(t)}$ \citep{lamb2016professor}. Specifically, the RNNs are trained to maximize the log-likelihood
+
+\begin{equation}
+\text{log} \Pr \left(\boldsymbol{y}^{(t)} | \boldsymbol{x}^{(1)} \ldots \boldsymbol{x}^{(t)},\boldsymbol{y}^{(t)}, \ldots, \boldsymbol{y}^{(t-1)} \right).
+\end{equation}
 
 \subsection{Encoder-decoder networks}
 
@@ -238,11 +246,11 @@ A special variant of RNNs that are suitable for handling variable-length sequent
 Encoder-decoder networks are trained to estimate the conditional distribution of the output sequence given the past input sequence, e.g., $p (\boldsymbol{x}^{(t)}, \ldots, \boldsymbol{x}^{(t)} | \boldsymbol{x}^{(t)}, \ldots, \boldsymbol{x}^{(t)})$, where the input and output sequence lengths can differ. The encoder RNN reads in $\boldsymbol{x}^{(t)}$ sequentially and the hidden state of the network updates according to Eq. \ref{eq:hidden}. The hidden state of the encoder is a context vector $\boldsymbol{c}$ that summarizes the input sequence, which is copied over to the decoder RNN. The decoder generates a variable-length output sequence by predicting $\boldsymbol{x}^{(t)}$ given the encoder hidden state and the previous element of the output sequence. Thus, the hidden state of the decoder is updated recursively by
 
 \begin{equation}
-\boldsymbol{h}^{(t)} = f \left( \boldsymbol{h}^{(t-1)}, \boldsymbol{X}^{(t-1)}, \boldsymbol{c} \right), \label{eq:decoder}
+\boldsymbol{h}^{(t)} = f \left( \boldsymbol{h}^{(t-1)}, \boldsymbol{y}^{(t-1)}, \boldsymbol{c} \right), \label{eq:decoder}
 \end{equation} and the conditional probability of the next element of the sequence is 
 
 \begin{equation}
-P (\boldsymbol{x}^{(t)} | \boldsymbol{x}^{(t)}, \ldots, \boldsymbol{X}^{(t-1)}, \boldsymbol{c}) =  f \left( \boldsymbol{h}^{(t)}, \boldsymbol{X}^{(t-1)}, \boldsymbol{c} \right).
+P (\boldsymbol{x}^{(t)} | \boldsymbol{y}^{(t)}, \ldots, \boldsymbol{y}^{(t-1)}, \boldsymbol{c}) =  f \left( \boldsymbol{h}^{(t)}, \boldsymbol{y}^{(t-1)}, \boldsymbol{c} \right).
 \end{equation}  Effectively, the decoder learns to generate outputs $\boldsymbol{x}^{(t)}$ given the previous outputs, conditioned on the input sequence. 
 
 \subsection{Variational autoencoder}
@@ -279,9 +287,9 @@ I evaluate the proposed RNN-based approach on three datasets common to the SCM l
 
 \subsection{RNNs implementation details}
 
-In the following application, I train a baseline RNN in the form of a single unidirectional Long Short-Term Memory (LSTM) network \citep{schmidhuber1997long} with output space dimensionality equivalent to the number of treated units. The encoder takes the form of a two-layer bidirectional LSTMs, each with 128 hidden units, and the decoder is a single-layer Gated Recurrent Unit (GRU) \citep{chung2014} also with 128 hidden units. An attention mechanism in the form of a softmax mask is included before the first hidden layer in order to generate a normalized distribution of the importance of each time-step regarding an input. In contrast to attention mechanisms used in neural machine translation to assist networks in learning the correct alignment between image pixels and target characters \citep{cho2014learning,2017arXiv171204046P}, the attention mechanism used in this paper is not expected to help the model perform better, but to help understand which time-steps and inputs contribute to the prediction.
+I train a baseline RNN in the form of a single unidirectional Long Short-Term Memory (LSTM) network \citep{schmidhuber1997long} with output space dimensionality equivalent to the number of treated units. The encoder takes the form of a two-layer bidirectional LSTMs, each with 128 hidden units, and the decoder is a single-layer Gated Recurrent Unit (GRU) \citep{chung2014} also with 128 hidden units. An attention mechanism in the form of a softmax mask is included before the first hidden layer in order to generate a normalized distribution of the importance of each time-step regarding an input. In contrast to attention mechanisms used in neural machine translation to assist networks in learning the correct alignment between image pixels and target characters \citep{cho2014learning,2017arXiv171204046P}, the attention mechanism used in this paper is not expected to help the model perform better, but to help understand which time-steps and inputs contribute to the prediction.
 
-RNN weights are learned with stochastic gradient descent on mean squared prediction error (MSPE), $L^{(t)}_{\text{MSPE}} = \E \left[\left(\boldsymbol{x}^{(t)} - \boldsymbol{\hat{y}}^{(t)} \right)^2 \right]$ using \texttt{Adam} stochastic optimization \citep{kingma2014adam}. As a regularization strategy, I apply dropout to the inputs and L2 regularization losses to the network weights. The networks are implemented with the \texttt{Keras} neural network library \citep{chollet2015keras} in Python on top of a TensorFlow backend. RNNs are trained in batches of size four or eight for 5,000 to 10,000 epochs, which takes about 20 minutes to run on a 12GB NVIDIA Titan Xp GPU.
+RNN weights are learned with stochastic gradient descent on the MSE using \texttt{Adam} stochastic optimization \citep{kingma2014adam}. As a regularization strategy, I apply dropout to the inputs and L2 regularization losses to the network weights. The networks are implemented with the \texttt{Keras} neural network library \citep{chollet2015keras} in Python on top of a TensorFlow backend. RNNs are trained in batches of size four or eight for 5,000 to 10,000 epochs, which takes about 20 minutes to run on a 12GB NVIDIA Titan Xp GPU.
 
 \subsection{Basque Country} 
 
