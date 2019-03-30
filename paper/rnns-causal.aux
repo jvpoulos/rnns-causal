@@ -58,57 +58,56 @@
 \newlabel{RNNs-section}{{3}{6}{RNNs for counteractual prediction}{section.3}{}}
 \newlabel{eq:hidden}{{4}{6}{RNNs for counteractual prediction}{equation.3.4}{}}
 \citation{lamb2016professor}
-\citation{cho2014learning}
-\citation{bahdanau2014neural,vinyals2014grammar}
+\citation{cho2014learning,bahdanau2014neural,vinyals2014grammar}
 \citation{chorowski2015attention}
 \citation{zhu2017deep}
+\newlabel{rnn-obj}{{5}{7}{RNNs for counteractual prediction}{equation.3.5}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Encoder-decoder networks}{7}{subsection.3.1}}
 \newlabel{eq:decoder}{{6}{7}{Encoder-decoder networks}{equation.3.6}{}}
+\citation{schmidhuber1997long}
+\citation{chung2014}
+\citation{cho2014learning,2017arXiv171204046P}
+\citation{kingma2014adam}
+\citation{chollet2015keras}
 \citation{kingma2013auto}
+\@writefile{toc}{\contentsline {paragraph}{Implementation details}{8}{section*.1}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Recurrent variational autoencoder}{8}{subsection.3.2}}
 \citation{fabius2014variational,chung2015recurrent,bowman2015generating}
-\citation{goodfellow2016deep}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Variational autoencoder}{8}{subsection.3.2}}
+\citation{abadie2003economic}
+\citation{abadie2003economic}
+\citation{abadie2010synthetic}
+\citation{abadie2010synthetic}
+\citation{abadie2015comparative}
+\citation{abadie2015comparative}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Placebo tests}{9}{subsection.3.3}}
+\newlabel{placebo}{{3.3}{9}{Placebo tests}{subsection.3.3}{}}
+\citation{athey2017matrix}
+\citation{athey2017matrix}
+\citation{athey2017matrix}
+\citation{abadie2010synthetic}
+\citation{athey2017matrix}
 \citation{abadie2010synthetic}
 \citation{cavallo2013catastrophic}
 \citation{firpo2018synthetic}
 \citation{hahn2017synthetic}
-\@writefile{toc}{\contentsline {section}{\numberline {4}Predictive accuracy and statistical significance}{9}{section.4}}
-\newlabel{eval}{{4}{9}{Predictive accuracy and statistical significance}{section.4}{}}
-\newlabel{mspe}{{8}{9}{Predictive accuracy and statistical significance}{equation.4.8}{}}
-\citation{schmidhuber1997long}
-\citation{chung2014}
-\citation{cho2014learning,2017arXiv171204046P}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Randomization confidence intervals}{10}{subsection.4.1}}
-\@writefile{toc}{\contentsline {section}{\numberline {5}SCM placebo tests}{10}{section.5}}
-\newlabel{placebo}{{5}{10}{SCM placebo tests}{section.5}{}}
-\citation{kingma2014adam}
-\citation{chollet2015keras}
-\citation{abadie2003economic}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}RNNs implementation details}{11}{subsection.5.1}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Basque Country}{11}{subsection.5.2}}
-\citation{abadie2010synthetic}
-\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Evaluation metrics on SCM placebo tests.\relax }}{12}{table.caption.1}}
-\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
-\newlabel{fig:benchmark-table}{{1}{12}{Evaluation metrics on SCM placebo tests.\relax }{table.caption.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}California}{12}{subsection.5.3}}
-\citation{abadie2015comparative}
-\citation{abadie2015comparative}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}West Germany}{13}{subsection.5.4}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.5}Discussion}{13}{subsection.5.5}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Placebo tests under simultaneous treatment adoption: {\tikz \draw [color={rgb:red,4;green,0;yellow,1}] (0,0) -- plot[mark=o, mark options={scale=1.5}] (0.25,0) -- (0.5,0);}, DID; {\tikz \draw [color={rgb:orange,4;yellow,2;pink,3}] (0,0) -- plot[mark=triangle*, mark options={scale=1.5,fill=white}] (0.25,0) -- (0.5,0);}, HR-EN; {\tikz \draw [color={rgb:red,0;green,5;blue,1}] (0,0) -- plot[mark=+, mark options={scale=1.5}] (0.25,0) -- (0.5,0);}, MC-NNM; {\tikz \draw [color={rgb:red,0;green,4;blue,2}] (0,0) -- plot[mark=x, mark options={scale=1.5}] (0.25,0) -- (0.5,0);}, PCA; {\tikz \draw [color=cyan] (0,0) -- plot[mark=diamond, mark options={scale=1.5}] (0.25,0) -- (0.5,0);}, SC-ADH; {\tikz \draw [color={rgb:red,100;pink,100;blue,200}] (0,0) -- plot[mark=triangle, mark options={scale=1.5, rotate=180}] (0.25,0) -- (0.5,0);}, SVD; {\tikz \draw [color=magenta] (0,0) -- plot[mark=square, mark options={scale=1.5}] (0.25,0) -- (0.5,0);}, VT-EN. \relax }}{11}{figure.caption.2}}
+\newlabel{synth-sim}{{1}{11}{Placebo tests under simultaneous treatment adoption: {\protect \tikz \protect \draw [color={rgb:red,4;green,0;yellow,1}] (0,0) -- plot[mark=o, mark options={scale=1.5}] (0.25,0) -- (0.5,0);}, DID; {\protect \tikz \protect \draw [color={rgb:orange,4;yellow,2;pink,3}] (0,0) -- plot[mark=triangle*, mark options={scale=1.5,fill=white}] (0.25,0) -- (0.5,0);}, HR-EN; {\protect \tikz \protect \draw [color={rgb:red,0;green,5;blue,1}] (0,0) -- plot[mark=+, mark options={scale=1.5}] (0.25,0) -- (0.5,0);}, MC-NNM; {\protect \tikz \protect \draw [color={rgb:red,0;green,4;blue,2}] (0,0) -- plot[mark=x, mark options={scale=1.5}] (0.25,0) -- (0.5,0);}, PCA; {\protect \tikz \protect \draw [color=cyan] (0,0) -- plot[mark=diamond, mark options={scale=1.5}] (0.25,0) -- (0.5,0);}, SC-ADH; {\protect \tikz \protect \draw [color={rgb:red,100;pink,100;blue,200}] (0,0) -- plot[mark=triangle, mark options={scale=1.5, rotate=180}] (0.25,0) -- (0.5,0);}, SVD; {\protect \tikz \protect \draw [color=magenta] (0,0) -- plot[mark=square, mark options={scale=1.5}] (0.25,0) -- (0.5,0);}, VT-EN. \relax }{figure.caption.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Hypothesis testing}{11}{section.4}}
+\newlabel{eval}{{4}{11}{Hypothesis testing}{section.4}{}}
 \citation{sylla1993sources}
 \citation{sylla1995sourcesa,sylla1995sourcesb}
 \citation{haines2010}
 \citation{williamson2017seven}
 \citation{haines2010}
-\@writefile{toc}{\contentsline {section}{\numberline {6}Application: Homestead acts and state capacity}{14}{section.6}}
-\newlabel{state-capacity}{{6}{14}{Application: Homestead acts and state capacity}{section.6}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces MC-NNM estimates of treatment exposure on state government education spending, 1809 to 1982.\relax }}{17}{figure.caption.2}}
-\newlabel{mc-educ-pc}{{1}{17}{MC-NNM estimates of treatment exposure on state government education spending, 1809 to 1982.\relax }{figure.caption.2}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Attention mechanism as a function of predictors (i.e., winner margins by city) and time-steps for encoder-decoder networks. Attention is the normalized (softmax) distribution of the importance of each time-step regarding a predictor.\relax }}{18}{figure.caption.3}}
-\newlabel{attn-plot}{{2}{18}{Attention mechanism as a function of predictors (i.e., winner margins by city) and time-steps for encoder-decoder networks. Attention is the normalized (softmax) distribution of the importance of each time-step regarding a predictor.\relax }{figure.caption.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Discussion}{18}{subsection.6.1}}
-\@writefile{toc}{\contentsline {section}{\numberline {7}Conclusion}{18}{section.7}}
-\newlabel{conclusion}{{7}{18}{Conclusion}{section.7}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Application: Homestead acts and state capacity}{12}{section.5}}
+\newlabel{state-capacity}{{5}{12}{Application: Homestead acts and state capacity}{section.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces MC-NNM estimates of treatment exposure on state government education spending, 1809 to 1982.\relax }}{14}{figure.caption.3}}
+\newlabel{mc-educ-pc}{{2}{14}{MC-NNM estimates of treatment exposure on state government education spending, 1809 to 1982.\relax }{figure.caption.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Attention mechanism as a function of predictors (i.e., winner margins by city) and time-steps for encoder-decoder networks. Attention is the normalized (softmax) distribution of the importance of each time-step regarding a predictor.\relax }}{15}{figure.caption.4}}
+\newlabel{attn-plot}{{3}{15}{Attention mechanism as a function of predictors (i.e., winner margins by city) and time-steps for encoder-decoder networks. Attention is the normalized (softmax) distribution of the importance of each time-step regarding a predictor.\relax }{figure.caption.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Discussion}{15}{subsection.5.1}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Conclusion}{15}{section.6}}
+\newlabel{conclusion}{{6}{15}{Conclusion}{section.6}{}}
 \bibstyle{rss}
 \bibdata{references}
 \bibcite{abadie2010synthetic}{{1}{2010}{{Abadie et~al.}}{{Abadie, Diamond and Hainmueller}}}
