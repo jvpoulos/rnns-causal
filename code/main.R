@@ -17,45 +17,21 @@ data.directory <- "~/Dropbox/github/rnns-causal/data/"
 code.directory <-"~/Dropbox/github/rnns-causal/code/"
 results.directory <-"~/Dropbox/github/rnns-causal/results/"
 
-source('~/Dropbox/github/gans-causal/code/utils.R')
+source('utils.R')
 
-# Causal impact estimates: basque country
+## Placebo tests on synth data
 
-# First run synth-basque.R in gans-causal/code with predictors=TRUE
+source('/media/jason/Dropbox/github/land-reform/code/prepare-synth.R') 
 
-source(paste0(code.directory,'encoder-decoder-basque.R')) # gans-causal/code/train_encoder_decoder.py 
+# synth-placebo.sh --> synth-placebo.R 
 
-source(paste0(code.directory,'lstm-basque.R')) # gans-causal/code/train_lstm.py 
+# Causal impact estimates: public education spending
 
-# california
+# funds_encoder_decoder.sh --> train_encoder_decoder.py 
+# funds_encoder_decoder_predict.sh --> predict_encoder_decoder.py 
 
-# First run synth-california.R in gans-causal/code with predictors=TRUE
+# funds_lstm.sh --> train_lstm.py 
+# funds_lstm_predict.sh --> predict_lstm.py 
 
-source(paste0(code.directory,'encoder-decoder-california.R')) # gans-causal/code/train_encoder_decoder.py 
-
-source(paste0(code.directory,'lstm-california.R')) # gans-causal/code/train_lstm.py
-
-# west germany
-
-# First run synth-germany.R in gans-causal/code with predictors=TRUE
-
-source(paste0(code.directory,'encoder-decoder-germany.R')) # gans-causal/code/train_encoder_decoder.py  
-
-source(paste0(code.directory,'lstm-germany.R')) # gans-causal/code/train_lstm.py
-
-# Plot benchmarks
-
-source(paste0(code.directory,'plot-benchmarks.R')) 
-
-# Causal impact estimates: mayoral elections
-
-source(paste0(code.directory,'elections.R')) # Assemble elections data
-
-source(paste0(code.directory,'encoder-decoder-elections.R')) # train_encoder_decoder.py 
-
-source(paste0(code.directory,'lstm-elections.R'))
-
-source(paste0(code.directory,'synth-elections.R')) # run elections.R first
-
-# GBR estimates
-source(paste0(code.directory,'gbr-elections.R')) 
+# funds_vae.sh --> train_vae.py 
+# funds_vae_predict.sh --> predict_vae.py 
