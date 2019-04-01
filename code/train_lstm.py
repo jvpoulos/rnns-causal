@@ -1,9 +1,5 @@
 from __future__ import print_function
 
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-
 import sys
 import math
 import numpy as np
@@ -18,28 +14,19 @@ from keras.optimizers import Adam, SGD
 
 # Select gpu
 import os
-gpu = sys.argv[-4]
+#gpu = sys.argv[-4]
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
 os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
 
 from tensorflow.python.client import device_lib
 print(device_lib.list_local_devices())
 
-analysis = sys.argv[-1] # 'treated' or 'control'
-dataname = sys.argv[-2] 
+# analysis = sys.argv[-1] # 'treated' or 'control'
+# dataname = sys.argv[-2] 
 
-EPOCHS = int(sys.argv[-3])
+# EPOCHS = int(sys.argv[-3])
 
-BATCHES = 8
-
-if dataname == 'california':
-    BATCHES = 4
-
-if dataname == 'germany':
-    BATCHES = 4
-
-if dataname == 'votediff':
-    BATCHES = 3
+BATCHES = 4
 
 def create_model(n_pre, n_post, nb_features, output_dim):
     """ 
@@ -50,19 +37,9 @@ def create_model(n_pre, n_post, nb_features, output_dim):
 
     initialization = 'glorot_normal'
     activation = 'linear'
-    lr = 0.0005
+    lr = 0.001
     penalty=0.1
     dr=0.5  
-
-    if analysis == 'control': 
-        dr=0.5
-        penalty=0.1
-        lr = 0.001
-
-    if analysis == 'treated-gans': 
-        dr=0.5
-        penalty=0.001
-        lr = 0.001
 
     inputs = Input(shape=(n_pre, nb_features,), name="Inputs")  
     dropout_1 = Dropout(dr)(inputs)
@@ -71,9 +48,6 @@ def create_model(n_pre, n_post, nb_features, output_dim):
     model = Model(inputs=inputs, output=lstm_1)
 
     model.compile(loss="mean_squared_error", optimizer=Adam(lr=lr)) 
-
-    if dataname == 'votediff':
-        model.compile(loss="mean_squared_error", optimizer=Adam(lr=lr))
 
     print(model.summary()) 
 
@@ -104,60 +78,30 @@ def test_sinus():
         a simple sinus wave.
     '''
     # Load saved data
-    if dataname == 'votediff':
-        n_post  = 1 
-        n_pre =  47-1
-        seq_len = 52   
 
-    if dataname == 'basque':
-        n_post  = 1 
-        n_pre =  14-1 
-        seq_len = 43
+    # if dataname == 'basque':
+    #     n_post  = 1 
+    #     n_pre =  14-1 
+    #     seq_len = 43
     
-    if dataname == 'california':
-        n_post  = 1 
-        n_pre =  19-1 
-        seq_len = 31
+    # if dataname == 'california':
+    #     n_post  = 1 
+    #     n_pre =  19-1 
+    #     seq_len = 31
 
-    if dataname == 'germany':
-        n_post  = 1 
-        n_pre =  30-1 
-        seq_len = 44  
+    # if dataname == 'germany':
+    #     n_post  = 1 
+    #     n_pre =  30-1 
+    #     seq_len = 44  
 
-    if dataname == 'west-revpc':
-        n_post  = 1 
-        n_pre =  52-1 
-        seq_len = 119  
-
-    if dataname == 'west-exppc':
-        n_post  = 1 
-        n_pre =  51-1 
-        seq_len = 117  
-
-    if dataname == 'west-educpc':
-        n_post  = 1 
-        n_pre =  37-1 
-        seq_len = 99  
-
-    if dataname == 'south-revpc':
-        n_post  = 1 
-        n_pre =  36-1 
-        seq_len = 97  
-
-    if dataname == 'south-exppc':
-        n_post  = 1 
-        n_pre =  37-1 
-        seq_len = 98  
-
-    if dataname == 'south-educpc':
-        n_post  = 1 
-        n_pre =  33-1 
-        seq_len = 90 
+    n_post = int(1)
+    n_pre =int(t0)-1
+    seq_len = int(T)
 
     y = np.array(pd.read_csv("data/{}-y.csv".format(dataname)))
     x = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))    
 
-    if analysis == 'treated-rnns': 
+    if analysis == 'treated': 
         print('raw x shape', x.shape)   
 
         print('raw y shape', y.shape)   
@@ -165,17 +109,6 @@ def test_sinus():
         dX, dY = [], []
         for i in range(seq_len-n_pre-n_post):
             dX.append(x[i:i+n_pre]) # controls are inputs
-            # dY.append(y[i+n_pre:i+n_pre+n_post]) # treated is output
-            dY.append(y[i+n_pre])
-
-    if analysis == 'treated-gans': 
-        print('raw x shape', x.shape)   
-
-        print('raw y shape', y.shape)   
-
-        dX, dY = [], []
-        for i in range(seq_len-n_pre-n_post):
-            dX.append(y[i:i+n_pre]) # treated is input
             # dY.append(y[i+n_pre:i+n_pre+n_post]) # treated is output
             dY.append(y[i+n_pre])
 
@@ -201,7 +134,7 @@ def test_sinus():
     # create and fit the LSTM network
     print('creating model...')
     model = create_model(n_pre, n_post, nb_features, output_dim)
-    train_sinus(model, dataX, dataY, EPOCHS, BATCHES)
+    train_sinus(model, dataX, dataY, int(EPOCHS), BATCHES)
 
 def main():
     test_sinus()

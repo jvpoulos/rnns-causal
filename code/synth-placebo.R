@@ -85,8 +85,9 @@ SynthSim <- function(outcomes,d){
       ## LSTM
       ## ------
       
-      est_model_LSTM <- en_mp_rows(Y_obs, treat_mat)
-      est_model_LSTM_msk_err <- (est_model_LSTM - Y)*(1-treat_mat)
+      source("lstm.R")
+      est_model_LSTM <- t(lstm.pred.control) # NxT
+      est_model_LSTM_msk_err <- (est_model_LSTM - Y[treat_indices,][,(t0+1):T])
       est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
       LSTM_RMSE_test[i,j] <- est_model_LSTM_test_RMSE
       
