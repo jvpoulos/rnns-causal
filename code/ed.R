@@ -28,7 +28,7 @@ ed <- function(Y_obs,treat_indices,d, t0, T){
   py$T <- T
   py$nb_batches <- 4
   
-  source_python("code/train_encoder_decoder.py")
+  source_python("train_encoder_decoder.py")
   
   ed.pred.control <- as.matrix(read_csv("results/encoder-decoder/basque/control/encoder-decoder-control-basque-test.csv", col_names = FALSE))
   

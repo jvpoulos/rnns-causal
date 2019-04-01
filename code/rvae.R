@@ -27,7 +27,7 @@ rvae <- function(Y_obs,treat_indices,d, t0, T){
   py$t0 <- t0
   py$T <- T
   
-  source_python("code/train_rvae.py")
+  source_python("train_rvae.py")
   
   rvae.pred.control <- as.matrix(read_csv("results/rvae/basque/control/rvae-control-basque-test.csv", col_names = FALSE))
   
