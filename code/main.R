@@ -13,15 +13,15 @@ registerDoParallel(cores) # register cores
 RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
 # Set directories
-data.directory <- "~/Dropbox/github/rnns-causal/data/"
-code.directory <-"~/Dropbox/github/rnns-causal/code/"
-results.directory <-"~/Dropbox/github/rnns-causal/results/"
+data.directory <- "/media/jason/Dropbox/github/rnns-causal/data/"
+code.directory <-"~/media/jason/Dropbox/github/rnns-causal/code/"
+results.directory <-"/media/jason/Dropbox/github/rnns-causal/results/"
 
 source('utils.R')
 
 ## Placebo tests on synth data
 
-source('/media/jason/Dropbox/github/land-reform/code/prepare-synth.R') 
+source('/media/jason/Dropbox/github/land-reform/code/prepare-synth.R') # land-reford/data/synth-control-outcomes.rds
 
 # synth-placebo.sh --> synth-placebo.R 
 

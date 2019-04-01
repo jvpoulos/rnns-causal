@@ -84,7 +84,7 @@ SynthSim <- function(outcomes,d){
       ## ------
       
       source("lstm.R")
-      est_model_LSTM <- t(lstm.pred.control) # NxT
+      est_model_LSTM <- lstm(Y_obs, treat_indices, d, t0, T)
       est_model_LSTM_msk_err <- (est_model_LSTM - Y[treat_indices,][,(t0+1):T])
       est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
       LSTM_RMSE_test[i,j] <- est_model_LSTM_test_RMSE
@@ -94,7 +94,7 @@ SynthSim <- function(outcomes,d){
       ## ------
       
       source("rvae.R")
-      est_model_RVAE <- t(rvae.pred.control) # NxT
+      est_model_RVAE <- rvae(Y_obs, treat_indices, d, t0, T)
       est_model_RVAE_msk_err <- (est_model_RVAE - Y[treat_indices,][,(t0+1):T])
       est_model_RVAE_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_RVAE_msk_err^2, na.rm = TRUE))
       RVAE_RMSE_test[i,j] <- est_model_RVAE_test_RMSE
@@ -104,7 +104,7 @@ SynthSim <- function(outcomes,d){
       ## ------
       
       source("ed.R")
-      est_model_ED <- t(ed.pred.control) # NxT
+      est_model_ED <- ed(Y_obs, treat_indices, d, t0, T)
       est_model_ED_msk_err <- (est_model_ED - Y[treat_indices,][,(t0+1):T])
       est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
       ED_RMSE_test[i,j] <- est_model_ED_test_RMSE
