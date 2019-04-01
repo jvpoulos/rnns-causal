@@ -8,9 +8,9 @@ import pandas as pd
 from keras import backend as K
 from keras.models import Model
 from keras.layers import LSTM, Input, Dropout
-from keras.callbacks import ModelCheckpoint, CSVLogger
+from keras.callbacks import CSVLogger, EarlyStopping
 from keras import regularizers
-from keras.optimizers import Adam, SGD
+from keras.optimizers import Adam
 
 # Select gpu
 import os
@@ -24,9 +24,7 @@ print(device_lib.list_local_devices())
 # analysis = sys.argv[-1] # 'treated' or 'control'
 # dataname = sys.argv[-2] 
 
-# EPOCHS = int(sys.argv[-3])
-
-BATCHES = 4
+# epoches = int(sys.argv[-3])
 
 def create_model(n_pre, n_post, nb_features, output_dim):
     """ 
@@ -53,14 +51,11 @@ def create_model(n_pre, n_post, nb_features, output_dim):
 
     return model
 
-def train_sinus(model, dataX, dataY, epoch_count, batches):
-    """ 
-        trains only the sinus model
-    """
+def train_model(model, dataX, dataY, epoch_count, batches):
+
     # Prepare model checkpoints and callbacks
 
-    filepath="results/lstm/{}/{}".format(dataname,analysis) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
-    checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=10, save_best_only=True)
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='auto', baseline=None, restore_best_weights=True)
 
     csv_logger = CSVLogger('results/lstm/{}/{}/training_log_{}_{}.csv'.format(dataname,analysis,dataname,analysis), separator=',', append=False)
 
@@ -69,30 +64,10 @@ def train_sinus(model, dataX, dataY, epoch_count, batches):
         batch_size=batches, 
         verbose=1,
         epochs=epoch_count, 
-        callbacks=[checkpointer,csv_logger],
-        validation_split=0.1)
+        callbacks=[stopping,csv_logger],
+        validation_split=0.2)
 
-def test_sinus():
-    ''' 
-        testing how well the network can predict
-        a simple sinus wave.
-    '''
-    # Load saved data
-
-    # if dataname == 'basque':
-    #     n_post  = 1 
-    #     n_pre =  14-1 
-    #     seq_len = 43
-    
-    # if dataname == 'california':
-    #     n_post  = 1 
-    #     n_pre =  19-1 
-    #     seq_len = 31
-
-    # if dataname == 'germany':
-    #     n_post  = 1 
-    #     n_pre =  30-1 
-    #     seq_len = 44  
+def test_model():
 
     n_post = int(1)
     n_pre =int(t0)-1
@@ -134,11 +109,25 @@ def test_sinus():
     # create and fit the LSTM network
     print('creating model...')
     model = create_model(n_pre, n_post, nb_features, output_dim)
-    train_sinus(model, dataX, dataY, int(EPOCHS), BATCHES)
+    train_model(model, dataX, dataY, int(epochs), int(nb_batches))
+
+    # now test
+
+    print('Generate predictions')
+
+    predict = model.predict(dataX, batch_size=int(nb_batches), verbose=1)
+
+    predict = np.squeeze(predict)
+
+    print('predictions shape =', predict.shape)
+
+    print('Saving to results/lstm/{}/{}/lstm-{}-{}-test.csv'.format(dataname,analysis,analysis,dataname))
+
+    np.savetxt("results/lstm/{}/{}/lstm-{}-{}-test.csv".format(dataname,analysis,analysis,dataname), predict, delimiter=",")
 
 def main():
-    test_sinus()
+    test_model()
     return 1
 
 if __name__ == "__main__":
-    sys.exit(main())
+	sys.exit(main())

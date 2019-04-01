@@ -1,5 +1,5 @@
 ###################################
-# MC Simulations #
+# Synth Simulations #
 ###################################
 
 ## Loading Source files
@@ -7,7 +7,6 @@ library(MCPanel)
 library(glmnet)
 library(ggplot2)
 library(latex2exp)
-library(keras)
 
 # Setup parallel processing 
 library(parallel)
@@ -23,7 +22,6 @@ RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
 # Load data
 synth.control.outcomes <- readRDS("synth-control-outcomes.rds")
-#synth.control.outcomes <- readRDS("/media/jason/Dropbox/github/land-reform/data/synth-control-outcomes.rds")
 
 ## Reading data
 SynthSim <- function(outcomes,d){
@@ -95,8 +93,9 @@ SynthSim <- function(outcomes,d){
       ## RVAE
       ## ------
       
-      est_model_RVAE <- en_mp_rows(Y_obs, treat_mat)
-      est_model_RVAE_msk_err <- (est_model_RVAE - Y)*(1-treat_mat)
+      source("rvae.R")
+      est_model_RVAE <- t(rvae.pred.control) # NxT
+      est_model_RVAE_msk_err <- (est_model_RVAE - Y[treat_indices,][,(t0+1):T])
       est_model_RVAE_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_RVAE_msk_err^2, na.rm = TRUE))
       RVAE_RMSE_test[i,j] <- est_model_RVAE_test_RMSE
       
@@ -104,8 +103,9 @@ SynthSim <- function(outcomes,d){
       ## ED
       ## ------
       
-      est_model_ED <- en_mp_rows(Y_obs, treat_mat)
-      est_model_ED_msk_err <- (est_model_ED - Y)*(1-treat_mat)
+      source("ed.R")
+      est_model_ED <- t(ed.pred.control) # NxT
+      est_model_ED_msk_err <- (est_model_ED - Y[treat_indices,][,(t0+1):T])
       est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
       ED_RMSE_test[i,j] <- est_model_ED_test_RMSE
       

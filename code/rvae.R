@@ -1,5 +1,5 @@
 ###################################
-# LSTM for Synth Simulations #
+# RVAE for Synth Simulations #
 ###################################
 
 library(keras)
@@ -25,8 +25,7 @@ py$epochs <- 10000
 py$gpu <- 0
 py$t0 <- t0
 py$T <- T
-py$nb_batches <- 4
 
-source_python("code/train_lstm.py")
+source_python("code/train_rvae.py")
 
-lstm.pred.control <- as.matrix(read_csv("results/lstm/basque/control/lstm-control-basque-test.csv", col_names = FALSE))
+rvae.pred.control <- as.matrix(read_csv("results/rvae/basque/control/rvae-control-basque-test.csv", col_names = FALSE))

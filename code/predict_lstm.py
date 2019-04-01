@@ -1,68 +1,34 @@
-def create_model(n_pre, n_post, nb_features, output_dim):
-    """ 
-        creates, compiles and returns a RNN model 
-        @param nb_features: the number of features in the model
-    """
-    # Define model parameters
+from __future__ import print_function
 
-    initialization = 'glorot_normal'
-    activation = 'linear'
-    lr = 0.001
-    penalty=0.1
-    dr=0.5  
+import sys
+import math
+import numpy as np
+import pandas as pd
 
-    inputs = Input(shape=(n_pre, nb_features,), name="Inputs")  
-    dropout_1 = Dropout(dr)(inputs)
-    lstm_1 = LSTM(output_dim, activation=activation, kernel_regularizer=regularizers.l2(penalty), kernel_initializer=initialization, return_sequences=False)(dropout_1) 
+from keras import backend as K
+from keras.models import Model
+from keras.layers import LSTM, Input, Dropout
+from keras.callbacks import CSVLogger, EarlyStopping
+from keras import regularizers
+from keras.optimizers import Adam
 
-    model = Model(inputs=inputs, output=lstm_1)
+# Select gpu
+import os
+#gpu = sys.argv[-4]
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
+os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
 
-    model.compile(loss="mean_squared_error", optimizer=Adam(lr=lr)) 
+from tensorflow.python.client import device_lib
+print(device_lib.list_local_devices())
 
-    print(model.summary()) 
+import train_lstm
 
-    return model
+# analysis = sys.argv[-1] # 'treated' or 'control'
+# dataname = sys.argv[-2] 
 
-def train_sinus(model, dataX, dataY, epoch_count, batches):
-    """ 
-        trains only the sinus model
-    """
-    # Prepare model checkpoints and callbacks
+# epochs = int(sys.argv[-3])
 
-    filepath="results/model/{}/{}".format(dataname,analysis) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
-    checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=5, save_best_only=True)
-
-    csv_logger = CSVLogger('results/model/{}/{}/training_log_{}_{}.csv'.format(dataname,analysis,dataname,analysis), separator=',', append=False)
-
-    history = model.fit(dataX, 
-        dataY, 
-        batch_size=batches, 
-        verbose=1,
-        epochs=epoch_count, 
-        callbacks=[checkpointer,csv_logger],
-        validation_split=0.1)
-
-def test_sinus():
-    ''' 
-        testing how well the network can predict
-        a simple sinus wave.
-    '''
-    # Load saved data
-
-    # if dataname == 'basque':
-    #     n_post  = 1 
-    #     n_pre =  14-1 
-    #     seq_len = 43
-    
-    # if dataname == 'california':
-    #     n_post  = 1 
-    #     n_pre =  19-1 
-    #     seq_len = 31
-
-    # if dataname == 'germany':
-    #     n_post  = 1 
-    #     n_pre =  30-1 
-    #     seq_len = 44  
+def test_model():
 
     n_post = int(1)
     n_pre =int(t0)-1
@@ -103,7 +69,7 @@ def test_sinus():
 
     # create and fit the LSTM network
     print('creating model...')
-    model = create_model(n_pre, n_post, nb_features, output_dim)
+    model = train_lstm.create_model(n_pre, n_post, nb_features, output_dim)
 
     # Load weights
     weights='weights.1000-5.678.hdf5'
@@ -116,7 +82,7 @@ def test_sinus():
 
     print('Generate predictions')
 
-    predict = model.predict(dataX, batch_size=BATCHES, verbose=1)
+    predict = model.predict(dataX, batch_size=int(nb_batches), verbose=1)
 
     predict = np.squeeze(predict)
 
@@ -125,7 +91,7 @@ def test_sinus():
     np.savetxt("results/lstm/{}/lstm-{}-{}-test.csv".format(dataname,analysis,weights,dataname), predict, delimiter=",")
 
 def main():
-    test_sinus()
+    test_model()
     return 1
 
 if __name__ == "__main__":

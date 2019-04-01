@@ -1,3 +1,8 @@
+from __future__ import print_function
+
+import numpy as np
+import pandas as pd
+
 import keras
 from keras import backend as K
 from keras.models import Sequential, Model
@@ -6,7 +11,21 @@ from keras.layers.core import Flatten, Dense, Dropout, Lambda
 from keras.optimizers import SGD, RMSprop, Adam
 from keras import regularizers
 from keras import objectives
+from keras.callbacks import CSVLogger, EarlyStopping
 
+# Select gpu
+import os
+#gpu = sys.argv[-4]
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
+os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
+
+from tensorflow.python.client import device_lib
+print(device_lib.list_local_devices())
+
+# analysis = sys.argv[-1] # 'treated' or 'control'
+# dataname = sys.argv[-2] 
+
+# epoches = int(sys.argv[-3])
 
 def create_lstm_vae(nb_features, 
     n_pre, 
@@ -94,3 +113,78 @@ def create_lstm_vae(nb_features,
     
     return vae, encoder, generator
 
+def get_data():
+    # read data from file
+
+    n_post = int(1)
+    n_pre =int(t0)-1
+    seq_len = int(T)
+                
+    y = np.array(pd.read_csv("data/{}-y.csv".format(dataname)))
+    x = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))
+
+    if analysis == 'treated': 
+        print('raw x shape', x.shape)    
+
+        dX = []
+        for i in range(seq_len-n_pre-n_post):
+            dX.append(y[i:i+n_pre]) # treated is input
+        return np.array(dX), n_pre, n_post
+
+    if analysis == 'control': 
+
+        print('raw x shape', x.shape)   
+
+        dX = []
+        for i in range(seq_len-n_pre-n_post):
+            dX.append(x[i:i+n_pre]) # controls are inputs
+        return np.array(dX), n_pre, n_post       
+
+if __name__ == "__main__":
+    x, n_pre, n_post = get_data() 
+    nb_features = x.shape[2]
+    batch_size = 1
+    penalty=0.001
+    lr=0.001
+    dr=0.5
+
+    if dataname == 'germany':
+        penalty=0
+        lr=0.00005
+
+    vae, enc, gen = create_lstm_vae(nb_features, 
+        n_pre=n_pre, 
+        n_post=n_post,
+        batch_size=batch_size, 
+        intermediate_dim=32,
+        latent_dim=200,
+        initialization = 'glorot_normal',
+        activation = 'linear',
+        lr = lr,
+        penalty=penalty,
+        dropout=dr,
+        epsilon_std=1.)
+
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='auto', baseline=None, restore_best_weights=True)
+
+    csv_logger = CSVLogger('results/rvae/{}/{}/training_log_{}_{}.csv'.format(dataname,analysis,dataname,analysis), separator=',', append=False)
+
+    vae.fit(x, x, 
+        epochs=int(epochs),
+        verbose=1,
+        callbacks=[stopping,csv_logger],
+        validation_split=0.2)
+
+	# now test
+
+    print('Generate predictions')
+
+    preds = vae.predict(x, batch_size=batch_size, verbose=1)
+
+    preds = np.squeeze(preds)
+
+    print('predictions shape =', preds.shape)
+
+    print('Saving to results/rvae/{}/{}/rvae-{}-{}-test.csv'.format(dataname,analysis,analysis,dataname))
+
+    np.savetxt("results/rvae/{}/{}/rvae-{}-{}-test.csv".format(dataname,analysis,analysis,dataname), preds, delimiter=",")
