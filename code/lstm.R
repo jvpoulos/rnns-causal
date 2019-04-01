@@ -16,8 +16,8 @@ lstm <- function(Y_obs,treat_indices,d, t0, T){
   
   test_data <- data[,(treat_indices)] # treated units
   
-  write.csv(train_data,paste0("data/",d,"-x.csv"),row.names = FALSE)
-  write.csv(test_data,paste0("data/",d,"-y.csv"),row.names = FALSE)
+  write.csv(train_data,paste0("../data/",d,"-x.csv"),row.names = FALSE)
+  write.csv(test_data,paste0("../data/",d,"-y.csv"),row.names = FALSE)
   
   py <- import_main()
   py$dataname <- d
@@ -30,7 +30,7 @@ lstm <- function(Y_obs,treat_indices,d, t0, T){
   
   source_python("train_lstm.py")
   
-  lstm.pred.control <- as.matrix(read_csv("results/lstm/basque/control/lstm-control-basque-test.csv", col_names = FALSE))
+  lstm.pred.control <- as.matrix(read_csv("../results/lstm/basque/control/lstm-control-basque-test.csv", col_names = FALSE))
   
   return(t(lstm.pred.control))
 }
