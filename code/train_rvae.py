@@ -165,7 +165,7 @@ if __name__ == "__main__":
         dropout=dr,
         epsilon_std=1.)
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='auto', baseline=None, restore_best_weights=True)
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='auto', baseline=None)
 
     csv_logger = CSVLogger('../results/rvae/{}/{}/training_log_{}_{}.csv'.format(dataname,analysis,dataname,analysis), separator=',', append=False)
 
