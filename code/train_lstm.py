@@ -57,7 +57,7 @@ def train_model(model, dataX, dataY, epoch_count, batches):
 
     stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='auto', baseline=None, restore_best_weights=True)
 
-    csv_logger = CSVLogger('results/lstm/{}/{}/training_log_{}_{}.csv'.format(dataname,analysis,dataname,analysis), separator=',', append=False)
+    csv_logger = CSVLogger('../results/lstm/{}/{}/training_log_{}_{}.csv'.format(dataname,analysis,dataname,analysis), separator=',', append=False)
 
     history = model.fit(dataX, 
         dataY, 
@@ -73,8 +73,8 @@ def test_model():
     n_pre =int(t0)-1
     seq_len = int(T)
 
-    y = np.array(pd.read_csv("data/{}-y.csv".format(dataname)))
-    x = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))    
+    y = np.array(pd.read_csv("../data/{}-y.csv".format(dataname)))
+    x = np.array(pd.read_csv("../data/{}-x.csv".format(dataname)))    
 
     if analysis == 'treated': 
         print('raw x shape', x.shape)   
@@ -123,7 +123,7 @@ def test_model():
 
     print('Saving to results/lstm/{}/{}/lstm-{}-{}-test.csv'.format(dataname,analysis,analysis,dataname))
 
-    np.savetxt("results/lstm/{}/{}/lstm-{}-{}-test.csv".format(dataname,analysis,analysis,dataname), predict, delimiter=",")
+    np.savetxt("../results/lstm/{}/{}/lstm-{}-{}-test.csv".format(dataname,analysis,analysis,dataname), predict, delimiter=",")
 
 def main():
     test_model()

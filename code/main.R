@@ -26,6 +26,7 @@ source('/media/jason/Dropbox/github/land-reform/code/prepare-synth.R') # land-re
 # synth-placebo.sh --> synth-placebo.R 
 
 # Causal impact estimates: public education spending
+# "/media/jason/Dropbox/github/land-reform/data/capacity-outcomes.rds"
 
 # funds_encoder_decoder.sh --> train_encoder_decoder.py 
 # funds_encoder_decoder_predict.sh --> predict_encoder_decoder.py 

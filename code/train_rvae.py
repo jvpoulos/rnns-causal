@@ -120,8 +120,8 @@ def get_data():
     n_pre =int(t0)-1
     seq_len = int(T)
                 
-    y = np.array(pd.read_csv("data/{}-y.csv".format(dataname)))
-    x = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))
+    y = np.array(pd.read_csv("../data/{}-y.csv".format(dataname)))
+    x = np.array(pd.read_csv("../data/{}-x.csv".format(dataname)))
 
     if analysis == 'treated': 
         print('raw x shape', x.shape)    
@@ -167,7 +167,7 @@ if __name__ == "__main__":
 
     stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='auto', baseline=None, restore_best_weights=True)
 
-    csv_logger = CSVLogger('results/rvae/{}/{}/training_log_{}_{}.csv'.format(dataname,analysis,dataname,analysis), separator=',', append=False)
+    csv_logger = CSVLogger('../results/rvae/{}/{}/training_log_{}_{}.csv'.format(dataname,analysis,dataname,analysis), separator=',', append=False)
 
     vae.fit(x, x, 
         epochs=int(epochs),
@@ -187,4 +187,4 @@ if __name__ == "__main__":
 
     print('Saving to results/rvae/{}/{}/rvae-{}-{}-test.csv'.format(dataname,analysis,analysis,dataname))
 
-    np.savetxt("results/rvae/{}/{}/rvae-{}-{}-test.csv".format(dataname,analysis,analysis,dataname), preds, delimiter=",")
+    np.savetxt("../results/rvae/{}/{}/rvae-{}-{}-test.csv".format(dataname,analysis,analysis,dataname), preds, delimiter=",")
