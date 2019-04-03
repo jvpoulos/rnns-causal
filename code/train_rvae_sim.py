@@ -165,13 +165,13 @@ if __name__ == "__main__":
         dropout=dr,
         epsilon_std=1.)
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1, mode='auto')
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
 
     csv_logger = CSVLogger('../results/rvae/{}/{}/training_log_{}_{}.csv'.format(dataname,analysis,dataname,analysis), separator=',', append=False)
 
     vae.fit(x, x, 
         epochs=int(epochs),
-        verbose=1,
+        verbose=0,
         callbacks=[stopping,csv_logger],
         validation_split=0.2)
 
@@ -179,7 +179,7 @@ if __name__ == "__main__":
 
     print('Generate predictions')
 
-    preds = vae.predict(x, batch_size=batch_size, verbose=1)
+    preds = vae.predict(x, batch_size=batch_size, verbose=0)
 
     preds = np.squeeze(preds)
 

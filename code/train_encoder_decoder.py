@@ -14,7 +14,7 @@ from keras.optimizers import Adam
 
 # Select gpu
 import os
-gpu = sys.argv[-6]
+gpu = sys.argv[-7]
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
 os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
 
@@ -22,11 +22,11 @@ from tensorflow.python.client import device_lib
 print(device_lib.list_local_devices())
 
 analysis = sys.argv[-1] # 'treated' or 'control'
-t0 = sys.argv[-2] 
-dataname = sys.argv[-3] 
-nb_batches = sys.argv[-4]
-
-epoches = int(sys.argv[-5])
+T = sys.argv[-2] 
+t0 = sys.argv[-3] 
+dataname = sys.argv[-4] 
+nb_batches = int(sys.argv[-5])
+nb_epoches = int(sys.argv[-6])
 
 def create_model(n_pre, n_post, nb_features, output_dim):
     """ 
@@ -40,9 +40,6 @@ def create_model(n_pre, n_post, nb_features, output_dim):
     lr = 0.001
     penalty=0.1
     dr=0.5
-
-    if dataname == 'germany':
-        dr=0.8
 
     encoder_hidden = 128
     decoder_hidden = 128
@@ -63,19 +60,20 @@ def create_model(n_pre, n_post, nb_features, output_dim):
 
     return model
 
-def train_sinus(model, dataX, dataY, epoch_count, batches):
+def train_model(model, dataX, dataY, nb_epoches, nb_batches):
 
     # Prepare model checkpoints and callbacks
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='auto')
+    filepath="results/encoder-decoder/{}/{}".format(dataname,analysis) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
+    checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=10, save_best_only=True)
 
     csv_logger = CSVLogger('../results/encoder-decoder/{}/{}/training_log_{}_{}.csv'.format(dataname,analysis,dataname,analysis), separator=',', append=False)
 
     history = model.fit(dataX, 
         dataY, 
-        batch_size=batches, 
+        batch_size=nb_batches, 
         verbose=1,
-        epochs=epoch_count, 
+        epochs=nb_epoches, 
         callbacks=[stopping,csv_logger],
         validation_split=0.2)
 
@@ -121,7 +119,7 @@ def test_model():
     # create and fit the encoder-decoder network
     print('creating model...')
     model = create_model(n_pre, n_post, nb_features, output_dim)
-    train_model(model, dataX, dataY, int(epochs), int(nb_batches))
+    train_model(model, dataX, dataY, int(nb_epochs), int(nb_batches))
 
     # now test
 

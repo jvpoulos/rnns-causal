@@ -7,26 +7,27 @@ import pandas as pd
 
 from keras import backend as K
 from keras.models import Model
-from keras.layers import LSTM, Input, Dropout
+from keras.layers import LSTM, Input, GRU, TimeDistributed, Dense, RepeatVector, Dropout
 from keras.callbacks import CSVLogger, EarlyStopping
 from keras import regularizers
 from keras.optimizers import Adam
 
 # Select gpu
 import os
-#gpu = sys.argv[-4]
+gpu = sys.argv[-6]
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
 os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
 
 from tensorflow.python.client import device_lib
 print(device_lib.list_local_devices())
 
-import train_lstm
+import train_encoder_decoder
 
-# analysis = sys.argv[-1] # 'treated' or 'control'
-# dataname = sys.argv[-2] 
-
-# epochs = int(sys.argv[-3])
+analysis = sys.argv[-1] # 'treated' or 'control'
+T = sys.argv[-2] 
+t0 = sys.argv[-3] 
+dataname = sys.argv[-4] 
+nb_batches = int(sys.argv[-5])
 
 def test_model():
 
@@ -69,11 +70,10 @@ def test_model():
 
     # create and fit the LSTM network
     print('creating model...')
-    model = train_lstm.create_model(n_pre, n_post, nb_features, output_dim)
+    model = train_encoder_decoder.create_model(n_pre, n_post, nb_features, output_dim)
 
     # Load weights
-    weights='weights.1000-5.678.hdf5'
-    filename = 'results/lstm/{}/{}/{}'.format(dataname,analysis,weights)
+    filename = sys.argv[-7]
     model.load_weights(filename, by_name=True)
 
     print("Created model and loaded weights from file")
@@ -88,7 +88,9 @@ def test_model():
 
     print('predictions shape =', predict.shape)
 
-    np.savetxt("results/lstm/{}/lstm-{}-{}-test.csv".format(dataname,analysis,weights,dataname), predict, delimiter=",")
+    print('Saving to results/encoder-decoder/{}/{}/encoder-decoder-{}-{}-test.csv'.format(dataname,analysis,analysis,dataname))
+
+    np.savetxt("../results/encoder-decoder/{}/{}/encoder-decoder-{}-{}-test.csv".format(dataname,analysis,analysis,dataname), predict, delimiter=",")
 
 def main():
     test_model()

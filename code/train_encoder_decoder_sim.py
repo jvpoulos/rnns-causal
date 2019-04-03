@@ -65,14 +65,14 @@ def train_sinus(model, dataX, dataY, epoch_count, batches):
 
     # Prepare model checkpoints and callbacks
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1, mode='auto')
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
 
     csv_logger = CSVLogger('../results/encoder-decoder/{}/{}/training_log_{}_{}.csv'.format(dataname,analysis,dataname,analysis), separator=',', append=False)
 
     history = model.fit(dataX, 
         dataY, 
         batch_size=batches, 
-        verbose=1,
+        verbose=0,
         epochs=epoch_count, 
         callbacks=[stopping,csv_logger],
         validation_split=0.2)
@@ -125,7 +125,7 @@ def test_model():
 
     print('Generate predictions')
 
-    predict = model.predict(dataX, batch_size=int(nb_batches), verbose=1)
+    predict = model.predict(dataX, batch_size=int(nb_batches), verbose=0)
 
     predict = np.squeeze(predict)
 
