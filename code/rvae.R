@@ -22,12 +22,12 @@ rvae <- function(Y_obs,treat_indices,d, t0, T){
   py <- import_main()
   py$dataname <- d
   py$analysis <- 'control'
-  py$epochs <- 10000
+  py$epochs <- 2500
   py$gpu <- 0
   py$t0 <- t0
   py$T <- T
   
-  source_python("train_rvae.py")
+  source_python("train_rvae_sim.py")
   
   rvae.pred.control <- as.matrix(read_csv("../results/rvae/basque/control/rvae-control-basque-test.csv", col_names = FALSE))
   

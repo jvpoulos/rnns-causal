@@ -14,19 +14,17 @@ from keras.optimizers import Adam
 
 # Select gpu
 import os
-gpu = sys.argv[-6]
+#gpu = sys.argv[-4]
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
 os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
 
 from tensorflow.python.client import device_lib
 print(device_lib.list_local_devices())
 
-analysis = sys.argv[-1] # 'treated' or 'control'
-t0 = sys.argv[-2] 
-dataname = sys.argv[-3] 
-nb_batches = sys.argv[-4]
+# analysis = sys.argv[-1] # 'treated' or 'control'
+# dataname = sys.argv[-2] 
 
-epoches = int(sys.argv[-5])
+# epoches = int(sys.argv[-3])
 
 def create_model(n_pre, n_post, nb_features, output_dim):
     """ 
@@ -67,7 +65,7 @@ def train_sinus(model, dataX, dataY, epoch_count, batches):
 
     # Prepare model checkpoints and callbacks
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='auto')
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1, mode='auto')
 
     csv_logger = CSVLogger('../results/encoder-decoder/{}/{}/training_log_{}_{}.csv'.format(dataname,analysis,dataname,analysis), separator=',', append=False)
 

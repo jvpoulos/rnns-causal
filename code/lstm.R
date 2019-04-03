@@ -22,13 +22,13 @@ lstm <- function(Y_obs,treat_indices,d, t0, T){
   py <- import_main()
   py$dataname <- d
   py$analysis <- 'control'
-  py$epochs <- 10000
+  py$epochs <- 2500
   py$gpu <- 0
   py$t0 <- t0
   py$T <- T
   py$nb_batches <- 4
   
-  source_python("train_lstm.py")
+  source_python("train_lstm_sim.py")
   
   lstm.pred.control <- as.matrix(read_csv("../results/lstm/basque/control/lstm-control-basque-test.csv", col_names = FALSE))
   
