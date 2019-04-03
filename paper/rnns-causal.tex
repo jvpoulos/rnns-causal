@@ -190,7 +190,7 @@ Y_{it}(1) 	& \mbox{if } W_{it} = 1  \text{ and } t \geq \text{T}_0.
 \end{cases} 
 \end{align} 
 
-The problem of counterfactual prediction is that we cannot directly observe the missing potential outcomes and instead wish to impute the missing values in $\boldsymbol{Y}(0)$ for treated units with $W_{it} =1$.  The potential outcomes framework explicitly assumes unconfoundedness. In an observational setting, this assumption requires $(\boldsymbol{Y}(0), \boldsymbol{Y}(1)) \independent \boldsymbol{W}| \boldsymbol{Y}(\mathcal{O})$, where $\boldsymbol{Y}(\mathcal{O})$ is the observed data. % which can include observed outcomes for units with similar values or observed outcomes in previous periods
+The problem of counterfactual prediction is that we cannot directly observe the missing potential outcomes and instead wish to impute the missing values in $\boldsymbol{Y}(0)$ for treated units with $W_{it} =1$.  The potential outcomes framework explicitly assumes unconfoundedness. In an observational setting, this assumption requires $(\boldsymbol{Y}(0), \boldsymbol{Y}(1)) \independent \boldsymbol{W}| \boldsymbol{Y}(\mathcal{O})$, where $\boldsymbol{Y}(\mathcal{O})$ is the observed data. 
 
 The potential outcomes framework also implicitly assumes treatment is well-defined to ensure that each unit has the same number of potential outcomes \citep{imbens2015causal}. It also excludes interference between units, which would undermine the framework by creating more than two potential outcomes per unit, depending on the treatment status of other units \citep{rubin1990}.
 
@@ -200,24 +200,32 @@ The proposed approach is similar to the method of matrix completion via nuclear 
 
 \citet{athey2017matrix} note two drawbacks of MC-NNM. First, the errors may be autocorrelated because the estimator does not account for time-series dependencies in the observed data. The estimator estimate patterns row- and column-wise, but treat the data as perfectly synchronized \citep{yoon2018estimating}. In contrast, the RNN-based approach described in Section \ref{RNNs-section} is exploits the temporal component of the data and therefore does not have the problem of autocorrelated errors. 
 
-Second, the MC-NNM estimator penalizes the errors for each observed value equally without regard to the fact that the probability of missingness (i.e, the propensity score), increases with $t$. \citet{athey2017matrix} suggest weighting the loss function by the propensity score, which is similar to the importance weighting scheme proposed by \citet{cortes2008sample} to address the problem of covariate shift, which is a special case of domain adaptation \citep{huang2007correcting,bickel2009discriminative,cortes2010learning}.\footnote{\citet{schnabel2016recommendations} first connected the matrix completion problem with causal inference in observational settings in the context of recommender systems under confounding. \citet{johansson2016learning} formulates the general problem of counterfactual inference as a covariate shift problem.} 
+Second, the MC-NNM estimator penalizes the errors for each observed value equally without regard to the fact that the probability of missingness (i.e, the propensity score), increases with $t$. \citet{athey2017matrix} suggest weighting the loss function by the propensity score, which is similar to the importance weighting scheme proposed by \citet{cortes2008sample} to address the problem of covariate shift, which is a special case of domain adaptation \citep{huang2007correcting,bickel2009discriminative,cortes2010learning}.\footnote{\citet{schnabel2016recommendations} first connected the matrix completion problem with causal inference in observational settings in the context of recommender systems under confounding. \citet{johansson2016learning} formulates the general problem of counterfactual inference as a covariate shift problem. The problem of covariate shift is also related to recent work in transfer learning \citep{ben2007analysis,2015arXiv150507818G}.} 
 
-The covariate shift problem occurs when training and test data are drawn from different distributions. For notational ease, define the set of predictors $\boldsymbol{X}$ = $\boldsymbol{Y}(\mathcal{O}), \, \forall\, t < \text{T}_0$.  In both the matrix completion and RNN-based approach to counterfactual prediction, the models are trained on $\boldsymbol{X}$ to predict $\boldsymbol{Y}(\mathcal{O})$ for $t \geq \text{T}_0$. The trained model is used to impute the missing potential outcomes, $\boldsymbol{Y}(\mathcal{M})$. This approach to counterfactual prediction can be connected to recent work in transfer learning \citep{ben2007analysis,2015arXiv150507818G}. The approach assumes similarity between the distributions of pre-period outcomes of treated and control units. An extension of the RNN-based approach would consider weighting the training loss by the propensity score to reduce any discrepancy between these two distributions. 
+The covariate shift problem occurs when training and test data are drawn from different distributions. For notational ease, define the training set input-output pair as 
+
+$$\left(\boldsymbol{X}^{\text{train}}, \boldsymbol{Y}^{\text{train}}\right) = \left(\boldsymbol{Y}(\boldsymbol{W})^{\{t < \text{T}_0\}}, \boldsymbol{Y}(\boldsymbol{W})^{\{t \geq \text{T}_0\}}\right)$$
+\noindent
+for units with $\boldsymbol{W}=1$ and the test set pair $\left(\boldsymbol{X}^{\text{test}}, \boldsymbol{Y}^{\text{test}}\right)$ for units with $\boldsymbol{W}=1$. In the proposed approach, the model weights learned on the training set is fit on $\boldsymbol{X}^{\text{test}}$ to predict $\boldsymbol{Y}^{\text{test}}$. The approach therefore assumes similarity between the distributions of $\boldsymbol{X}^{\text{train}}$ and $\boldsymbol{X}^{\text{test}}$. An extension of the RNN-based approach would consider weighting the training loss by the propensity score to reduce any discrepancy between these two distributions. 
 
 \subsection{Nonparametric regression}
 
-In its most basic form, counterfactual prediction can be approached by nonparametrically regressing the post-period observed outcomes on the pre-period observed outcomes,
+In its most basic form, counterfactual prediction can be represented as a nonparametric regression,
 
 \begin{equation}\label{eq:np}
-  \boldsymbol{\hat{Y}} =  \hat{f_0} \left(\boldsymbol{X}\right) + \upepsilon^{(t)},
+  \boldsymbol{\hat{\boldsymbol{Y}}^{\text{train}}} =  \hat{f_0} \left(\boldsymbol{X}^{\text{train}}\right) + \upepsilon^{(t)},
 \end{equation}
 \noindent
-where the noise variables $\epsilon^{(t)}$ are assumed to be i.i.d. standard normal and independent of the observed data. 
+where the noise variables $\epsilon^{(t)}$ are assumed to be i.i.d. standard normal and independent of the observed data. The nonlinear function $\hat{f_0}$ is estimated by minimizing the mean squared error, 
 
-The nonlinear function $\hat{f_0}$ is estimated by minimizing the mean squared error, $\text{MSE} = \E \left[\left(\boldsymbol{Y} - \boldsymbol{\hat{Y}} \right)^2 \right]$  for $t \geq \text{T}_0$. The estimated causal effect of the intervention is the difference between the observed time-series of the treated units and the counterfactual time-series that would have been observed in the absence of the intervention:
+\begin{equation} \label{eq:mse}
+\text{MSE} = \E \left[\left(\boldsymbol{Y}^{\text{train}} - \boldsymbol{\hat{Y}}^{\text{train}}  \right)^2 \right].
+\end{equation}
+\noindent
+At test time, the estimated function is used to predict $\boldsymbol{\hat{Y}}^{\text{test}} = \hat{f_0} \left(\boldsymbol{X}^{\text{test}}\right)$. The estimated causal effect of the intervention is then
 
 \begin{equation}\label{eq:pointwise}
-  \boldsymbol{\hat{\phi}}^{(t)} = \boldsymbol{Y}(\mathcal{M})^{(t)} - \boldsymbol{\hat{Y}}^{(t)} \hspace{10mm} \text{for } t = \text{T}_0, \ldots, \text{T}. 
+  \boldsymbol{\hat{\phi}} = \boldsymbol{Y}^{\text{test}} - \boldsymbol{\hat{Y}}^{\text{test}}. 
 \end{equation}
 
 This treatment effect is calculated at every post-period time-step and is thus useful for understanding the temporal evolution of the causal effect.
@@ -253,22 +261,25 @@ Encoder-decoder networks are trained to maximize (\ref{rnn-obj}), where $n_x$ an
 \Pr (\boldsymbol{y}^{(t)} | \boldsymbol{y}^{(t)}, \ldots, \boldsymbol{y}^{(t-1)}, \boldsymbol{c}) =  f_1 \left( \boldsymbol{h}^{(t)}, \boldsymbol{y}^{(t-1)}, \boldsymbol{c}; \, \theta \right).
 \end{equation}  Effectively, the decoder learns to generate outputs $\boldsymbol{y}^{(t)}$ given the previous outputs, conditioned on the input sequence. 
 
-\paragraph{Implementation details} \label{imp-details}
-
-The encoder takes the form of a two-layer Long Short-Term Memory (LSTM) network \citep{schmidhuber1997long}, each with 128 hidden units, and the decoder is a single-layer Gated Recurrent Unit (GRU) \citep{chung2014} also with 128 hidden units. An attention mechanism in the form of a softmax mask is included before the first hidden layer in order to generate a normalized distribution of the importance of each time-step regarding an input. In contrast to attention mechanisms used in neural machine translation to assist networks in learning the correct alignment between image pixels and target characters \citep{cho2014learning,2017arXiv171204046P}, the attention mechanism used in this paper is not expected to help the model perform better, but to help understand which time-steps and inputs contribute to the prediction.
-
-RNN weights are learned with stochastic gradient descent on the MSE using \texttt{Adam} stochastic optimization \citep{kingma2014adam}. As a regularization strategy, I apply dropout to the inputs and L2 regularization losses to the network weights. The networks are implemented with the \texttt{Keras} neural network library \citep{chollet2015keras} in Python on top of a TensorFlow backend. RNNs are trained in batches of size four or eight for 5,000 to 10,000 epochs, which takes about 20 minutes to run on a 12GB NVIDIA Titan Xp GPU.
-
-
 \subsection{Recurrent variational autoencoder}
 
-While the encoder-decoder architecture is effective for many sequential prediction tasks, the model does not learn a vector representation of the entire input. The variational autoencoder (VAE) \citep{kingma2013auto} is a generative model that learns a latent variable model for $\boldsymbol{x}^{(t)}$ such that new sequences $\boldsymbol{x'}^{(t)}$ can be generated by sampling from the latent space $q$. Similar to encoder-decoder networks, the VAE has an encoder that learns a latent representation of the input sequence and a decoder that maps the representation back to the inputs. The VAE architecture differs from encoder-decoder networks in that the VAE doesn't have a final dense layer that compares the decoder outputs to  $\boldsymbol{x'}^{(t)}$ (i.e., it is a ``self-supervised'' technique).\footnote{Figures SM-\ref{encoder-decoder} and SM-\ref{vae} illustrates the architectures of encoder-decoder networks and the VAE, respectively.} The other difference is that the VAE maps the inputs to a distribution over latent variables. 
+While the encoder-decoder architecture is effective for many sequential prediction tasks, the model does not learn a vector representation of the entire input. The variational autoencoder (VAE) \citep{kingma2013auto} is a generative model that learns a latent variable model for $\boldsymbol{x}^{(t)}$ such that new sequences $\boldsymbol{x'}^{(t)}$ can be generated by sampling from the latent space $q$. Similar to encoder-decoder networks, the VAE has an encoder that learns a latent representation of the input sequence and a decoder that maps the representation back to the inputs. The VAE architecture differs from encoder-decoder networks in that the VAE doesn't have a final dense layer that compares the decoder outputs to  $\boldsymbol{x'}^{(t)}$ (i.e., it is a ``self-supervised'' technique). The other difference is that the VAE maps the inputs to a distribution over latent variables. 
 
 The recurrent VAE (RVAE) proposed by several researchers \citep{fabius2014variational, chung2015recurrent,bowman2015generating} for sequence generation consists of an encoder RNN that maps $\boldsymbol{x}^{(t)}$ to a distribution over parameters of $q$. The model then randomly samples $\boldsymbol{z}$ from the latent distribution, $q(\boldsymbol{z} | \boldsymbol{x}^{(t)}) = q (\boldsymbol{z}; f_2(\boldsymbol{x}^{(t)};\, \theta))$, where $f_2(\cdot)$ takes the form of a log-normal distribution in the empirical applications. Finally, a decoder RNN takes the form of a conditional probability model $\Pr (\boldsymbol{x}^{(t)} | \boldsymbol{z})$. The parameters of the model are learned by maximizing the loss function, which takes the difference between the log-likelihood between the decoder outputs $\boldsymbol{x'}^{(t)}$ and $\boldsymbol{x}^{(t)}$ and the relative entropy between  $q(\boldsymbol{z} | \boldsymbol{x}^{(t)})$ and the model prior $\Pr (\boldsymbol{z})$. The latter component of the loss function acts as regularizer by forcing the learned latent distribution to be similar to the model prior. 
 
+\subsection{Implementation details} 
+
+The networks are implemented with the \texttt{Keras} neural network library \citep{chollet2015keras} in Python on top of a TensorFlow backend. The implementation details are as follows.\footnote{Figures SM-\ref{encoder-decoder} and SM-\ref{vae} illustrates the architectures of encoder-decoder networks and the VAE, respectively.}
+
+\paragraph{Encoder-decoder networks}The encoder takes the form of a two-layer Long Short-Term Memory (LSTM) network \citep{schmidhuber1997long}, each with 128 hidden units, and the decoder is a single-layer Gated Recurrent Unit (GRU) \citep{chung2014} also with 128 hidden units. Each recurrent layer uses a linear activation function with weights initialized using Xavier initialization \citep{glorot2010}. An attention mechanism in the form of a softmax mask is included before the first hidden layer in order to generate a normalized distribution of the importance of each time-step regarding an input.\footnote{In contrast to attention mechanisms used in neural machine translation to assist networks in learning the correct alignment between image pixels and target characters \citep{cho2014learning,2017arXiv171204046P}, the attention mechanism used in this work is not expected to help the model perform better, but to help understand which time-steps and inputs contribute to the prediction.}
+
+RNN weights are learned with stochastic gradient descent on the MSE using \texttt{Adam} stochastic optimization \citep{kingma2014adam}. As a regularization strategy, I apply dropout to the inputs and L2 regularization losses to the network weights. RNNs are trained in batches of size four for 10,000 epochs, which takes about 20 minutes to run on a 12GB NVIDIA Titan Xp GPU.
+
+\paragraph{RVAE} The encoder takes the form of a single-layer LSTM with 32 hidden units and the decoder is a two-layer LSTM with the number of hidden units equal to 32 and the number of predictors, respectively. The latent space $\boldsymbol{z}$ is implemented as a densely-connected layer with a dimension of 200 units. 
+
 \subsection{Placebo tests} \label{placebo}
 
-In this section, I evaluate the accuracy of the RNN-based approach on the following three datasets common to the synthetic control literature, with the actual treated unit removed from each dataset: \possessivecite{abadie2003economic} study of the economic impact of terrorism in the Basque Country during the late 1960s ($\text{N}=16$, $\text{T}=43$); \possessivecite{abadie2010synthetic} study of the effects of a large-scale tobacco control program implemented in California in 1988 ($\text{N}=38$, $\text{T}=31$); and \possessivecite{abadie2015comparative} study of the economic impact of the 1990 German reunification on West Germany ($\text{N}=16$, $\text{T}=44$). For each trial run, I randomly select half of the control units to be treated and predict their counterfactual outcomes for periods following a randomly selected $\text{T}_0$. I compare the predicted values to the observed values by calculating the root-mean squared error, $\text{RMSE} = \sum_{it}|L^{*} -\hat{L}|^2 / \sqrt{\text{NT}}$. 
+In this section, I evaluate the accuracy of the RNN-based approach on the following three datasets common to the synthetic control literature, with the actual treated unit removed from each dataset: \possessivecite{abadie2003economic} study of the economic impact of terrorism in the Basque Country during the late 1960s ($\text{N}=16$, $\text{T}=43$); \possessivecite{abadie2010synthetic} study of the effects of a large-scale tobacco control program implemented in California in 1988 ($\text{N}=38$, $\text{T}=31$); and \possessivecite{abadie2015comparative} study of the economic impact of the 1990 German reunification on West Germany ($\text{N}=16$, $\text{T}=44$). For each trial run, I randomly select half of the control units to be treated and predict their counterfactual outcomes for periods following a randomly selected $\text{T}_0$. I compare the predicted values to the observed values by calculating the root-mean squared error $(\text{RMSE})$. 
 
 I benchmark the encoder-decoder networks and RVAE against the following estimators:
 
@@ -277,7 +288,7 @@ I benchmark the encoder-decoder networks and RVAE against the following estimato
 		{\setlength\itemindent{1mm}
 			\item[(a) DID] Regression of $\textbf{Y}$ on $\textbf{W}$ and unit and time fixed effects \citep{athey2017matrix}
 			\item[(b) HR-EN] Horizontal regression with elastic net regularization, with regularization term $\lambda$ and shape parameter $\alpha$ selected by cross-validation  \citep{athey2017matrix} 
-			\item[(c) LSTM] Baseline RNN in the form of a single unidirectional LSTM with output space dimensionality equivalent to the number of treated units
+			\item[(c) LSTM] Baseline RNN in the form of a single unidirectional LSTM with output space dimensionality equivalent to the number of predictors
 			\item[(d) MC-NNM] Matrix completion via nuclear norm minimization, with the regularization term on the nuclear norm selected by cross-validation \citep{athey2017matrix}
 			\item[(e) SC-ADH] Synthetic control method approached via exponentiated gradient descent \citep{abadie2010synthetic}
 			\item[(f) VT-EN] Vertical regression with elastic net regularization, with $\lambda$ and $\alpha$ selected by cross-validation \citep{athey2017matrix}.
@@ -288,6 +299,10 @@ I benchmark the encoder-decoder networks and RVAE against the following estimato
 Figure \ref{synth-sim} reports the average prediction error of the estimators in a simultaneous treatment adoption setting, with the estimates jittered horizontally to reduce overlap. Error bars represent 95\% prediction intervals calculated using the standard deviation of the prediction distribution for 20 trial runs. 
 
 Across all estimators, the average RMSE decreases and prediction intervals narrow as $\text{T}_0/\text{T}$ approaches unity because the estimators have more information to generate counterfactual predictions. The MC-NNM estimator generally outperforms all other estimators in terms of average RMSE across different ratios $\text{T}_0/\text{T}$.  The strong performance of the MC-NNM estimator can be attributed to the fact that it is capable of using additional information in the form of pre-period observations of the treated units, whereas the regression-based estimators rely only on the pre-period observations of control units to predict counterfactuals. 
+
+%I find that either encoder-decoder networks or LSTM outperform the SCM on each of the three datasets in terms of having the lowest MSE, with FPRs comparable to the SCM. The baseline LSTM outperforms encoder-decoder networks in two of the three datasets. When applied to datasets with low-dimensional predictor sets, the LSTM performs well but deeper networks such as encoder-decoder networks are susceptible to overfitting. Overfitting in this case means that the networks learn dependencies on a small subset of predictors and cannot generalize well to unseen data. Overfitting occurs when training encoder-decoder networks on the Basque Country dataset (Figure SM-\ref{encoder-decoder-loss-basque-treated}), which is has the lowest dimensions of the three SCM datasets. Even in this case of obvious overfitting, model check-pointing is employed so that the model with the lowest validation error is used to produce counterfactual time-series.
+
+%The results suggest that RNNs should outperform the SCM in all cases as long as the complexity of the network architecture is proportional to the dimension of the predictor set. Encoder-decoder networks outperform the other models when the predictor set is comparatively large (i.e., $J=38$ in the California dataset), while the baseline LSTM outperforms all other models on smaller predictor sets ($J=16$ for Basque Country and West Germany datasets). 
 
 \begin{figure}[htbp]
 	\centering
@@ -334,14 +349,30 @@ Each element of the $(\text{T}-\text{T}_0) \times J$ matrix of counts obtained f
 
 \section{Application: Homestead acts and state capacity} \label{state-capacity}
 
+% bandiera2018nation
+% states adopted compulsory schooling laws as a nation-building tool to instill civic values to the tens of millions of culturally diverse migrants who arrived during the ‘Age of Mass Migration’ between 1850 and 1914.
+
+%alesina2013nation
+% provision of mass primary education as nation-building policy
+% means to homogenize the population
+
+%meyer1979public
+% we argue that the spread of schooling in the rural North and West can best be understood as a social movement implementing a commonly held ideology of nation-building
+% The rapid spread of public schooling across the continent during the 19th century is one of the most dramatic examples of institution-building in American history. 
+
+%Galor et al. [2009] show that state schooling expenditures are significantly correlated to land inequality
+
+\subsection{Data and assumptions}
+
 In this section, I estimate the causal impacts of homestead acts on state government education spending. I create a state-level measure of state government education spending from the records of 48 state governments during the period of 1783 to 1932 \citep{sylla1993sources} and the records of 16 state governments during the period of 1933 to 1937 \citep{sylla1995sourcesa,sylla1995sourcesb}. Comparable measures for 48 states are drawn from U.S. Census special reports for the years 1902, 1913, 1932, 1942, 1962, 1972, and 1982 \citep{haines2010}.
 
-The data pre-processing steps are as follows. The measure is inflation-adjusted according to the U.S. Consumer Price Index \citep{williamson2017seven} and scaled by the total free population in the decennial census \citep{haines2010}. Missing values are imputed separately in the pre- and -post-periods by carrying the last observation forward and remaining missing values are imputed by carrying the next observation backward. The raw outcomes data are log-transformed to alleviate exponential effects. Lastly, I remove states with no variance in the pre-period outcomes, resulting in complete $\text{N} \times \text{T}$ matrices of size $33 \times 159$ and $34 \times 158$ for the expenditures and revenues outcomes, respectively. 
+The data pre-processing steps are as follows. The measure is inflation-adjusted according to the U.S. Consumer Price Index \citep{williamson2017seven} and scaled by the total free population in the decennial census \citep{haines2010}. Missing values are imputed separately in the pre- and -post-periods by carrying the last observation forward and remaining missing values are imputed by carrying the next observation backward. The raw outcomes data are log-transformed to alleviate exponential effects. Lastly, I remove states with no variance in the pre-period outcomes, resulting in a complete $\text{N} \times \text{T}$ matrix of size $33 \times 156$. 
 
-In this application, public land states are the treated units and state land states --- i.e., states that were not crafted from the public domain and were therefore not directly affected by homestead policies --- serve as control units. This group includes states of the original 13 colonies, Maine, Tennessee, Texas, Vermont, and West Virginia. Aggregating to the state level approximately 1.46 million individual land patent records authorized under the HSA,\footnote{Land patent records provide information on the initial transfer of land titles from the federal government and are made accessible online by the U.S. General Land Office (\url{https://glorecords.blm.gov}).} I determine that the earliest homestead entries occurred in 1869 in about half of the western frontier states, about seven years following the enactment of the HSA.
+In this application, public land states are the treated units and state land states --- i.e., states that were not crafted from the public domain and were therefore not directly affected by homestead policies --- serve as control units. This group includes states of the original 13 colonies, Maine, Tennessee, Texas, Vermont, and West Virginia. The RNN-based approach assumes the distribution of $\boldsymbol{X}^{\text{train}}$ and $\boldsymbol{X}^{\text{test}}$ are similar. The assumption may be violated in the application because state land states had already been well-developed by the time of the passage of the homestead laws. Fig. SM-\ref{educ-dense} (left panel) shows that the pre-period distributions of education spending for control and treated units are visually similar; however, a two-sided t-test provides evidence to reject the null of equivalence for the difference-in-means between the two distributions ($p <0.01$). While the no interference assumption cannot directly be tested, it is likely that state land states were indirectly affected by the out-migration of homesteaders from frontier states.
 
-%assume distribution of X_c similar to X_t (might be violated in the application)
-%States that were not crafted from the public domain and were therefore not directly affected by the homestead acts --- the states of the original 13 colonies, Maine, Tennessee, Texas, Vermont, and West Virginia --- are not appropriate control units because their governments and markets had already been well-developed by the time of the passage of the homestead laws. Additionally, it is likely that state land states were indirectly affected by the out-migration of homesteaders from frontier states. 
+Aggregating to the state level approximately 1.46 million individual land patent records authorized under the HSA,\footnote{Land patent records provide information on the initial transfer of land titles from the federal government and are made accessible online by the U.S. General Land Office (\url{https://glorecords.blm.gov}).} I determine that the earliest homestead entries occurred in 1869 in about half of the frontier states, about seven years following the enactment of the Homestead Act. Using this information, I set $\text{T}_0 = 87$, which leaves $\text{T} - \text{T}_0 = 69$ post-period observations. The RNN-based approach assumes that treatment adoption is simultaneous across states; however, the date of initial treatment exposure varied as new frontier land opened between the period of 1869 to 1902. 
+
+\subsection{Estimates}
 
 I train a encoder-decoder network to predict the counterfactual time-series of public land states, using only their previous history to generate predictions. Similar to the placebo tests on the SCM datasets, I evaluate the models two ways: first, I monitor the loss over 2,000 training epochs and save the model weights with the lowest error on a validation set consisting of the final 10\% of the time-series.\footnote{The models use both dropout and L2 regularization to control for overfitting on the training set. Figures SM-\ref{encoder-decoder-loss-capacity-south} and SM-\ref{encoder-decoder-loss-capacity-west} record the training history of each model.} Second, I calculate MSE (Eq.~\ref{MSE}) on $J=18$ state land states that serve as placebo treated units. Encoder-decoder networks outperform the baseline LSTM in terms of minimizing the MSE in placebo tests (Tables SM-\ref{encoder-decoder-mpse} and SM-\ref{lstm-mpse}).
 
@@ -366,21 +397,6 @@ The attention mechanism embedded within the networks provides clues as to which 
 		networks. Attention is the normalized (softmax) distribution of the importance of each time-step regarding a predictor.\label{attn-plot}} 
 \end{figure}
 
-\subsection{Discussion}
-
-% bandiera2018nation
-% states adopted compulsory schooling laws as a nation-building tool to instill civic values to the tens of millions of culturally diverse migrants who arrived during the ‘Age of Mass Migration’ between 1850 and 1914.
-
-%alesina2013nation
-% provision of mass primary education as nation-building policy
-% means to homogenize the population
-
-%meyer1979public
-% we argue that the spread of schooling in the rural North and West can best be understood as a social movement implementing a commonly held ideology of nation-building
-% The rapid spread of public schooling across the continent during the 19th century is one of the most dramatic examples of institution-building in American history. 
-
-%Galor et al. [2009] show that state schooling expenditures are significantly correlated to land inequality
-
 \section{Conclusion} \label{conclusion}
 
 This paper makes a methodological contribution in proposing a novel alternative to the SCM for estimating the effect of a policy intervention on an outcome over time in settings where appropriate control units are unavailable. The SCM is growing in popularity in the social sciences despite its limitations --- the most obvious being that the choice of specification can lead to different results, and thus facilitate $p$-hacking. By inputting only control unit outcomes and not relying on pre-period covariates, the proposed method offers a more principled approach than the SCM. 
@@ -389,7 +405,7 @@ In placebo tests, RNN-based models outperform the SCM in terms of predictive acc
 
 The RNN-based approach joins a new generation of data-driven machine learning techniques for generating counterfactual predictions. Machine learning techniques in general have an advantage over the SCM in that they automatically choose appropriate predictors without relying on pretreatment covariates; this capability limits ``researcher degrees of freedom'' that arises from choices on how to specify the model. RNNs have an advantage over alternative machine learning algorithms because they are specifically structured to exploit the sequential nature of time-series data by sharing model parameters across time-steps.
 
-Future research might investigate through simulations how the interaction between RNN complexity (as determined by the number of hidden layers or nodes) and data dimensionality impacts predictive accuracy. Simulations will also allow us to assess the exact impact of data dimensionality, the proportion of treated units, convexity versus non-convexity in the modeled relationship, and the length of the pre-period on the choice between RNNs and the SCM. % Future work might formalize a set of assumptions necessary for the approach to be valid and provide further proof of consistency of the estimator under these assumptions.
+Future research might investigate through simulations how the interaction between RNN complexity (as determined by the number of hidden layers or nodes) and data dimensionality impacts predictive accuracy. Simulations will also allow us to assess the exact impact of data dimensionality, the proportion of treated units, convexity versus non-convexity in the modeled relationship, and the length of the pre-period on the choice between RNNs and the SCM. Future work might formalize a set of assumptions necessary for the approach to be valid and provide further proof of consistency of the estimator under these assumptions.
 
 \newpage
 

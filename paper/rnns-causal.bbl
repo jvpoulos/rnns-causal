@@ -1,4 +1,4 @@
-\begin{thebibliography}{54}
+\begin{thebibliography}{60}
 \expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
 \expandafter\ifx\csname url\endcsname\relax
   \def\url#1{\texttt{#1}}\fi
@@ -59,6 +59,15 @@ Bickel, S., Br{\"u}ckner, M. and Scheffer, T. (2009) Discriminative learning
 Bowman, S.~R., Vilnis, L., Vinyals, O., Dai, A.~M., Jozefowicz, R. and Bengio,
   S. (2015) Generating sentences from a continuous space.
 \newblock \textit{arXiv:1511.06349}.
+
+\bibitem[{Candes and Plan(2010)}]{candes2010matrix}
+Candes, E.~J. and Plan, Y. (2010) Matrix completion with noise.
+\newblock \textit{Proceedings of the IEEE}, \textbf{98}, 925--936.
+
+\bibitem[{Cand{\`e}s and Recht(2009)}]{candes2009exact}
+Cand{\`e}s, E.~J. and Recht, B. (2009) Exact matrix completion via convex
+  optimization.
+\newblock \textit{Foundations of Computational mathematics}, \textbf{9}, 717.
 
 \bibitem[{Carvalho et~al.(2018)Carvalho, Masini and
   Medeiros}]{carvalho2018arco}
@@ -170,6 +179,11 @@ Firpo, S. and Possebom, V. (2018) Synthetic control method: Inference,
   {Domain-Adversarial Training of Neural Networks}.
 \newblock \textit{arXiv e-prints}, arXiv:1505.07818.
 
+\bibitem[{Glorot and Bengio(2010)}]{glorot2010}
+Glorot, X. and Bengio, Y. (2010) Understanding the difficulty of training deep
+  feedforward neural networks.
+\newblock In \textit{Artificial Intelligence and Statistics}, vol.~9, 249--256.
+
 \bibitem[{Goodfellow et~al.(2016)Goodfellow, Bengio and
   Courville}]{goodfellow2016deep}
 Goodfellow, I., Bengio, Y. and Courville, A. (2016) \textit{Deep Learning}.
@@ -239,6 +253,18 @@ Lamb, A.~M., Goyal, A. G. A.~P., Zhang, Y., Zhang, S., Courville, A.~C. and
   networks.
 \newblock In \textit{Advances In Neural Information Processing Systems},
   4601--4609.
+
+\bibitem[{Little and Rubin(2014)}]{little2014}
+Little, R.~J. and Rubin, D.~B. (2014) \textit{Statistical Analysis with Missing
+  Data}.
+\newblock Hoboken, NJ: John Wiley \& Sons.
+
+\bibitem[{Mazumder et~al.(2010)Mazumder, Hastie and
+  Tibshirani}]{mazumder2010spectral}
+Mazumder, R., Hastie, T. and Tibshirani, R. (2010) Spectral regularization
+  algorithms for learning large incomplete matrices.
+\newblock \textit{Journal of Machine Learning Research}, \textbf{11},
+  2287--2322.
 
 \bibitem[{Neyman(1923)}]{neyman1923}
 Neyman, J. (1923) On the application of probability theory to agricultural
@@ -314,6 +340,11 @@ Williamson, S.~H. (2017) Seven ways to compute the relative value of a us
 Xu, Y. (2017) Generalized synthetic control method: Causal inference with
   interactive fixed effects models.
 \newblock \textit{Political Analysis}, \textbf{25}, 57--76.
+
+\bibitem[{Yoon et~al.(2018)Yoon, Zame and van~der Schaar}]{yoon2018estimating}
+Yoon, J., Zame, W.~R. and van~der Schaar, M. (2018) Estimating missing data in
+  temporal data streams using multi-directional recurrent neural networks.
+\newblock \textit{IEEE Transactions on Biomedical Engineering}.
 
 \bibitem[{{Zhu} and {Laptev}(2017)}]{zhu2017deep}
 {Zhu}, L. and {Laptev}, N. (2017) {Deep and Confident Prediction for Time

@@ -5,8 +5,10 @@
 \BOOKMARK [1][-]{section.3}{RNNs for counteractual prediction}{}% 5
 \BOOKMARK [2][-]{subsection.3.1}{Encoder-decoder networks}{section.3}% 6
 \BOOKMARK [2][-]{subsection.3.2}{Recurrent variational autoencoder}{section.3}% 7
-\BOOKMARK [2][-]{subsection.3.3}{Placebo tests}{section.3}% 8
-\BOOKMARK [1][-]{section.4}{Hypothesis testing}{}% 9
-\BOOKMARK [1][-]{section.5}{Application: Homestead acts and state capacity}{}% 10
-\BOOKMARK [2][-]{subsection.5.1}{Discussion}{section.5}% 11
-\BOOKMARK [1][-]{section.6}{Conclusion}{}% 12
+\BOOKMARK [2][-]{subsection.3.3}{Implementation details}{section.3}% 8
+\BOOKMARK [2][-]{subsection.3.4}{Placebo tests}{section.3}% 9
+\BOOKMARK [1][-]{section.4}{Hypothesis testing}{}% 10
+\BOOKMARK [1][-]{section.5}{Application: Homestead acts and state capacity}{}% 11
+\BOOKMARK [2][-]{subsection.5.1}{Data and assumptions}{section.5}% 12
+\BOOKMARK [2][-]{subsection.5.2}{Estimates}{section.5}% 13
+\BOOKMARK [1][-]{section.6}{Conclusion}{}% 14

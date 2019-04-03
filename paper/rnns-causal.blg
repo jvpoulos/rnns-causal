@@ -11,51 +11,46 @@ Repeated entry---line 3172 of file references.bib
  : @article{xu2017generalized
  :                           ,
 I'm skipping whatever remains of this entry
-Warning--I didn't find a database entry for "little2014"
-Warning--I didn't find a database entry for "candes2009exact"
-Warning--I didn't find a database entry for "candes2010matrix"
-Warning--I didn't find a database entry for "mazumder2010spectral"
-Warning--I didn't find a database entry for "yoon2018estimating"
 Warning--empty note in dube2015pooling
-You've used 54 entries,
+You've used 60 entries,
             2705 wiz_defined-function locations,
-            864 strings with 14376 characters,
-and the built_in function-call counts, 29040 in all, are:
-= -- 2865
-> -- 1476
-< -- 24
-+ -- 572
-- -- 513
-* -- 2349
-:= -- 5239
-add.period$ -- 112
-call.type$ -- 54
-change.case$ -- 469
-chr.to.int$ -- 53
-cite$ -- 55
-duplicate$ -- 1359
-empty$ -- 1906
-format.name$ -- 692
-if$ -- 5825
+            890 strings with 15224 characters,
+and the built_in function-call counts, 32080 in all, are:
+= -- 3168
+> -- 1600
+< -- 29
++ -- 620
+- -- 555
+* -- 2608
+:= -- 5782
+add.period$ -- 124
+call.type$ -- 60
+change.case$ -- 514
+chr.to.int$ -- 59
+cite$ -- 61
+duplicate$ -- 1503
+empty$ -- 2131
+format.name$ -- 760
+if$ -- 6434
 int.to.chr$ -- 2
 int.to.str$ -- 1
-missing$ -- 45
-newline$ -- 224
-num.names$ -- 216
-pop$ -- 579
+missing$ -- 52
+newline$ -- 248
+num.names$ -- 240
+pop$ -- 640
 preamble$ -- 1
-purify$ -- 385
+purify$ -- 423
 quote$ -- 0
-skip$ -- 945
+skip$ -- 1034
 stack$ -- 0
-substring$ -- 1341
-swap$ -- 403
-text.length$ -- 1
+substring$ -- 1504
+swap$ -- 443
+text.length$ -- 2
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 480
+type$ -- 531
 warning$ -- 1
-while$ -- 219
+while$ -- 245
 width$ -- 0
-write$ -- 634
+write$ -- 705
 (There were 2 error messages)
