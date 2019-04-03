@@ -28,7 +28,7 @@ source('/media/jason/Dropbox/github/land-reform/code/prepare-synth.R') # land-re
 # Causal impact estimates: public education spending
 # "/media/jason/Dropbox/github/land-reform/data/capacity-outcomes.rds"
 
-source(paste0(code.directory, "density-plot.R"))
+source(paste0(code.directory, "prepare-funds.R"))
 
 # funds-placebo.sh --> funds-placebo.R 
 

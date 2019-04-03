@@ -8,7 +8,7 @@ import pandas as pd
 from keras import backend as K
 from keras.models import Model
 from keras.layers import LSTM, Input, GRU, TimeDistributed, Dense, RepeatVector, Dropout
-from keras.callbacks import CSVLogger, EarlyStopping
+from keras.callbacks import ModelCheckpoint, CSVLogger
 from keras import regularizers
 from keras.optimizers import Adam
 
