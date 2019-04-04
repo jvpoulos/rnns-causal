@@ -150,10 +150,27 @@
 
 \section{Descriptive statistics}
 
+
+\begin{figure*}[htbp]
+	\centering
+	\begin{subfigure}[t]{0.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/educ-dens.png}
+		\caption{Unweighted \label{educ-dense}} 
+	\end{subfigure}
+	~ 
+	\begin{subfigure}[t]{0.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/educ-dens-w.png}
+		\caption{Weighted\label{educ-dense-w}}
+	\end{subfigure}
+	\caption{Pre-period densities of log per-capita state government education spending by treatment status. Density in \ref{educ-dense-w} weighted by propensity score.} 
+\end{figure*}
+
 \begin{figure}[htbp]
 	\begin{center}
 		\includegraphics[width=0.8\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/educ-dens.png} \\
-		\caption{Pre-and post-period densities of log per-capita state government education spending by treatment status.  \label{educ-dense}} 
+		\caption{(Left) Pre-period unweighted densities of log per-capita state government education spending by treatment status. (Right)  \label{educ-dense}} 
 	\end{center}
 \end{figure}
 

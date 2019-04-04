@@ -50,24 +50,23 @@ write.csv(train_data,paste0(data.directory,"educ-x.csv"),row.names = FALSE)
 write.csv(test_data,paste0(data.directory,"educ-y.csv"),row.names = FALSE)
 write.csv(predicted,paste0(data.directory,"educ-w.csv"),row.names = FALSE)
 
-## Plot public education spending by pre/post and treatment status
+## Plot public education spending (pre) by treatment status
 
 require(ggplot2)
 require(reshape2)
 
-df <- data.frame(t(Y),check.names = FALSE)
+df <- data.frame(t(Y)[1:(t0-1),][,colnames(t(Y))%in% c(colnames(train_data),colnames(test_data))],check.names = FALSE) #pre-period
 
 df$id <- rownames(df)
 
 df.m <- melt(df, "id")
-df.m$time <- factor(ifelse(df.m$id<1869,"Pre-period","Post-period")) # compare xt vs xc, weighted 
-levels(df.m$time ) <- rev( levels(df.m$time ))
 df.m$status <- factor(ifelse(df.m$variable%in%treated.indices,"Treated","Control"))
 
-df.m <- df.m[df.m$time!="Post-period" | df.m$status!="Treated",] # Censor Y_t
+df.m <- merge(df.m, t(rbind("weights"=predicted,"variable"=(names(predicted)))), by="variable", all.x = TRUE)
+
+df.m$weights <- as.numeric(levels(df.m$weights))[df.m$weights]
 
 p <- ggplot(data = df.m, aes(x=value)) + geom_density(aes(fill=status), alpha = 0.4) +
-  facet_wrap( ~ time) + 
   scale_fill_brewer(palette = "Set1") +
   ylab("Density") + 
   xlab("Log per-capita education spending") +
@@ -76,11 +75,27 @@ p <- ggplot(data = df.m, aes(x=value)) + geom_density(aes(fill=status), alpha = 
 
 ggsave(paste0(results.directory,"plots/educ-dens.png"), p, width=8.5, height=11)
 
+pw <- ggplot(data = df.m, aes(x=value)) + geom_density(aes(fill=status,weights=weights), alpha = 0.4) +
+  scale_fill_brewer(palette = "Set1") +
+  ylab("Density") + 
+  xlab("Log per-capita education spending") +
+  scale_fill_manual(values = c("red","blue"), labels= c("Control", "Treated"), name="Treatment status") +
+  theme(legend.justification = c(0.95, 0.95), legend.position = c(0.95, 0.95),legend.background = element_rect(colour = "black"))
+
+ggsave(paste0(results.directory,"plots/educ-dens-w.png"), pw, width=8.5, height=11)
+
 # two-sample t-test
-X.c <- train_data[as.numeric(rownames(df))<1869,]
-X.t <-test_data[as.numeric(rownames(df))<1869,]
+X.c <- train_data[as.numeric(rownames(train_data))<1869,]
+X.t <-test_data[as.numeric(rownames(train_data))<1869,]
 
 t.test(X.t,X.c,alternative="two.sided", conf.level = 0.95)
 
 library(weights)
-wtd.t.test(X.c, X.t, weight=train_w, samedata = FALSE, bootse=TRUE)
+
+predicted.test <- predicted[names(predicted) %in% colnames(test_data)]
+
+predicted.test <-predicted.test[order(match(names(predicted.test),colnames(test_data)))]
+
+test_w <- matrix(predicted.test ,nrow=(t0-1),ncol=length(predicted.test),byrow=TRUE)
+
+wtd.t.test(X.c, X.t, weight=train_w, weighty=test_w, samedata = FALSE, bootse=TRUE)
