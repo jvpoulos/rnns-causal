@@ -144,10 +144,6 @@ def test_model():
 
     np.savetxt("../results/encoder-decoder/{}/encoder-decoder-{}-train.csv".format(dataname,dataname), preds_train, delimiter=",")
 
-    # get gradients 
-    ig = integrated_gradients(model)
-    print(ig.explain([dataXC,wXC]))
-
     print('Generate predictions on test set')
 
     wy = np.array(pd.read_csv("../data/{}-wy.csv".format(dataname)))    
