@@ -28,6 +28,7 @@ data <- data.matrix(t(Y_obs)) # T x N
 train_data <- data[,!colnames(data)%in% treated.indices] # train on control units
 
 test_data <- data[,colnames(data)%in% treated.indices] # treated units
+set.seed(1280)
 train_data <- train_data[, sample(1:ncol(train_data), ncol(test_data))] # dimensional parity with test set
 
 # importance weight matrix
@@ -37,18 +38,33 @@ funds.covars <- readRDS("/media/jason/Dropbox/github/land-reform/data/capacity-c
 X <- data.frame(funds.covars) 
 X$treat <- ifelse(rownames(X) %in% treated.indices, 1, 0)
 
-logitMod <- glm(treat ~ ., data=X, family=binomial(link="logit"))
+set.seed(1280)
+training.indices <- sample(nrow(X), ceiling(nrow(X)*0.75))
 
-predicted <- plogis(predict(logitMod, X))  # predicted scores
-predicted.train <- predicted[names(predicted) %in% colnames(train_data)]
+logitMod <- glm(treat ~ ., data=X[training.indices,], family=binomial(link="logit"))
+
+predicted <- plogis(predict(logitMod, X[-training.indices,][,-ncol(X)]))  # predicted scores
+
+library(InformationValue)
+plotROC(X[-training.indices,][,ncol(X)], predicted) # ROC 83.33%
+
+predicted.all <- plogis(predict(logitMod, X))  # predicted scores on full training set
+predicted.train <- predicted.all[names(predicted.all) %in% colnames(train_data)]
 
 predicted.train <-predicted.train[order(match(names(predicted.train),colnames(train_data)))]
 
-train_w <- matrix(predicted.train ,nrow=(t0-1),ncol=length(predicted.train),byrow=TRUE)
+train_w <- matrix(predicted.train ,nrow=nrow(train_data),ncol=length(predicted.train),byrow=TRUE)
+
+predicted.test <- predicted.all[names(predicted.all) %in% colnames(test_data)]
+
+predicted.test <-predicted.test[order(match(names(predicted.test),colnames(test_data)))]
+
+test_w <- matrix(predicted.test ,nrow=nrow(test_data),ncol=length(predicted.test),byrow=TRUE)
 
 write.csv(train_data,paste0(data.directory,"educ-x.csv"),row.names = FALSE)
 write.csv(test_data,paste0(data.directory,"educ-y.csv"),row.names = FALSE)
-write.csv(predicted,paste0(data.directory,"educ-w.csv"),row.names = FALSE)
+write.csv(train_w,paste0(data.directory,"educ-wx.csv"),row.names = FALSE)
+write.csv(test_w,paste0(data.directory,"educ-wy.csv"),row.names = FALSE)
 
 ## Plot public education spending (pre) by treatment status
 
@@ -92,10 +108,4 @@ t.test(X.t,X.c,alternative="two.sided", conf.level = 0.95)
 
 library(weights)
 
-predicted.test <- predicted[names(predicted) %in% colnames(test_data)]
-
-predicted.test <-predicted.test[order(match(names(predicted.test),colnames(test_data)))]
-
-test_w <- matrix(predicted.test ,nrow=(t0-1),ncol=length(predicted.test),byrow=TRUE)
-
-wtd.t.test(X.c, X.t, weight=train_w, weighty=test_w, samedata = FALSE, bootse=TRUE)
+wtd.t.test(X.c, X.t, weight=train_w[1:(t0-1),], weighty=test_w[1:(t0-1),], samedata = FALSE, bootse=TRUE) 
