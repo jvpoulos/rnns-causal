@@ -50,9 +50,10 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
   ## Matrices for saving RMSE values
   
   MCPanel_RMSE_test <- matrix(0L,num_runs,length(T0))
-  SVD_RMSE_test <- matrix(0L,num_runs,length(T0))
-  PCA_RMSE_test <- matrix(0L,num_runs,length(T0))
- # EN_RMSE_test <- matrix(0L,num_runs,length(T0))
+  LSTM_RMSE_test <- matrix(0L,num_runs,length(T0))
+  RVAE_RMSE_test <- matrix(0L,num_runs,length(T0))
+  ED_RMSE_test <- matrix(0L,num_runs,length(T0))
+#  EN_RMSE_test <- matrix(0L,num_runs,length(T0))
   ENT_RMSE_test <- matrix(0L,num_runs,length(T0))
   DID_RMSE_test <- matrix(0L,num_runs,length(T0))
   ADH_RMSE_test <- matrix(0L,num_runs,length(T0))
