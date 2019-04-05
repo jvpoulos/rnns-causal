@@ -7,14 +7,12 @@ library(MCPanel)
 library(glmnet)
 library(ggplot2)
 library(latex2exp)
-library(missMDA)
-library(bcv)
 
 # Setup parallel processing 
 library(parallel)
 library(doParallel)
 
-cores <- 28#detectCores()
+cores <- detectCores()
 
 cl <- parallel::makeForkCluster(cores)
 
