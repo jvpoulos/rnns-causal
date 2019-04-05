@@ -117,7 +117,7 @@ def create_lstm_vae(nb_features,
         xent_loss = objectives.mse(x, x_decoded_mean)
         kl_loss = - 0.5 * K.mean(1 + z_log_sigma - K.square(z_mean) - K.exp(z_log_sigma))
         loss = xent_loss + kl_loss
-        return K.dot(loss,weights)
+        return loss*K.mean(weights,2) # mean across  nb_features
 
     cl = wrapped_partial(vae_loss, weights=weights_tensor)
 
