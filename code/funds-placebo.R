@@ -33,7 +33,7 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
   treat_y <- Y[rownames(Y)%in%treated.indices,] 
   
   ## Working with the rest of matrix
-  treat <- treat[!rownames(treat)%in%rownames(treat_y),] 
+  treat <- treat[!rownames(treat)%in%c(rownames(treat_y),"TN"),] #randomly exclude TN for parity
   Y <- Y[!rownames(Y)%in%rownames(treat_y),] 
   Y.missing <- Y.missing[!rownames(Y.missing)%in%rownames(treat_y),] 
   
@@ -248,6 +248,6 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
   }
 }
 
-treat_indices_order <- c("CA", "CO", "IA", "KS", "MI", "MN", "MO", "NE", "OH", "OR", "SD", "WA", "WI", "IL", "NV", "ID", "MT", "ND",  "UT", "AL", "MS", "AR", "FL", "LA", "IN", "NM", "WY", "AZ", "OK", "AK")
+treat_indices_order <- c("CA", "IA", "KS", "MI", "MN", "MO", "OH", "OR", "WI", "IL", "NV", "AL", "MS", "FL", "LA", "IN")
 
 CapacitySim(capacity.outcomes,d="educ.pc",sim=1,treated.indices = treat_indices_order)
