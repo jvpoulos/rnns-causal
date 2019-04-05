@@ -34,8 +34,8 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
   
   ## Working with the rest of matrix
   treat <- treat[!rownames(treat)%in%c(rownames(treat_y),"TN"),] #randomly exclude TN for parity
-  Y <- Y[!rownames(Y)%in%rownames(treat_y),] 
-  Y.missing <- Y.missing[!rownames(Y.missing)%in%rownames(treat_y),] 
+  Y <- Y[!rownames(Y)%in%c(rownames(treat_y),"TN"),] 
+  Y.missing <- Y.missing[!rownames(Y.missing)%in%c(rownames(treat_y),"TN"),] 
   
   ## Setting up the configuration
   N <- nrow(treat)
