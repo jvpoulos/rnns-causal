@@ -116,7 +116,7 @@ def test_model():
 
     print('dataXT shape:', dataXT.shape)
 
-    preds_test = model.predict([dataXT, wXT], batch_size=int(nb_batches), verbose=1)
+    preds_test = model.predict(dataXT, batch_size=int(nb_batches), verbose=1)
 
     preds_test = np.squeeze(preds_test)
 
