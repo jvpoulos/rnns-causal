@@ -92,8 +92,8 @@ def test_model():
     print('dataXC shape:', dataXC.shape)
     print('dataYC shape:', dataYC.shape)
 
-    nb_features = dataX.shape[2]
-    output_dim = dataY.shape[1]
+    nb_features = dataXC.shape[2]
+    output_dim = dataYC.shape[1]
 
     # create and fit the LSTM network
     print('creating model...')
