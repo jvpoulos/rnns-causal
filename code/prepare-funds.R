@@ -78,7 +78,7 @@ df$id <- rownames(df)
 df.m <- melt(df, "id")
 df.m$status <- factor(ifelse(df.m$variable%in%treated.indices,"Treated","Control"))
 
-df.m <- merge(df.m, t(rbind("weights"=predicted,"variable"=(names(predicted)))), by="variable", all.x = TRUE)
+df.m <- merge(df.m, t(rbind("weights"=predicted.all,"variable"=(names(predicted.all)))), by="variable", all.x = TRUE)
 
 df.m$weights <- as.numeric(levels(df.m$weights))[df.m$weights]
 
@@ -87,7 +87,7 @@ p <- ggplot(data = df.m, aes(x=value)) + geom_density(aes(fill=status), alpha = 
   ylab("Density") + 
   xlab("Log per-capita education spending") +
   scale_fill_manual(values = c("red","blue"), labels= c("Control", "Treated"), name="Treatment status") +
-  theme(legend.justification = c(0.95, 0.95), legend.position = c(0.95, 0.95),legend.background = element_rect(colour = "black"))
+  theme(legend.justification = c(0.95, 0.95), legend.position = c(0.25, 0.95),legend.background = element_rect(colour = "black"))
 
 ggsave(paste0(results.directory,"plots/educ-dens.png"), p, width=8.5, height=11)
 
@@ -96,7 +96,7 @@ pw <- ggplot(data = df.m, aes(x=value)) + geom_density(aes(fill=status,weights=w
   ylab("Density") + 
   xlab("Log per-capita education spending") +
   scale_fill_manual(values = c("red","blue"), labels= c("Control", "Treated"), name="Treatment status") +
-  theme(legend.justification = c(0.95, 0.95), legend.position = c(0.95, 0.95),legend.background = element_rect(colour = "black"))
+  theme(legend.justification = c(0.95, 0.95), legend.position = c(0.25, 0.95),legend.background = element_rect(colour = "black"))
 
 ggsave(paste0(results.directory,"plots/educ-dens-w.png"), pw, width=8.5, height=11)
 

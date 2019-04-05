@@ -21,10 +21,6 @@ os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
 from tensorflow.python.client import device_lib
 print(device_lib.list_local_devices())
 
-# analysis = sys.argv[-1] # 'treated' or 'control'
-# dataname = sys.argv[-2] 
-
-# epoches = int(sys.argv[-3])
 
 def create_model(n_pre, n_post, nb_features, output_dim):
     """ 
@@ -57,7 +53,7 @@ def train_model(model, dataX, dataY, epoch_count, batches):
 
     stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
 
-    csv_logger = CSVLogger('../results/lstm/{}/{}/training_log_{}_{}.csv'.format(dataname,analysis,dataname,analysis), separator=',', append=False)
+    csv_logger = CSVLogger('../results/lstm/{}/{}/training_log_{}_{}.csv'.format(dataname,dataname), separator=',', append=False)
 
     history = model.fit(dataX, 
         dataY, 
@@ -73,35 +69,20 @@ def test_model():
     n_pre =int(t0)-1
     seq_len = int(T)
 
-    y = np.array(pd.read_csv("../data/{}-y.csv".format(dataname)))
     x = np.array(pd.read_csv("../data/{}-x.csv".format(dataname)))    
 
-    if analysis == 'treated': 
-        print('raw x shape', x.shape)   
+    print('raw x shape', x.shape)   
 
-        print('raw y shape', y.shape)   
-
-        dX, dY = [], []
-        for i in range(seq_len-n_pre-n_post):
-            dX.append(x[i:i+n_pre]) # controls are inputs
-            # dY.append(y[i+n_pre:i+n_pre+n_post]) # treated is output
-            dY.append(y[i+n_pre])
-
-    if analysis == 'control': 
-
-        print('raw x shape', x.shape)   
-
-        dX, dY = [], []
-        for i in range(seq_len-n_pre-n_post):
-            dX.append(x[i:i+n_pre]) # controls are inputs
-            # dY.append(x[i+n_pre:i+n_pre+n_post]) # controls are outputs
-            dY.append(x[i+n_pre])
+    dXC, dYC = [], []
+    for i in range(seq_len-n_pre-n_post):
+        dXC.append(x[i:i+n_pre]) # controls are inputs
+        dYC.append(x[i+n_pre:i+n_pre+n_post]) # controls are outputs
     
-    dataX = np.array(dX)
-    dataY = np.array(dY)
+    dataXC = np.array(dXC)
+    dataYC = np.array(dYC)
 
-    print('dataX shape:', dataX.shape)
-    print('dataY shape:', dataY.shape)
+    print('dataXC shape:', dataXC.shape)
+    print('dataYC shape:', dataYC.shape)
 
     nb_features = dataX.shape[2]
     output_dim = dataY.shape[1]
@@ -109,21 +90,33 @@ def test_model():
     # create and fit the LSTM network
     print('creating model...')
     model = create_model(n_pre, n_post, nb_features, output_dim)
-    train_model(model, dataX, dataY, int(epochs), int(nb_batches))
+    train_model(model, dataXC, dataYC, int(epochs), int(nb_batches))
 
     # now test
 
-    print('Generate predictions')
+    print('Generate predictions on test set')
 
-    predict = model.predict(dataX, batch_size=int(nb_batches), verbose=0)
+    y = np.array(pd.read_csv("../data/{}-y.csv".format(dataname)))
+     
+    print('raw y shape', y.shape)   
 
-    predict = np.squeeze(predict)
+    dXT = []
+    for i in range(seq_len-n_pre-n_post):
+        dXT.append(y[i:i+n_pre]) # treated is input
 
-    print('predictions shape =', predict.shape)
+    dataXT = np.array(dXT)
 
-    print('Saving to results/lstm/{}/{}/lstm-{}-{}-test.csv'.format(dataname,analysis,analysis,dataname))
+    print('dataXT shape:', dataXT.shape)
 
-    np.savetxt("../results/lstm/{}/{}/lstm-{}-{}-test.csv".format(dataname,analysis,analysis,dataname), predict, delimiter=",")
+    preds_test = model.predict([dataXT, wXT], batch_size=int(nb_batches), verbose=1)
+
+    preds_test = np.squeeze(preds_test)
+
+    print('predictions shape =', preds_test.shape)
+
+    print('Saving to results/lstm/{}/lstm-{}-test.csv'.format(dataname,dataname))
+
+    np.savetxt("../results/lstm/{}/lstm-{}-test.csv".format(dataname,dataname), preds_test, delimiter=",")
 
 def main():
     test_model()

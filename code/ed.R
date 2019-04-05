@@ -21,8 +21,7 @@ ed <- function(Y_obs,treat_indices,d, t0, T){
   
   py <- import_main()
   py$dataname <- d
-  py$analysis <- 'control'
-  py$epochs <- 2500
+  py$epochs <- 1000
   py$gpu <- 0
   py$t0 <- t0
   py$T <- T
@@ -30,7 +29,7 @@ ed <- function(Y_obs,treat_indices,d, t0, T){
   
   source_python("train_encoder_decoder_sim.py")
   
-  ed.pred.control <- as.matrix(read_csv("../results/encoder-decoder/basque/control/encoder-decoder-control-basque-test.csv", col_names = FALSE))
+  ed.pred.control <- as.matrix(read_csv(paste0("../results/encoder-decoder/",d,"/encoder-decoder-",d,"-test.csv"), col_names = FALSE))
   
   return(t(ed.pred.control))
 }

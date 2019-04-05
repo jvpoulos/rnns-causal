@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+import sys
+import math
 import numpy as np
 import pandas as pd
 
@@ -11,15 +13,29 @@ from keras.layers.core import Flatten, Dense, Dropout, Lambda
 from keras.optimizers import SGD, RMSprop, Adam
 from keras import regularizers
 from keras import objectives
-from keras.callbacks import CSVLogger, EarlyStopping
+from keras.callbacks import ModelCheckpoint, CSVLogger
+
+from functools import partial, update_wrapper
+
+def wrapped_partial(func, *args, **kwargs):
+    partial_func = partial(func, *args, **kwargs)
+    update_wrapper(partial_func, func)
+    return partial_func
 
 # Select gpu
 import os
+gpu = sys.argv[-6]
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
 os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
 
 from tensorflow.python.client import device_lib
 print(device_lib.list_local_devices())
+
+T = sys.argv[-1] 
+t0 = sys.argv[-2] 
+dataname = sys.argv[-3] 
+nb_batches = int(sys.argv[-4])
+nb_epochs = int(sys.argv[-5])
 
 def create_lstm_vae(nb_features, 
     n_pre, 
@@ -29,7 +45,6 @@ def create_lstm_vae(nb_features,
     latent_dim,
     initialization,
     activation,
-    lr,
     penalty,
     dropout,
     epsilon_std=1.):
@@ -52,6 +67,7 @@ def create_lstm_vae(nb_features,
     """
 
     x = Input(shape=(n_pre, nb_features), name='Encoder_inputs')
+    weights_tensor = Input(shape=(n_pre, nb_features), name="Weights")
 
     # LSTM encoding
     h = LSTM(intermediate_dim, kernel_initializer=initialization, name='Encoder')(x)
@@ -83,7 +99,7 @@ def create_lstm_vae(nb_features,
     x_decoded_mean = decoder_mean(h_decoded)
     
     # end-to-end autoencoder
-    vae = Model(x, x_decoded_mean)
+    vae = Model([x, weights_tensor], x_decoded_mean)
 
     # encoder, from inputs to latent space
     encoder = Model(x, z_mean)
@@ -97,13 +113,15 @@ def create_lstm_vae(nb_features,
     _x_decoded_mean = decoder_mean(_h_decoded)
     generator = Model(decoder_input, _x_decoded_mean)
     
-    def vae_loss(x, x_decoded_mean):
+    def vae_loss(x, x_decoded_mean, weights):
         xent_loss = objectives.mse(x, x_decoded_mean)
         kl_loss = - 0.5 * K.mean(1 + z_log_sigma - K.square(z_mean) - K.exp(z_log_sigma))
         loss = xent_loss + kl_loss
-        return loss
+        return K.dot(loss,weights)
 
-    vae.compile(optimizer=Adam(lr=lr), loss=vae_loss)
+    cl = wrapped_partial(vae_loss, weights=weights_tensor)
+
+    vae.compile('adam', cl)
     
     return vae, encoder, generator
 
@@ -113,32 +131,40 @@ def get_data():
     n_post = int(1)
     n_pre =int(t0)-1
     seq_len = int(T)
+
+    wx = np.array(pd.read_csv("../data/{}-wx.csv".format(dataname)))    
+
+    print('raw wx shape', wx.shape)   
                 
     x = np.array(pd.read_csv("../data/{}-x.csv".format(dataname)))
 
     print('raw x shape', x.shape)   
 
+    wy = np.array(pd.read_csv("../data/{}-wy.csv".format(dataname)))    
+
+    print('raw wy shape', wy.shape)  
+
     y = np.array(pd.read_csv("../data/{}-y.csv".format(dataname)))
 
     print('raw y shape', y.shape) 
 
-    dXC, dXT = [], []
+    dXC,  wXC, dXT,  wXT  = [], [], [], []
     for i in range(seq_len-n_pre-n_post):
         dXC.append(x[i:i+n_pre]) # controls are inputs
+        wXC.append(wx[i:i+n_pre]) 
         dXT.append(y[i:i+n_pre]) # controls are inputs
-    return np.array(dXC),np.array(dXT),n_pre,n_post     
+        wXT.append(wy[i:i+n_pre]) 
+    return np.array(dXC),np.array(wXC),np.array(dXT),np.array(wXT),n_pre,n_post     
 
 if __name__ == "__main__":
-    x, y, n_pre, n_post = get_data() 
+    x, wx, y, wy, n_pre, n_post = get_data() 
     nb_features = x.shape[2]
     batch_size = 1
     penalty=0.001
-    lr=0.001
     dr=0.5
 
-    if dataname == 'germany':
-        penalty=0
-        lr=0.00005
+    print('x samples shape', x.shape)     
+    print('wx samples shape', wx.shape)  
 
     vae, enc, gen = create_lstm_vae(nb_features, 
         n_pre=n_pre, 
@@ -148,28 +174,41 @@ if __name__ == "__main__":
         latent_dim=200,
         initialization = 'glorot_normal',
         activation = 'linear',
-        lr = lr,
         penalty=penalty,
         dropout=dr,
         epsilon_std=1.)
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
+    filepath="../results/rvae/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
+    checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=5, save_best_only=True)
 
     csv_logger = CSVLogger('../results/rvae/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
 
-    vae.fit(x, x, 
-        epochs=int(epochs),
-        verbose=0,
-        callbacks=[stopping,csv_logger],
+    vae.fit([x,wx], x, 
+        epochs=int(nb_epochs),
+        verbose=1,
+        callbacks=[checkpointer,csv_logger],
         validation_split=0.2)
 
-	# now test
+    # now test
+
+    print('Generate predictions on full training set')
+
+    preds_train = vae.predict([wx,x], batch_size=batch_size, verbose=0)
+
+    preds_train = np.squeeze(preds_train)
+
+    print('predictions shape =', preds_train.shape)
+
+    print('Saving to results/rvae/{}/rvae-{}-train.csv'.format(dataname,dataname))
+
+    np.savetxt("../results/rvae/{}/rvae-{}-train.csv".format(dataname,dataname), preds_train, delimiter=",")
 
     print('Generate predictions on test set')
 
     print('y samples shape', y.shape)     
+    print('wy samples shape', wy.shape)  
 
-    preds_test = vae.predict(y, batch_size=batch_size, verbose=0)
+    preds_test = vae.predict([wy,y], batch_size=batch_size, verbose=0)
 
     preds_test = np.squeeze(preds_test)
 
