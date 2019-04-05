@@ -84,7 +84,7 @@ def test_model():
     dXC, dYC = [], []
     for i in range(seq_len-n_pre-n_post):
         dXC.append(x[i:i+n_pre]) # controls are inputs
-        dYC.append(x[i+n_pre]) # controls are outputs
+        dYC.append(x[i+n_pre:i+n_pre+n_post]) # controls are outputs
     
     dataXC = np.array(dXC)
     dataYC = np.array(dYC)
