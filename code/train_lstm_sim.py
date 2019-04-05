@@ -35,7 +35,7 @@ def create_model(n_pre, n_post, nb_features, output_dim):
     penalty=0.1
     dr=0.5  
 
-    inputs = Input(shape=(n_pre, nb_features), name="Inputs")  
+    inputs = Input(shape=(n_pre, nb_features,), name="Inputs")  
     dropout_1 = Dropout(dr)(inputs)
     lstm_1 = LSTM(output_dim, activation=activation, kernel_regularizer=regularizers.l2(penalty), kernel_initializer=initialization, return_sequences=False)(dropout_1) 
 
@@ -76,7 +76,7 @@ def test_model():
     dXC, dYC = [], []
     for i in range(seq_len-n_pre-n_post):
         dXC.append(x[i:i+n_pre]) # controls are inputs
-        dYC.append(x[i+n_pre:i+n_pre+n_post]) # controls are outputs
+        dYC.append(x[i+n_pre]) # controls are outputs
     
     dataXC = np.array(dXC)
     dataYC = np.array(dYC)
