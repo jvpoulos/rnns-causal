@@ -61,7 +61,7 @@ def train_sinus(model, dataX, dataY, epoch_count, batches):
 
     stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
 
-    csv_logger = CSVLogger('../results/encoder-decoder/{}/{}/training_log_{}_{}.csv'.format(dataname,dataname), separator=',', append=False)
+    csv_logger = CSVLogger('../results/encoder-decoder/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
 
     history = model.fit(dataX, 
         dataY, 
