@@ -12,7 +12,7 @@ library(latex2exp)
 library(parallel)
 library(doParallel)
 
-cores <- 14 #detectCores()
+cores <- detectCores()
 
 cl <- parallel::makeForkCluster(cores)
 

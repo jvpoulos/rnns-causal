@@ -77,7 +77,7 @@ def train_model(model, dataX, dataY, weights, nb_epoches, nb_batches):
     # Prepare model checkpoints and callbacks
 
     filepath="../results/encoder-decoder/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
-    checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=5, save_best_only=True)
+    checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=25, save_best_only=True)
 
     csv_logger = CSVLogger('../results/encoder-decoder/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
 

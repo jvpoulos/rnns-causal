@@ -21,7 +21,7 @@ treat[rownames(treat)%in% treated.indices,][,as.numeric(colnames(treat)) >= 1869
 treat_mat <- 1-treat
 Y_obs <- Y * treat_mat
 
-# Converting the data to a floating point matrix
+# converting the data to a floating point matrix
 data <- data.matrix(t(Y_obs)) # T x N
 
 # Splits
@@ -43,10 +43,10 @@ training.indices <- sample(nrow(X), ceiling(nrow(X)*0.75))
 
 logitMod <- glm(treat ~ ., data=X[training.indices,], family=binomial(link="logit"))
 
-predicted <- plogis(predict(logitMod, X[-training.indices,][,-ncol(X)]))  # predicted scores
+predicted <- plogis(predict(logitMod, X[-training.indices,][,-ncol(X)]))  # convert it into prediction probability scores that is bound between 0 and 1
 
 library(InformationValue)
-plotROC(X[-training.indices,][,ncol(X)], predicted) # ROC 83.33%
+plotROC(X[-training.indices,][,ncol(X)], predicted) 
 
 predicted.all <- plogis(predict(logitMod, X))  # predicted scores on full training set
 predicted.train <- predicted.all[names(predicted.all) %in% colnames(train_data)]
@@ -54,13 +54,23 @@ predicted.train <- predicted.all[names(predicted.all) %in% colnames(train_data)]
 predicted.train <-predicted.train[order(match(names(predicted.train),colnames(train_data)))]
 
 train_w <- matrix(predicted.train ,nrow=nrow(train_data),ncol=length(predicted.train),byrow=TRUE)
+rownames(train_w) <- rownames(train_data)
+colnames(train_w) <- colnames(train_data)
+
+# propensity score increases as t increase (penalize earlier weights)
+train_w <- train_w*(log(1:nrow(train_data))-min(log(1:nrow(train_data))))/(max(log(1:nrow(train_data)))-min(log(1:nrow(train_data)))) # norm log values
 
 predicted.test <- predicted.all[names(predicted.all) %in% colnames(test_data)]
 
 predicted.test <-predicted.test[order(match(names(predicted.test),colnames(test_data)))]
 
 test_w <- matrix(predicted.test ,nrow=nrow(test_data),ncol=length(predicted.test),byrow=TRUE)
+rownames(test_w) <- rownames(test_data)
+colnames(test_w) <- colnames(test_data)
 
+# propensity score increases as t increase (penalize earlier weights)
+test_w <- test_w*(log(1:nrow(test_data))-min(log(1:nrow(test_data))))/(max(log(1:nrow(test_data)))-min(log(1:nrow(test_data)))) # norm log values
+  
 write.csv(train_data,paste0(data.directory,"educ-x.csv"),row.names = FALSE)
 write.csv(test_data,paste0(data.directory,"educ-y.csv"),row.names = FALSE)
 write.csv(train_w,paste0(data.directory,"educ-wx.csv"),row.names = FALSE)
@@ -81,6 +91,8 @@ df.m$status <- factor(ifelse(df.m$variable%in%treated.indices,"Treated","Control
 df.m <- merge(df.m, t(rbind("weights"=predicted.all,"variable"=(names(predicted.all)))), by="variable", all.x = TRUE)
 
 df.m$weights <- as.numeric(levels(df.m$weights))[df.m$weights]
+df.m$weights[df.m$status=="Control"] <- df.m$weights[df.m$status=="Control"] /sum(df.m$weights[df.m$status=="Control"] ) # normalize weights per group
+df.m$weights[df.m$status=="Treated"] <- df.m$weights[df.m$status=="Treated"] /sum(df.m$weights[df.m$status=="Treated"] ) # 
 
 p <- ggplot(data = df.m, aes(x=value)) + geom_density(aes(fill=status), alpha = 0.4) +
   scale_fill_brewer(palette = "Set1") +
@@ -91,7 +103,7 @@ p <- ggplot(data = df.m, aes(x=value)) + geom_density(aes(fill=status), alpha = 
 
 ggsave(paste0(results.directory,"plots/educ-dens.png"), p, width=8.5, height=11)
 
-pw <- ggplot(data = df.m, aes(x=value)) + geom_density(aes(fill=status,weights=weights), alpha = 0.4) +
+pw <- ggplot(data = df.m, aes(x=value)) + geom_density(aes(fill=status, weights=weights), alpha = 0.4) +
   scale_fill_brewer(palette = "Set1") +
   ylab("Density") + 
   xlab("Log per-capita education spending") +

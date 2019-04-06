@@ -14,7 +14,7 @@ keras.backend.tensorflow_backend.set_session(sess)
 from keras import backend as K
 from keras.models import Model
 from keras.layers import LSTM, Input, GRU, TimeDistributed, Dense, RepeatVector, Dropout
-from keras.callbacks import CSVLogger, EarlyStopping
+from keras.callbacks import CSVLogger
 from keras import regularizers
 from keras.optimizers import Adam
 
@@ -62,8 +62,6 @@ def train_model(model, dataX, dataY, epoch_count, batches):
 
     # Prepare model checkpoints and callbacks
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
-
     csv_logger = CSVLogger('../results/encoder-decoder/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
 
     history = model.fit(dataX, 
@@ -71,7 +69,7 @@ def train_model(model, dataX, dataY, epoch_count, batches):
         batch_size=batches, 
         verbose=0,
         epochs=epoch_count, 
-        callbacks=[stopping,csv_logger],
+        callbacks=[csv_logger],
         validation_split=0.2)
 
 def test_model():

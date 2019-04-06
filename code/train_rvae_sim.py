@@ -16,7 +16,7 @@ from keras.layers.core import Flatten, Dense, Dropout, Lambda
 from keras.optimizers import SGD, RMSprop, Adam
 from keras import regularizers
 from keras import objectives
-from keras.callbacks import CSVLogger, EarlyStopping
+from keras.callbacks import CSVLogger
 
 # Select gpu
 import os
@@ -154,14 +154,12 @@ if __name__ == "__main__":
         dropout=dr,
         epsilon_std=1.)
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
-
     csv_logger = CSVLogger('../results/rvae/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
 
     vae.fit(x, x, 
         epochs=int(epochs),
         verbose=0,
-        callbacks=[stopping,csv_logger],
+        callbacks=[csv_logger],
         validation_split=0.2)
 
 	# now test
