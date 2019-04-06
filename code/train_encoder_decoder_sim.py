@@ -5,9 +5,11 @@ import math
 import numpy as np
 import pandas as pd
 
+import keras
 import tensorflow as tf
-gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
-sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=True))
+gpu_options = tf.GPUOptions(allow_growth=True)
+sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+keras.backend.tensorflow_backend.set_session(sess)
 
 from keras import backend as K
 from keras.models import Model
@@ -59,7 +61,7 @@ def create_model(n_pre, n_post, nb_features, output_dim):
 
     return model
 
-def train_sinus(model, dataX, dataY, epoch_count, batches):
+def train_model(model, dataX, dataY, epoch_count, batches):
 
     # Prepare model checkpoints and callbacks
 
