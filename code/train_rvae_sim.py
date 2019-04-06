@@ -141,10 +141,6 @@ if __name__ == "__main__":
     lr=0.0005
     dr=0.5
 
-    if dataname == 'germany':
-        penalty=0
-        lr=0.00005
-
     vae, enc, gen = create_lstm_vae(nb_features, 
         n_pre=n_pre, 
         n_post=n_post,
