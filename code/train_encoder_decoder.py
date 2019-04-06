@@ -48,6 +48,7 @@ def create_model(n_pre, n_post, nb_features, output_dim):
     activation = 'linear'
     penalty=0.1
     dr=0.5
+    lr = 0.0005
 
     encoder_hidden = 128
     decoder_hidden = 128
@@ -65,7 +66,7 @@ def create_model(n_pre, n_post, nb_features, output_dim):
 
     model = Model([inputs, weights_tensor], output)
 
-    model.compile('adam', cl)
+    model.compile(optimizer=Adam(lr=lr), loss=cl)
 
     print(model.summary()) 
 

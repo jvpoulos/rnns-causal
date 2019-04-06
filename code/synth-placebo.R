@@ -25,7 +25,7 @@ synth.control.outcomes <- readRDS("synth-control-outcomes.rds")
 
 ## Reading data
 SynthSim <- function(outcomes,d){
-  Y <- outcomes[[d]]$M # NxT 
+  Y <- log(outcomes[[d]]$M) # NxT log outcomes
   treat <- outcomes[[d]]$mask # NxT masked matrix 
 
   ## Setting up the configuration

@@ -138,7 +138,7 @@ if __name__ == "__main__":
     nb_features = x.shape[2]
     batch_size = 1
     penalty=0.001
-    lr=0.001
+    lr=0.0005
     dr=0.5
 
     if dataname == 'germany':

@@ -45,6 +45,7 @@ def create_lstm_vae(nb_features,
     latent_dim,
     initialization,
     activation,
+    lr,
     penalty,
     dropout,
     epsilon_std=1.):
@@ -121,7 +122,7 @@ def create_lstm_vae(nb_features,
 
     cl = wrapped_partial(vae_loss, weights=weights_tensor)
 
-    vae.compile('adam', cl)
+    vae.compile(optimizer=Adam(lr=lr), loss=cl)
     
     return vae, encoder, generator
 
@@ -161,6 +162,7 @@ if __name__ == "__main__":
     nb_features = x.shape[2]
     batch_size = 1
     penalty=0.001
+    lr=0.0005
     dr=0.5
 
     print('x samples shape', x.shape)     
@@ -174,6 +176,7 @@ if __name__ == "__main__":
         latent_dim=200,
         initialization = 'glorot_normal',
         activation = 'linear',
+        lr = lr,
         penalty=penalty,
         dropout=dr,
         epsilon_std=1.)

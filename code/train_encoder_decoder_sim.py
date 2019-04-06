@@ -35,12 +35,9 @@ def create_model(n_pre, n_post, nb_features, output_dim):
 
     initialization = 'glorot_normal'
     activation = 'linear'
-    lr = 0.001
+    lr = 0.0005
     penalty=0.1
     dr=0.5
-
-    if dataname == 'germany':
-        dr=0.8
 
     encoder_hidden = 128
     decoder_hidden = 128
@@ -55,7 +52,7 @@ def create_model(n_pre, n_post, nb_features, output_dim):
 
     model = Model(inputs=inputs, output=output)
 
-    model.compile(loss="mean_squared_error", optimizer=Adam(lr=lr))  
+    model.compile(optimizer=Adam(lr=lr), loss="mean_squared_error")  
 
     print(model.summary()) 
 
