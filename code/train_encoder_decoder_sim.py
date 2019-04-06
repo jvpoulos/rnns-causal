@@ -6,9 +6,8 @@ import numpy as np
 import pandas as pd
 
 import tensorflow as tf
-config = tf.ConfigProto()
-config.gpu_options.allow_growth = True
-session = tf.Session(config=config....)
+gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=args.gpu_memory_fraction)
+sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=True))
 
 from keras import backend as K
 from keras.models import Model

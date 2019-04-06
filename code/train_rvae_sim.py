@@ -3,6 +3,10 @@ from __future__ import print_function
 import numpy as np
 import pandas as pd
 
+import tensorflow as tf
+gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=args.gpu_memory_fraction)
+sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=True))
+
 import keras
 from keras import backend as K
 from keras.models import Sequential, Model
