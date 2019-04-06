@@ -14,43 +14,43 @@ I'm skipping whatever remains of this entry
 Warning--empty note in dube2015pooling
 You've used 60 entries,
             2705 wiz_defined-function locations,
-            890 strings with 15224 characters,
-and the built_in function-call counts, 32080 in all, are:
-= -- 3168
-> -- 1600
+            890 strings with 15274 characters,
+and the built_in function-call counts, 31760 in all, are:
+= -- 3124
+> -- 1592
 < -- 29
-+ -- 620
-- -- 555
-* -- 2608
-:= -- 5782
++ -- 617
+- -- 552
+* -- 2606
+:= -- 5764
 add.period$ -- 124
 call.type$ -- 60
-change.case$ -- 514
+change.case$ -- 513
 chr.to.int$ -- 59
 cite$ -- 61
-duplicate$ -- 1503
-empty$ -- 2131
-format.name$ -- 760
-if$ -- 6434
+duplicate$ -- 1469
+empty$ -- 2121
+format.name$ -- 753
+if$ -- 6338
 int.to.chr$ -- 2
 int.to.str$ -- 1
 missing$ -- 52
 newline$ -- 248
 num.names$ -- 240
-pop$ -- 640
+pop$ -- 633
 preamble$ -- 1
-purify$ -- 423
+purify$ -- 422
 quote$ -- 0
-skip$ -- 1034
+skip$ -- 988
 stack$ -- 0
-substring$ -- 1504
-swap$ -- 443
+substring$ -- 1497
+swap$ -- 409
 text.length$ -- 2
 text.prefix$ -- 0
 top$ -- 0
 type$ -- 531
 warning$ -- 1
-while$ -- 245
+while$ -- 246
 width$ -- 0
 write$ -- 705
 (There were 2 error messages)

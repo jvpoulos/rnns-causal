@@ -28,6 +28,11 @@ Amjad, M., Shah, D. and Shen, D. (2018) Robust synthetic control.
 \newblock \textit{The Journal of Machine Learning Research}, \textbf{19},
   802--852.
 
+\bibitem[{Atack(2013)}]{atack2013use}
+Atack, J. (2013) On the use of geographic information systems in economic
+  history: The american transportation revolution revisited.
+\newblock \textit{The Journal of Economic History}, \textbf{73}, 313--338.
+
 \bibitem[{{Athey} et~al.(2017){Athey}, {Bayati}, {Doudchenko}, {Imbens} and
   {Khosravi}}]{athey2017matrix}
 {Athey}, S., {Bayati}, M., {Doudchenko}, N., {Imbens}, G. and {Khosravi}, K.
@@ -276,10 +281,6 @@ Neyman, J. (1923) On the application of probability theory to agricultural
 {Poulos}, J. (2019) {State-Building through Public Land Disposal? An
   Application of Matrix Completion for Counterfactual Prediction}.
 \newblock \textit{arXiv e-prints}, arXiv:1903.08028.
-
-\bibitem[{{Poulos} and {Valle}(2017)}]{2017arXiv171204046P}
-{Poulos}, J. and {Valle}, R. (2017) {Attention networks for image-to-text}.
-\newblock \textit{arXiv e-prints}, arXiv:1712.04046.
 
 \bibitem[{Rubin(1990)}]{rubin1990}
 Rubin, D.~B. (1990) Comment: Neyman (1923) and causal inference in experiments

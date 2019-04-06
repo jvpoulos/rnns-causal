@@ -1,8 +1,2 @@
-\contentsline {section}{\numberline {1}RNNs architecture}{1}{section.1}
-\contentsline {section}{\numberline {2}Descriptive statistics}{3}{section.2}
-\contentsline {section}{\numberline {3}RNNs training history: SCM datasets}{5}{section.3}
-\contentsline {section}{\numberline {4}Estimates on Basque Country data}{8}{section.4}
-\contentsline {section}{\numberline {5}Estimates on California data}{11}{section.5}
-\contentsline {section}{\numberline {6}Estimates on West Germany data}{14}{section.6}
-\contentsline {section}{\numberline {7}RNNs training history: Education spending data}{17}{section.7}
-\contentsline {section}{\numberline {8}Estimates on education spending data}{17}{section.8}
+\contentsline {section}{\numberline {1}Descriptive statistics}{1}{section.1}
+\contentsline {section}{\numberline {2}Estimates on education spending data}{1}{section.2}
