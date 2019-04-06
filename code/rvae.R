@@ -21,7 +21,7 @@ rvae <- function(Y_obs,treat_indices,d, t0, T){
   
   py <- import_main()
   py$dataname <- d
-  py$epochs <- 1000
+  py$epochs <- 1500
   py$gpu <- 0
   py$t0 <- t0
   py$T <- T
