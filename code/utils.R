@@ -34,7 +34,7 @@ PermutationTest<-function(forecast, true, t.stat, n.placebo, np=NULL){
 
 # Invert for CIs
 
-PermutationCI <- function(forecast, true, t.stat, n.placebo, np=NULL, alpha=0.025, l=100, prec=1e-03) {
+PermutationCI <- function(forecast, true, t.stat, n.placebo, np=NULL, alpha=0.025, l=100, prec=1e-05) {
   require(matrixStats)
   # Calculate randomization test confidence interval.
   #
@@ -47,7 +47,7 @@ PermutationCI <- function(forecast, true, t.stat, n.placebo, np=NULL, alpha=0.02
   # Returns:
   #   Vector of per-time-step randomization confidence interval
   # Create vector to store CIs
-  c.range <- round(range(t.stat),2)*2
+  c.range <- round(range(t.stat),abs(log10(prec)))*1.96
   
   CI <- matrix(NA, nrow(forecast), l)
   for(i in 1:l){
