@@ -1,0 +1,95 @@
+*Figures: made in Stata except for Figure 3, which was made in R.
+*Also includes code for Table 9a, made in R.
+
+*Figure 2
+gen difftest2 =round(DIFFusmonthcitymonth)
+
+reg incumbentpercent DIFFusmonthcitymonth unemploymonthlyus CENSUS2000medhhinc logCENSUS2000pop CENSUS2000hispanicpercent CENSUS2000blackpercent CENSUS2000bachdegplus CENSUS2000medhomevalue CENSUS1990medhhinc mayorcouncildum demvs1988 CENSUSlogitalianper2000 CENSUSlogirishper2000  i.year if cityinds==1&cityinds==1, cluster(citystabbr)
+predict pvdiff
+reg incumbentpercent DIFFusmonthcitymonth unemploymonthlyus CENSUS2000medhhinc logCENSUS2000pop CENSUS2000hispanicpercent CENSUS2000blackpercent CENSUS2000bachdegplus CENSUS2000medhomevalue CENSUS1990medhhinc mayorcouncildum demvs1988 CENSUSlogitalianper2000 CENSUSlogirishper2000  i.year if cityinds==1, cluster(citystabbr)
+margins, at(DIFFusmonthcitymonth =(-16(1)6)) atmeans
+*copy margins and ub lb, save to csv, merge on original dataset on difftest2
+
+*once above is merged,:
+set scheme s2mono
+preserve
+drop if DIFFusmonthcitymonth<-10
+twoway (scatter pv difftest2, jitter(2)  ylabel(.3(.1).8))  || connected est lb ub difftest2, xlabel(-10(2)5) ||scatter where DIFFusmonthcitymonth, ms(none) mlabel(pipe) mlabpos(0) legend(off)
+restore
+**gray13 for diamonds, medium for hashes
+
+
+*Figure 3
+tabulate unemploquin, gen(unemploquin)
+tabulate DIFFusmonthcitymonth, gen(DIFFusmonthcitymonth5)
+
+reg incumbentpercent unemploquin2 unemploquin3 unemploquin4 unemploquin5 CENSUS2000medhhinc logCENSUS2000pop CENSUS2000hispanicpercent CENSUS2000blackpercent CENSUS2000bachdegplus CENSUS2000medhomevalue CENSUS1990medhhinc mayorcouncildum demvs1988 CENSUSlogitalianper2000 CENSUSlogirishper2000  i.year if cityinds==1, cluster(citystabbr)
+
+disp  .0195271 -.0253106
+disp  .0224709-.0273055
+disp  .0248947- .0308294
+disp .0856378 -.0295907
+disp  .0195271 +.0253106
+disp  .0224709+.0273055
+disp  .0248947+ .0308294
+disp .0856378 +.0295907
+
+**in R
+library(ggplot2)
+DIFF=c(1,2,3,4,5)
+estn=c(0, .02, .022, .025, .086)
+lbn=c(NA,-.0057835,-.0048346,-.0059347,.0560471)
+ubn=c( NA,.0448377,.0497764,.0557241,.1152285)
+data=data.frame(DIFF, estn, lbn, ubn)
+
+test2<-qplot(DIFF,estn, ylab="Change in Incumbent Percent", xlab="US-city monthly employment")+
+  geom_errorbar(aes(x=DIFF, ymin=lbn, ymax=ubn), width=0.25)+
+  geom_line(data = data, aes(x = DIFF, y = estn))
+test3<-test2 + annotate("text", x = 1.2, y = .03, label = "Nation better")
+test3+annotate("text", x = 4.5, y = .14, label = "City better")
+
+*Figure 4
+egen group2x=group(citystabbr) if cityinds==1
+
+keep if cityinds==1
+su group2x, meanonly
+foreach i of num 1/`r(max)' {
+reg incumbentpercent DIFFusmonthcitymonth unemploymonthlyus CENSUS2000medhhinc logCENSUS2000pop CENSUS2000hispanicpercent CENSUS2000blackpercent CENSUS2000bachdegplus CENSUS2000medhomevalue CENSUS1990medhhinc mayorcouncildum demvs1988 CENSUSlogitalianper2000 CENSUSlogirishper2000 i.year if group2x!=`i' &cityinds==1, cluster(citystabbr)
+capture eststo est`i'
+}
+
+estout using example.txt, replace cells(b)
+eststo clear
+
+*open example.txt in an Excel editor, keep ONLY DIFFusmonthcitymonth column, rename it `coef` and save.
+
+*back in Stata
+by group2x: gen x2=_n
+keep if x2==1
+order citystabbr group2x, last
+
+*copy citystabbr column in Stata, paste in new sheet in Excel, transpose and then paste below `coef` (from above). transpose both columns (i.e. make them long rather than wide), copy and make New dataset in Stata.
+
+rename var1 citystabbr
+rename var2 coef
+graph bar coef, over(citystabbr, sort(1))
+
+**table 9a- Done in R
+#### Dan Hopkins
+#### Code to estimate Appendix Table 9A
+#### 11/7/2016
+#### "Retrospective Voting in Big-City U.S. Mayoral Elections"
+
+library(texreg)
+
+dta <- read.csv(“~/mayoralelections_final_full.csv")
+
+dta10 <- dta[dta$cityinds==1 & ! dta$cityinds %in% c(NA),]
+
+lout1 <- lm(incumbentpercent ~ DIFFusmonthcitymonth+ unemploymonthlyus,data=dta10)
+
+lout2 <- lm(incumbentpercent ~ DIFFusmonthcitymonth+ unemploymonthlyus + logCENSUS2000pop+as.factor(year),data=dta10)
+
+lout3 <- lm(incumbentpercent ~ DIFFusmonthcitymonth+ unemploymonthlyus + logCENSUS2000pop + CENSUS2000hispanicpercent + CENSUS2000blackpercent +CENSUS2000bachdegplus + CENSUS2000medhomevalue + CENSUS1990medhhinc + mayorcouncildum  + demvs1988+as.factor(year),data=dta10)
+ 
+ texreg(l=list(lout1,lout2,lout3),stars=c(0.05),digits=3)
