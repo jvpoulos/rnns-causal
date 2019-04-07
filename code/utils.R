@@ -34,25 +34,25 @@ PermutationTest<-function(forecast, true, t.stat, n.placebo, np=NULL){
 
 # Invert for CIs
 
-PermutationCI <- function(forecast, true, t.stat, n.placebo, np=NULL, c.range=c(-1,1), alpha=0.025, l=100, d=1e-05) {
+PermutationCI <- function(forecast, true, t.stat, n.placebo, np=NULL, alpha=0.025, l=100, prec=1e-03) {
   require(matrixStats)
   # Calculate randomization test confidence interval.
   #
   # Args:
-  #   c.range: Range of constant treatment effects. Default is c(-1,1).
   #   alpha: Two-sided significance level. Default is 0.025.
   #   l: Number of constant treatment effects. Default is 100.
   #   np: override n. possible placebo avgs. Default is NULL. 
-  #   d: Level of precision in constant treatment effects. Default is 1e-05.
+  #   prec: Level of precision in constant treatment effects. Default is 1e-05.
   #
   # Returns:
   #   Vector of per-time-step randomization confidence interval
   # Create vector to store CIs
-  p.weights <- abs(log(abs(seq(c.range[1],c.range[2],by=d) + .Machine$double.eps))) # penalize larger effects
+  c.range <- round(range(t.stat),2)*2
+  
   CI <- matrix(NA, nrow(forecast), l)
   for(i in 1:l){
     # Choose constant treatment effect
-    delta.c <- sample(seq(c.range[1],c.range[2],by=d),length(t.stat),replace=FALSE, prob=p.weights)
+    delta.c <- sample(seq(c.range[1],c.range[2],by=prec),length(t.stat),replace=FALSE)
     # Subtract from t.stat
     t.stat.delta <- t.stat-delta.c
     # Run permuation test
