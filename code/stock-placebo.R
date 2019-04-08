@@ -26,8 +26,8 @@ Y <- t(read.csv('returns_no_missing.csv',header=F)) # N X T
 ## Setting up the configuration
 Nbig <- nrow(Y)
 Tbig <- ncol(Y)
-N <- Nbig #70
-T <- Tbig # 70
+N <-490
+T <- 10
 number_T0 <- 5
 T0 <- ceiling(T*((1:number_T0)*2-1)/(2*number_T0))
 N_t <- ceiling(N/2)
