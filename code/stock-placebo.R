@@ -219,4 +219,4 @@ Y <- t(read.csv('returns_no_missing.csv',header=F)) # N X T
 results <- foreach(N = c(10,20,50,70,100,140), .combine='rbind') %do% {
   StockSim(Y,N)
 }
-saveRDS(results, "stock-placebo-results.rda")
+saveRDS(results, "stock-placebo-results.rds")
