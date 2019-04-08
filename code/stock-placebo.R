@@ -26,8 +26,8 @@ Y <- t(read.csv('returns_no_missing.csv',header=F)) # N X T
 ## Setting up the configuration
 Nbig <- nrow(Y)
 Tbig <- ncol(Y)
-N <-ceiling(Nbig*0.05)
-T <- ceiling(Tbig*0.05)
+N <-10 # needs to be even
+T <- 490
 number_T0 <- 5
 T0 <- ceiling(T*((1:number_T0)*2-1)/(2*number_T0))
 N_t <- ceiling(N/2)
@@ -74,7 +74,7 @@ for(i in c(1:num_runs)){
     ## ------
     
     print("MC-NNM Started")
-    est_model_MCPanel <- mcnnm_cv(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, num_folds = 5)
+    est_model_MCPanel <- mcnnm_cv(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, num_folds = 2)
     est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
     est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y_sub)*(1-treat_mat)
     est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))

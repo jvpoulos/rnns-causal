@@ -10,7 +10,7 @@ basque <- ggplot(data = df1, aes(x, y, color = Method, shape = Method)) +
     width = 0.1,
     linetype = "solid",
     position=position_dodge(width=0.1)) +
-  coord_cartesian(ylim=c(0, 0.5)) +
+#  coord_cartesian(ylim=c(0, 0.5)) +
   scale_shape_manual(values=c(1:8)) +
   scale_x_continuous(breaks=c(0.25,0.5,0.75,1), labels=c("0.25","0.5","0.75","1")) +
   theme_bw() +
@@ -37,7 +37,7 @@ germany <- ggplot(data = df1, aes(x, y, color = Method, shape = Method)) +
     width = 0.1,
     linetype = "solid",
     position=position_dodge(width=0.1)) +
-  coord_cartesian(ylim=c(0, 0.5)) +
+ # coord_cartesian(ylim=c(0, 0.5)) +
   scale_shape_manual(values=c(1:8)) +
   scale_x_continuous(breaks=c(0.25,0.5,0.75,1), labels=c("0.25","0.5","0.75","1")) +
   theme_bw() +
@@ -64,7 +64,7 @@ california <- ggplot(data = df1, aes(x, y, color = Method, shape = Method)) +
     width = 0.1,
     linetype = "solid",
     position=position_dodge(width=0.1)) +
-  coord_cartesian(ylim=c(0, 0.5)) +
+#  coord_cartesian(ylim=c(0, 0.5)) +
   scale_shape_manual(values=c(1:8)) +
   scale_x_continuous(breaks=c(0.25,0.5,0.75,1), labels=c("0.25","0.5","0.75","1")) +
   theme_bw() +
