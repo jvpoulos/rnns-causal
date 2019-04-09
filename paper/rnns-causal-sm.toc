@@ -1,2 +1,0 @@
-\contentsline {section}{\numberline {1}Descriptive statistics}{1}{section.1}
-\contentsline {section}{\numberline {2}Estimates on education spending data}{1}{section.2}

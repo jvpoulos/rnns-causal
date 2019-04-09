@@ -1,4 +1,4 @@
-\begin{thebibliography}{60}
+\begin{thebibliography}{62}
 \expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
 \expandafter\ifx\csname url\endcsname\relax
   \def\url#1{\texttt{#1}}\fi
@@ -183,6 +183,14 @@ Firpo, S. and Possebom, V. (2018) Synthetic control method: Inference,
   {Laviolette}, F., {Marchand}, M. and {Lempitsky}, V. (2015)
   {Domain-Adversarial Training of Neural Networks}.
 \newblock \textit{arXiv e-prints}, arXiv:1505.07818.
+
+\bibitem[{Gates(1941)}]{gates1941land}
+Gates, P.~W. (1941) Land policy and tenancy in the prairie states.
+\newblock \textit{The Journal of Economic History}, \textbf{1}, 60--82.
+
+\bibitem[{Gates(1979)}]{gates1979federal}
+--- (1979) Federal land policies in the southern public land states.
+\newblock \textit{Agricultural History}, \textbf{53}, 206--227.
 
 \bibitem[{Glorot and Bengio(2010)}]{glorot2010}
 Glorot, X. and Bengio, Y. (2010) Understanding the difficulty of training deep
