@@ -1,19 +1,19 @@
 library(ggplot2)
 library(latex2exp)
 
-load(paste0(results.directory, "plots/stock_N_70_T_70_numruns_5_num_treated_35_simultaneuous_1.rds"))
+df1<- readRDS(paste0(results.directory, "plots/stock-placebo-results.rds"))
 
-stock <- ggplot(data = df1, aes(x, y, color = Method, shape = Method)) +
-  geom_point(size = 2, position=position_dodge(width=0.1)) +
+stock <- ggplot(data = df1, aes(log(N), y, color = Method, shape = Method)) +
+  geom_point(size = 2, position=position_dodge(width=0.3)) +
+  geom_line(position=position_dodge(width=0.3)) +
   geom_errorbar(
     aes(ymin = lb, ymax = ub),
     width = 0.1,
     linetype = "solid",
-    position=position_dodge(width=0.1)) +
+    position=position_dodge(width=0.3)) +
   scale_shape_manual(values=c(1:8)) +
-  scale_x_continuous(breaks=c(0.25,0.5,0.75,1), labels=c("0.25","0.5","0.75","1")) +
   theme_bw() +
-  xlab(TeX('$T_0/T$')) +
+  xlab(TeX('log(N)')) +
   ylab("Average RMSE") +
   theme(axis.title=element_text(family="serif", size=16)) +
   theme(axis.text=element_text(family="serif", size=14)) +

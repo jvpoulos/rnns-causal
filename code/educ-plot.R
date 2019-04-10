@@ -6,6 +6,7 @@ require(zoo)
 require(matrixStats)
 require(tseries)
 require(ggplot2)
+require(readr)
 
 source(paste0(code.directory,"TsPlot.R"))
 source(paste0(code.directory, "utils.R"))

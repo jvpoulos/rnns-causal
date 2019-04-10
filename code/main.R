@@ -21,8 +21,7 @@ results.directory <-"/media/jason/Dropbox/github/rnns-causal/results/"
 
 source('/media/jason/Dropbox/github/land-reform/code/prepare-synth.R') # land-reford/data/synth-control-outcomes.rds
 
-# synth-placebo.sh --> synth-placebo.R 
-
+# synth-placebo.R 
 source(paste0(code.directory, "synth-placebo-plot.R"))
 
 # Causal impact estimates: public education spending
@@ -30,10 +29,10 @@ source(paste0(code.directory, "synth-placebo-plot.R"))
 
 source(paste0(code.directory, "prepare-funds.R"))
 
-# funds-placebo.sh --> funds-placebo.R 
+# funds-placebo.R 
 source(paste0(code.directory, "synth-placebo-plot.R"))
 
 # train_encoder_decoder.py 
 # train_rvae.py 
 
-source(paste0(code.directory, "educ-plots.R"))
+source(paste0(code.directory, "educ-plot.R"))

@@ -172,9 +172,9 @@ This paper proposes an alternative to the SCM that is capable of automatically s
 
 The proposed method builds on a new literature that uses machine learning methods for data-driven synthetic controls, such as matrix completion \citep{athey2017matrix,2019arXiv190308028P}, or two-stage estimators that reduces data dimensionality via L1-regularized regression \citep{doudchenko2016balancing,carvalho2018arco} or matrix factorization \citep{amjad2018robust} prior to regressing the outcomes on the reduced data. These methods are data-driven in the sense that they are capable of finding an appropriate subset of control units for comparison in the absence of domain knowledge or pre-intervention covariates. 
 
-RNNs are end-to-end trainable and very flexible to a given sequential prediction problem. For example, they are capable of sharing learned parameters across time-steps and multiple treated units. while the SCM can be generalized to handle multiple treated units \citep[e.g.,][]{dube2015pooling,xu2017generalized}, the generalized the SCM is not capable of sharing model weights when predicting the outcomes of multiple treated units. Regularization methods such as dropout can easily be incorporated into RNN architectures to prevent overfitting during the training process, which is problematic when the networks learn an overreliance on a few model inputs. Moreover, an attention mechanism can be included in the model in order to discern the contribution of each model input to the predicted counterfactual. 
+RNNs are end-to-end trainable and very flexible to a given sequential prediction problem. For example, they are capable of sharing learned parameters across time-steps and multiple treated units. while the SCM can be generalized to handle multiple treated units \citep[e.g.,][]{dube2015pooling,xu2017generalized}, the generalized the SCM is not capable of sharing model weights when predicting the outcomes of multiple treated units. Regularization methods such as dropout can easily be incorporated into RNN architectures to prevent overfitting during the training process, which is problematic when the networks learn an overreliance on a few model inputs.
 
-In the section immediately below, I describe the approach of using RNNs for counterfactual time-series prediction; Section \ref{eval} details the procedure for evaluating the models in terms of predictive accuracy and statistical significance; Section \ref{placebo} presents the results of the placebo tests and discusses when the proposed method is expected to outperform the SCM; Section \ref{conclusion} concludes by discussing the contributions of the paper and offering potential avenues for future research. 
+In the section immediately below, I describe the problem of counterfactual prediction and its relationship to matrix completion and the problem of covariate shift; Section \ref{RNNs-section} introduces the approach of using RNNs for counterfactual prediction; Section \ref{placebo} presents the results of the placebo tests; Section \ref{eval} details the procedure for hypothesis testing; Section \ref{schooling-app} applies the RNN-based method and inferential procedure ot the problem of estimating the impact of homestead policy on long-run state government investment in public schooling; Section \ref{conclusion} concludes and offers potential avenues for future research. 
 
 %\setcounter{section}{1}
 \section{Counterfactual prediction} \label{prediction}
@@ -288,7 +288,7 @@ For each trial run, I randomly select half of the units in the dataset to be tre
 		%	\item[(b) HR-EN] Horizontal regression with elastic net regularization, with regularization term $\lambda$ and shape parameter $\alpha$ selected by cross-validation  \citep{athey2017matrix} 
 	%		\item[(c) LSTM] Baseline RNN in the form of a single LSTM with output space dimensionality equivalent to the number of predictors
 			\item[(b) MC-NNM] Matrix completion via nuclear norm minimization, with the regularization term on the nuclear norm selected by cross-validation \citep{athey2017matrix}
-			\item[(c) SC-ADH] Synthetic control method approached via exponentiated gradient descent \citep{abadie2010synthetic}
+			\item[(c) SCM] SCM approached via exponentiated gradient descent \citep{abadie2010synthetic}
 			\item[(d) VT-EN] Vertical regression with elastic net regularization, with $\lambda$ and $\alpha$ selected by cross-validation \citep{athey2017matrix}.
 		}
 	\end{singlespace}
@@ -305,26 +305,26 @@ Figure \ref{synth-sim} reports the average prediction error of the estimators in
 	\begin{subfigure}[t]{0.48\textwidth}
 		\centering
 		\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/basque-sim.png}
-		\caption{Basque Country terrorism data, $\text{N}_t = 8$} 
+		\caption{Basque Country terrorism data} 
 	\end{subfigure}
 	~ 
 	\begin{subfigure}[t]{0.48\textwidth}
 		\centering
 		\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/california-sim.png}
-		\caption{California smoking ban data, $\text{N}_t = 19$}
+		\caption{California smoking ban data} 
 	\end{subfigure}
 	~ 
 	\begin{subfigure}[t]{0.48\textwidth}
 		\centering
 		\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/germany-sim.png}
-		\caption{West German reunification data, $\text{N}_t = 8$}
+		\caption{West German reunification data}%,
 	\end{subfigure}
 	\caption{Placebo tests on synthetic control datasets: 
 		{\protect\tikz \protect\draw[color={rgb:red,4;green,0;yellow,1}] (0,0) -- plot[mark=o, mark options={scale=2}] (0.25,0) -- (0.5,0);}, DID;
 		{\protect\tikz \protect\draw[color={rgb:red,244;green,226;blue,66}] (0,0) -- plot[mark=triangle*, mark options={scale=2,fill=white}] (0.25,0) -- (0.5,0);}, ED; 
 		{\protect\tikz \protect\draw[color={rgb:red,0;green,5;blue,1}] (0,0) -- plot[mark=+, mark options={scale=2}] (0.25,0) -- (0.5,0);}, MC-NNM;
 		{\protect\tikz \protect\draw[color={rgb:red,66;green,200;blue,244}] (0,0) -- plot[mark=x, mark options={scale=2}] (0.25,0) -- (0.5,0);}, RVAE;
-		{\protect\tikz \protect\draw[color={rgb:red,66;green,107;blue,244}] (0,0) -- plot[mark=diamond, mark options={scale=2}] (0.25,0) -- (0.5,0);}, SC-ADH;
+		{\protect\tikz \protect\draw[color={rgb:red,66;green,107;blue,244}] (0,0) -- plot[mark=diamond, mark options={scale=2}] (0.25,0) -- (0.5,0);}, SCM;
 		{\protect\tikz \protect\draw[color={rgb:red,244;pink,66;blue,223}] (0,0) -- plot[mark=triangle, mark options={scale=2, rotate=180}] (0.25,0) -- (0.5,0);}, VT-EN.\label{synth-sim}}
 \end{figure}
 
@@ -332,17 +332,17 @@ Figure \ref{synth-sim} reports the average prediction error of the estimators in
 
 The second battery of placebo tests draws on a dataset of stock market returns compiled by \citet{athey2017matrix}. The dataset consists of daily returns for 2,453 stocks over 3,082 days. In order to track how the error rates vary according to the dimensionality of the data, I create six sub-samples of the first $T$ daily returns of $N$ randomly selected stocks for the pairs $(\text{N}, \text{T}) = (10, 490), (20, 245), (50, 98), (70, 70), (100, 49), (140, 35)$. In each sub-sample, half of the units are randomly selected as treated and $\text{T}_0 = \text{T}/2$.
 
-Figure \ref{stock-sim} reports the average RMSE for each pair with standard errors informed by the error distribution generated by five trial runs. The RNN-based estimators do comparatively less well when $N \gg T$ since there is not an adequate number of training set pre-periods to learn a good representation. When $N \ll T$, the RNN-based estimators do comparatively well. The MC-NNM estimator does well in both settings and outperforms all estimators when $(\text{N}, \text{T}) = (70, 70)$.
+Figure \ref{stock-sim} reports the average RMSE for each pair with standard errors informed by the error distribution generated by five trial runs. The average RMSE is the lowest for all estimators in the sub-sample $(\text{N}, \text{T}) = (10, 490)$, which reflects the benefit of training on a large number of time periods. Within this sub-sample, encoder-decoder networks and RVAE achieve the lowest average RMSE, followed by MC-NNM, SCM, DID, and lastly, vertical regression. The RNN-based estimators. The RNN-based estimators do comparatively less well when $N \gg T$ since there is not an adequate number of training set pre-periods to learn a good representation. 
 
 \begin{figure}[htbp]
 	\centering
 	\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/stock-sim.png}
-	\caption{Placebo tests on stock market data, $\text{N}_t = \text{N}/2$: 
+	\caption{Placebo tests on stock market data: 
 		{\protect\tikz \protect\draw[color={rgb:red,4;green,0;yellow,1}] (0,0) -- plot[mark=o, mark options={scale=2}] (0.25,0) -- (0.5,0);}, DID;
 		{\protect\tikz \protect\draw[color={rgb:red,244;green,226;blue,66}] (0,0) -- plot[mark=triangle*, mark options={scale=2,fill=white}] (0.25,0) -- (0.5,0);}, ED; 
 		{\protect\tikz \protect\draw[color={rgb:red,0;green,5;blue,1}] (0,0) -- plot[mark=+, mark options={scale=2}] (0.25,0) -- (0.5,0);}, MC-NNM;
 		{\protect\tikz \protect\draw[color={rgb:red,66;green,200;blue,244}] (0,0) -- plot[mark=x, mark options={scale=2}] (0.25,0) -- (0.5,0);}, RVAE;
-		{\protect\tikz \protect\draw[color={rgb:red,66;green,107;blue,244}] (0,0) -- plot[mark=diamond, mark options={scale=2}] (0.25,0) -- (0.5,0);}, SC-ADH;
+		{\protect\tikz \protect\draw[color={rgb:red,66;green,107;blue,244}] (0,0) -- plot[mark=diamond, mark options={scale=2}] (0.25,0) -- (0.5,0);}, SCM;
 		{\protect\tikz \protect\draw[color={rgb:red,244;pink,66;blue,223}] (0,0) -- plot[mark=triangle, mark options={scale=2, rotate=180}] (0.25,0) -- (0.5,0);}, VT-EN.\label{stock-sim}}
 \end{figure}
 
@@ -361,22 +361,13 @@ In the placebo tests, the counterfactual outcome is known and the estimators can
 Each element of the $(\text{T}-\text{T}_0) \times J$ matrix of counts obtained from the last step is divided by $\mathcal{Q}$ to estimate an array of exact two-sided $p$ values, $\hat{p}$. Assuming that treatment has a constant additive effect $\Delta$, I construct an interval estimate for $\Delta$ by inverting the randomization test. Let $\delta_\Delta$ be the test statistic calculated by subtracting all possible $\mu$ by $\Delta$. I derive a two-sided randomization confidence interval by collecting all values of $\delta_\Delta$ that yield $\hat{p}$ values greater than or equal to a significance level $\alpha$. I find the endpoints of the confidence interval by randomly sampling 500 values of $\Delta$.
 
 
-\section{Application: Homestead acts and state capacity} \label{state-capacity}
+\section{Application: Homestead acts and public schooling} \label{schooling-app}
 
-In this section, I estimate the causal impacts of homestead acts on state government education spending. 
+Sociologists and political economists \citep[e.g,][]{meyer1979public,alesina2013nation,bandiera2018nation} have viewed the rapid development of public schooling in the U.S. during the 19th century as a form of nation-building policy. It is argued in this literature that states across the U.S. adopted compulsory primary education means to homogenize the population during the Age of Mass Migration of tens of millions of migrants who arrived to the country between 1850 and 1914. 
 
-% bandiera2018nation
-% states adopted compulsory schooling laws as a nation-building tool to instill civic values to the tens of millions of culturally diverse migrants who arrived during the ‘Age of Mass Migration’ between 1850 and 1914.
+An alternative explanation for the rise of public schooling is the view that frontier state governments sought to increase public investments in order to attract eastern migrants following the passage of the Homestead Act (HSA) of 1862, which opened for settlement hundreds of millions of acres of frontier land.  Any adult citizen could apply for a homestead grant of 160 acres of land, provided that they live and make improvements on the land for five years. \citet{engerman2005evolution} argue that the sparse population on the frontier meant that state and local governments competed with each other to attract migrants in order to lower local labor costs and to increase land values and tax revenues. Frontier governments offered migrants broad access to cheap land and property rights, unrestricted voting rights, and a more generous provision of schooling and other public goods.
 
-%alesina2013nation
-% provision of mass primary education as nation-building policy
-% means to homogenize the population
-
-%meyer1979public
-% we argue that the spread of schooling in the rural North and West can best be understood as a social movement implementing a commonly held ideology of nation-building
-% The rapid spread of public schooling across the continent during the 19th century is one of the most dramatic examples of institution-building in American history. 
-
-%Galor et al. [2009] show that state schooling expenditures are significantly correlated to land inequality
+The HSA may have also increased state schooling expenditures by reducing the degree of land inequality on the frontier. Policies that led to the decentralization of public land are expected to lower land inequality by fixing land grants to 160 acres, thereby encouraging farm sizes to approach their ideal scale. Political economy frameworks \citep[e.g.,][]{acemoglu2008persistence, besley2009origins} emphasize that greater economic power of the ruling class reduces public investments. In the model of \citet{galor2009inequality}, wealthy landowners block education reforms because public schooling favors industrial labor productivity and decreases the value in farm rents. Inequality in this context can be thought of as a proxy for the amount of \emph{de facto} political influence elites have to block reforms.
 
 \subsection{Data and assumptions} \label{educ-data}
 
@@ -396,17 +387,16 @@ Aggregating to the state level approximately 1.46 million individual land patent
 
 Prior to analyzing the data, I conduct placebo tests on the education spending data similar to those described in Section \ref{synth-placebo}. Figure \ref{educ-sim} presents the average RMSE calculated on the control unit outcomes with standard errors originating from 10 runs. In line with the previous placebo tests, the RNN-based estimators yield error rates comparable to the alternative estimators only when there are sufficient pre-period observations to train on; in this case, when $\text{T}_0/\text{T} \geq 0.5$. We can be reasonably confident that the RNN-based estimators will be at least as accurate as the other estimators since $\text{T}_0/\text{T} = 0.55$ in this application. 
 
-Next, I train a encoder-decoder network to predict the counterfactual time-series of public land states, using only the  history of control units to generate predictions.\footnote{Figure \ref{educ-loss} records the training history of the networks.} The top panel of Figure \ref{educ-ed} compares the observed time-series of treated units and control units along with the predicted outcomes of treated units. The dashed vertical line represents the first year of treatment exposure in 1869. We are primarily interested in the difference in the observed and predicted treated unit outcomes, which is the quantity $\boldsymbol{\hat{\phi}}$ from (\ref{eq:pointwise}). These per-period causal impacts are bounded by 95\% randomization confidence intervals and plotted in the bottom panel. 
+Next, I train a encoder-decoder network on the training set of state land states and use the learned weights to predict the counterfactual time-series of public land states.\footnote{Figure \ref{educ-loss} records the evolution of training and validation loss of the networks over 1,000 epochs.} The top panel of Figure \ref{educ-ed} compares the observed time-series of treated units and control units along with the predicted outcomes of treated units. The dashed vertical line represents the first year of treatment exposure in 1869. We are primarily interested in the difference in the observed and predicted treated unit outcomes, which is the quantity $\boldsymbol{\hat{\phi}}$ calculated by (\ref{eq:pointwise}). These per-period causal impacts are plotted in the bottom panel and are bounded by 95\% randomization confidence intervals. 
 
-Counterfactual predictions of state government education spending in the absence of homestead acts generally tracks the observed control time-series until the turn of the century, at which the counterfactual flattens and diverges from the increasing observed time-series. This delay can potentially be explained by the facts that homesteaders were required to make improvements on land for five years before filing a grant and homestead entries did not substantially accumulate until after Congress prohibited the sale of public land in 1889 in all states except Missouri \citep{gates1941land,gates1979federal}. 
+Counterfactual predictions of state government education spending in the absence of the HSA generally tracks the observed control time-series until the turn of the 19$^\text{th}$ century, at which the counterfactual flattens and diverges from the increasing observed control time-series. This delay can potentially be explained by the fact that homestead entries did not substantially accumulate until after Congress prohibited the sale of public land in 1889 in all states except Missouri \citep{gates1941land,gates1979federal}, as visualized by the per-capita number of homestead entries in each state (Figure \ref{fig:homestead-heatmap}). 
 
-Per-period impacts on state government spending peak in 1870, at the same time most PLS were first exposed to homesteads, representing a 0.18 [-0.35, 0.71] log increase in per-capita expenditure. By 1876, after most PLS had been exposed to homesteads, homestead exposure decreases expenditure by 0.51 [-1.67, 0.66] log points, and the trajectory of causal impacts remains negative for the rest of the time-series. Fifty years after its passage, the estimated impact of the HSA on western state government education spending and revenue is 0.005 log points [-0.16, 0.19], and 0.61 log points [-0.19, 1.53], respectively. The confidence intervals surrounding these time-specific estimates contain zero, which implies that the estimated impacts are not significantly more extreme than the placebo treated effects estimated at the same time-step. The confidence interval on the estimated impact of the HSA on western state government expenditure in 1912, an increase of 0.17 log points [0.004, 0.3], does not contains zero, which implies that the estimated impact is significantly more extreme than the placebo treated effects. 
-
-
+Taking the mean of post-period impacts, I estimate that the impact of the HSA on the state government spending of states exposed to homesteads is 0.69 [-0.19, 2.01]. The confidence intervals surrounding this estimate contains zero, which implies that the estimated impact is not significantly more extreme than the exact distribution of average placebo effects under the null hypothesis. Examining the time-specific causal estimates reveals that fifty years after the first homestead entry, the estimated impact of the HSA on state government education spending in 1919 is 0.68 log points [0.13, 1.24]. The confidence intervals surrounding this time-specific estimate does not contain zero, which implies that the estimated impact is significantly more extreme than the average placebo effects. To put the magnitude of the point estimate in perspective, it represents about 3\% of the total school expenditures per-capita in 1929.\footnote{Data on total school expenditures per-capita of total population are from \citet{snyder2010digest}.}
+ 
 \begin{figure}[htbp]
 	\centering
 	\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/educ-ed.png}
-	\caption{Encoder-decoder estimates of homestead acts on state government education spending, 1809 to 1982:		{\color{Darjeeling15}{\sampleline{}}}, observed treated;
+	\caption{Encoder-decoder estimates of the impact of the HSA on state government education spending, 1809 to 1982:		{\color{Darjeeling15}{\sampleline{}}}, observed treated;
 		{\color{Darjeeling11}{\sampleline{dashed}}}, observed control;
 		{\color{Darjeeling15}{\sampleline{dotted}}}, counterfactual treated;
 		{\color{Darjeeling15}{\sampleline{dash pattern=on .7em off .2em on .05em off .2em}}}, $\boldsymbol{\hat{\phi}}$.\label{educ-ed}} 
@@ -416,29 +406,17 @@ Per-period impacts on state government spending peak in 1870, at the same time m
 
 This paper makes a methodological contribution in proposing a novel alternative to the SCM for estimating the effect of a policy intervention on an outcome over time in settings where appropriate control units are unavailable. The SCM is growing in popularity in the social sciences despite its limitations --- the most obvious being that the choice of specification can lead to different results, and thus facilitate $p$-hacking. By inputting only control unit outcomes and not relying on pre-period covariates, the proposed method offers a more principled approach than the SCM. 
 
-In placebo tests, RNN-based models outperform the SCM in terms of predictive accuracy while yielding a comparable proportion of false positives. RNNs have advantages over the SCM in that they are structured for sequential data and can learn nonconvex combinations of predictors, which is beneficial when the data-generating process underlying the outcome of interest depends nonlinearly on the history of its inputs. RNNs are also capable of handling multiple treated units and can learn nonconvex combinations of control units, which is useful because the model can share parameters across treated units, and thus generate more precise predictions in settings in which treated units share similar data-generating processes.
+The RNN-based approach joins a new generation of data-driven machine learning techniques for generating counterfactual predictions. Machine learning techniques in general have an advantage over the SCM in that they automatically choose appropriate predictors without relying on pretreatment covariates; this capability limits ``researcher degrees of freedom'' that arises from choices on how to specify the model. 
 
-The RNN-based approach joins a new generation of data-driven machine learning techniques for generating counterfactual predictions. Machine learning techniques in general have an advantage over the SCM in that they automatically choose appropriate predictors without relying on pretreatment covariates; this capability limits ``researcher degrees of freedom'' that arises from choices on how to specify the model. RNNs have an advantage over alternative machine learning algorithms because they are specifically structured to exploit the sequential nature of time-series data by sharing model parameters across time-steps.
+The advantages of RNN-based estimators are numerous. RNNs have an advantage over alternative estimators because they do not assume a specific functional distribution, are specifically structured to exploit temporal dependencies in panel data. RNNs are also capable of handling multiple treated units and can learn nonconvex combinations of control units, which is useful because the model can share parameters across treated units, and thus generate more precise predictions in settings in which treated units share similar data-generating processes.
 
-Future research might investigate through simulations how the interaction between RNN complexity (as determined by the number of hidden layers or nodes) and data dimensionality impacts predictive accuracy. Simulations will also allow us to assess the exact impact of data dimensionality, the proportion of treated units, convexity versus non-convexity in the modeled relationship, and the length of the pre-period on the choice between RNNs and the SCM. Future work might formalize a set of assumptions necessary for the approach to be valid and provide further proof of consistency of the estimator under these assumptions.
-
-%alt. approach, like machine translation: training set (XC, XT); test set (YC))
+% summarize placebo tests
 %combine mc & rnns approach - multidirectional RNNs 
 
-%--- Polana review comments
-%
-%Provide much more guidance on how to choose the appropriate network structure
-%
-%Simulations: This would allow the author to assess, for instance, the exact impact of a) the dimensionality of data, b) the number/proportion of treated units, c) convexity vs. non-convexity, or d) length of the pre-treatment period on the choice between RNNs and the SCM.
-%
-%1. Provide a set of assumptions necessary for their approach to be
-%valid. This would allow the reader to know if these assumptions were
-%plausible in any given analysis. 
-%
-%2. Ideally they would provide some proof of consistency of their
-%estimator under these assumptions. It would even better would if they
-%could give the sampling/posterior distribution of this estimator.
+% assumption of equivalence between input distributions
+%alt. approach, like machine translation: training set (XC, XT); test set (YC))
 
+Future research might investigate through simulations how the interaction between RNN complexity (as determined by the number of hidden layers or nodes) and data dimensionality impacts predictive accuracy. Simulations will also allow us to assess the exact impact of data dimensionality, the proportion of treated units, convexity versus non-convexity in the modeled relationship, and the length of the pre-period on the choice between RNNs and the SCM. Future work might formalize a set of assumptions necessary for the RNN-based approach to be valid and provide further proof of consistency of the estimator under these assumptions.
 
 \newpage
 
@@ -461,11 +439,11 @@ Future research might investigate through simulations how the interaction betwee
 \begin{figure}[htbp]
 		\centering
 		\includegraphics[width=0.9\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/educ-sim.png}
-		\caption{Placebo tests on education spending data, $\text{N}_t = 8$: 		{\protect\tikz \protect\draw[color={rgb:red,4;green,0;yellow,1}] (0,0) -- plot[mark=o, mark options={scale=2}] (0.25,0) -- (0.5,0);}, DID;
+		\caption{Placebo tests on education spending data: 		{\protect\tikz \protect\draw[color={rgb:red,4;green,0;yellow,1}] (0,0) -- plot[mark=o, mark options={scale=2}] (0.25,0) -- (0.5,0);}, DID;
 			{\protect\tikz \protect\draw[color={rgb:red,244;green,226;blue,66}] (0,0) -- plot[mark=triangle*, mark options={scale=2,fill=white}] (0.25,0) -- (0.5,0);}, ED; 
 			{\protect\tikz \protect\draw[color={rgb:red,0;green,5;blue,1}] (0,0) -- plot[mark=+, mark options={scale=2}] (0.25,0) -- (0.5,0);}, MC-NNM;
 			{\protect\tikz \protect\draw[color={rgb:red,66;green,200;blue,244}] (0,0) -- plot[mark=x, mark options={scale=2}] (0.25,0) -- (0.5,0);}, RVAE;
-			{\protect\tikz \protect\draw[color={rgb:red,66;green,107;blue,244}] (0,0) -- plot[mark=diamond, mark options={scale=2}] (0.25,0) -- (0.5,0);}, SC-ADH;
+			{\protect\tikz \protect\draw[color={rgb:red,66;green,107;blue,244}] (0,0) -- plot[mark=diamond, mark options={scale=2}] (0.25,0) -- (0.5,0);}, SCM;
 			{\protect\tikz \protect\draw[color={rgb:red,244;pink,66;blue,223}] (0,0) -- plot[mark=triangle, mark options={scale=2, rotate=180}] (0.25,0) -- (0.5,0);}, VT-EN.
 			\label{educ-sim}}
 \end{figure}
@@ -505,8 +483,15 @@ Future research might investigate through simulations how the interaction betwee
 %\begin{figure}[htbp]
 %	\centering
 %		\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/educ-rvae.png}
-%	\caption{RVAE estimates of homestead acts on state government education spending, 1809 to 1982.\label{rvae-ed}} 
+%	\caption{RVAE estimates of the homestead act on state government education spending, 1809 to 1982.\label{rvae-ed}} 
 %\end{figure}
+
+\begin{figure}[htbp]
+	\begin{center}
+		\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/land-reform/paper/plots/homestead-heatmap.png}
+	\end{center}
+	\caption{Per-capita homestead entries in state $i$ and year $t$, 1869-1922. \label{fig:homestead-heatmap}}
+\end{figure}
 
 \end{appendices}
 

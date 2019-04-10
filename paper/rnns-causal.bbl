@@ -1,4 +1,4 @@
-\begin{thebibliography}{62}
+\begin{thebibliography}{70}
 \expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
 \expandafter\ifx\csname url\endcsname\relax
   \def\url#1{\texttt{#1}}\fi
@@ -23,6 +23,15 @@ Abadie, A. and Gardeazabal, J. (2003) The economic costs of conflict: A case
   study of the basque country.
 \newblock \textit{The American Economic Review}, \textbf{93}, 113--132.
 
+\bibitem[{Acemoglu and Robinson(2008)}]{acemoglu2008persistence}
+Acemoglu, D. and Robinson, J.~A. (2008) Persistence of power, elites, and
+  institutions.
+\newblock \textit{American Economic Review}, \textbf{98}, 267--293.
+
+\bibitem[{Alesina and Reich(2013)}]{alesina2013nation}
+Alesina, A. and Reich, B. (2013) Nation building.
+\newblock \textit{Tech. rep.}, National Bureau of Economic Research.
+
 \bibitem[{Amjad et~al.(2018)Amjad, Shah and Shen}]{amjad2018robust}
 Amjad, M., Shah, D. and Shen, D. (2018) Robust synthetic control.
 \newblock \textit{The Journal of Machine Learning Research}, \textbf{19},
@@ -45,12 +54,23 @@ Atack, J. (2013) On the use of geographic information systems in economic
   by Jointly Learning to Align and Translate}.
 \newblock \textit{ArXiv e-prints}.
 
+\bibitem[{Bandiera et~al.(2018)Bandiera, Mohnen, Rasul and
+  Viarengo}]{bandiera2018nation}
+Bandiera, O., Mohnen, M., Rasul, I. and Viarengo, M. (2018) Nation-building
+  through compulsory schooling during the age of mass migration.
+\newblock \textit{The Economic Journal}, \textbf{129}, 62--109.
+
 \bibitem[{Ben-David et~al.(2007)Ben-David, Blitzer, Crammer and
   Pereira}]{ben2007analysis}
 Ben-David, S., Blitzer, J., Crammer, K. and Pereira, F. (2007) Analysis of
   representations for domain adaptation.
 \newblock In \textit{Advances in neural information processing systems},
   137--144.
+
+\bibitem[{Besley and Persson(2009)}]{besley2009origins}
+Besley, T. and Persson, T. (2009) The origins of state capacity: Property
+  rights, taxation and politics.
+\newblock \textit{American Economic Review}, \textbf{99}, 1218--1244.
 
 \bibitem[{Bickel et~al.(2009)Bickel, Br{\"u}ckner and
   Scheffer}]{bickel2009discriminative}
@@ -152,6 +172,11 @@ El~Hihi, S. and Bengio, Y. (1995) Hierarchical recurrent neural networks for
   long-term dependencies.
 \newblock In \textit{Neural Information Processing Systems}, vol. 400, 409.
 
+\bibitem[{Engerman and Sokoloff(2005)}]{engerman2005evolution}
+Engerman, S.~L. and Sokoloff, K.~L. (2005) The evolution of suffrage
+  institutions in the new world.
+\newblock \textit{The Journal of Economic History}, \textbf{65}, 891--921.
+
 \bibitem[{Fabius and van Amersfoort(2014)}]{fabius2014variational}
 Fabius, O. and van Amersfoort, J.~R. (2014) Variational recurrent
   auto-encoders.
@@ -176,6 +201,11 @@ Ferman, B., Pinto, C. and Possebom, V. (2018) Cherry picking with synthetic
 Firpo, S. and Possebom, V. (2018) Synthetic control method: Inference,
   sensitivity analysis and confidence sets.
 \newblock \textit{Journal of Causal Inference}, \textbf{6}.
+
+\bibitem[{Galor et~al.(2009)Galor, Moav and Vollrath}]{galor2009inequality}
+Galor, O., Moav, O. and Vollrath, D. (2009) Inequality in landownership, the
+  emergence of human-capital promoting institutions, and the great divergence.
+\newblock \textit{The Review of Economic Studies}, \textbf{76}, 143--179.
 
 \bibitem[{{Ganin} et~al.(2015){Ganin}, {Ustinova}, {Ajakan}, {Germain},
   {Larochelle}, {Laviolette}, {Marchand} and {Lempitsky}}]{2015arXiv150507818G}
@@ -279,6 +309,12 @@ Mazumder, R., Hastie, T. and Tibshirani, R. (2010) Spectral regularization
 \newblock \textit{Journal of Machine Learning Research}, \textbf{11},
   2287--2322.
 
+\bibitem[{Meyer et~al.(1979)Meyer, Tyack, Nagel and Gordon}]{meyer1979public}
+Meyer, J.~W., Tyack, D., Nagel, J. and Gordon, A. (1979) Public education as
+  nation-building in america: Enrollments and bureaucratization in the american
+  states, 1870-1930.
+\newblock \textit{American Journal of Sociology}, \textbf{85}, 591--613.
+
 \bibitem[{Neyman(1923)}]{neyman1923}
 Neyman, J. (1923) On the application of probability theory to agricultural
   experiments.
@@ -304,6 +340,11 @@ Schmidhuber, J. and Hochreiter, S. (1997) Long short-term memory.
 Schnabel, T., Swaminathan, A., Singh, A., Chandak, N. and Joachims, T. (2016)
   Recommendations as treatments: Debiasing learning and evaluation.
 \newblock \textit{arXiv:1602.05352}.
+
+\bibitem[{Snyder and Dillow(2010)}]{snyder2010digest}
+Snyder, T.~D. and Dillow, S.~A. (2010) Digest of education statistics, 2009.
+\newblock National Center for Education Statistics. Available at:
+  \url{https://nces.ed.gov/programs/digest/index.asp}.
 
 \bibitem[{Splawa-Neyman et~al.(1990)Splawa-Neyman, Dabrowska, Speed
   et~al.}]{splawa1990}
