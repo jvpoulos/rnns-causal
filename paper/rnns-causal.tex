@@ -149,10 +149,10 @@
 \pagenumbering{roman}% Roman-numbered pages (start from i)
 \begin{abstract}  % abstract of 150 to 250 words
 \noindent 
-This paper proposes an alternative to the synthetic control method (SCM) for estimating the effect of a policy intervention on an outcome over time. Recurrent neural networks (RNNs) are used to predict counterfactual time-series of treated units using only the pre-intervention outcomes of control units as model inputs. The proposed method is less susceptible to $p$-hacking because it not require the researcher to specify which control units to include in the model or covariates to construct the control group. RNNs are also capable of learning nonconvex combinations of control units. In placebo tests, the RNN-based approach outperforms the SCM and other estimators in high-dimensional datasets with a sufficient proportion of pre-intervention time periods. 
+This paper proposes an alternative to the synthetic control method (SCM) for estimating the effect of a policy intervention on an outcome over time. Recurrent neural networks (RNNs) are used to predict the counterfactual outcomes of treated units using only the pre-intervention outcomes of control units as predictors. The proposed method is less susceptible to $p$-hacking because it not require the researcher to specify predictors or use pre-intervention covariates to construct the control group. RNNs do not assume a specific functional form and are also capable of learning nonconvex combinations of control units. In placebo tests, the RNN-based approach outperforms the SCM and other estimators in settings with high-dimensional data where the number of time periods exceeds the size of the predictor set. 
 \\
 \begin{singlespace}
-	\emph{Keywords:} Counterfactual Prediction; Recurrent Neural Networks; Randomization Inference; Synthetic Controls; Time-Series Cross-Section Data
+	\emph{Keywords:} Counterfactual Prediction; Randomization Inference; Recurrent Neural Networks; Panel Data; Synthetic Controls
 \end{singlespace}
 \end{abstract}
 
@@ -168,7 +168,7 @@ The SCM has several limitations. First, the convexity restriction of the synthet
 
 While the strength of the SCM lies in its simplicity in setup and implementation, several problems arise from the lack of guidance on how to specify the SCM estimator. The specification of the estimator can produce very different results: \citet{ferman2018cherry} show, for example, how cherry-picking between common SCM specifications can facilitate $p$-hacking.\citet{kaul2015synthetic} show that the common practice of including lagged versions of the outcome variable as model inputs can render all other covariates irrelevant. \citet{klossner2017comparative} demonstrates that the common practice of using cross-validation to select importance weights can yield multiple values and consequently different results. 
 
-This paper proposes an alternative to the SCM that is capable of automatically selecting appropriate control units at each time-step, allows for nonconvex combinations of control units, and does not rely on pre-intervention covariates. The method uses recurrent neural networks (RNNs) to predict a counterfactual time-series of treated units using only control unit outcomes as model inputs. RNNs are a class of neural networks that take advantage of the sequential nature of time-series data by sharing model parameters across multiple time-steps \citep{el1995}. Non-parametric models such as RNNs are useful for prediction problems because we do not have to assume a functional form on the data. In addition, RNNs can learn the most useful nonconvex combination of control unit outcomes at each time-step for generating counterfactual predictions. Relaxing the convexity restriction is useful when the data-generating process underlying the outcome of interest depends nonlinearly on the history of its inputs. RNNs have been shown to outperform various linear models on time-series prediction tasks \citep{cinar2017position}. 
+This paper proposes an alternative to the SCM that is capable of automatically selecting appropriate control units at each time-step, allows for nonconvex combinations of control units, and does not rely on pre-intervention covariates. The method uses recurrent neural networks (RNNs) to predict the counterfactual outcomes of treated units using only control unit outcomes as model inputs. RNNs are a class of neural networks that take advantage of the sequential nature of temporal data by sharing model parameters across multiple time-steps \citep{el1995}. Non-parametric models such as RNNs are useful for prediction problems because we do not have to assume a functional form on the data. In addition, RNNs can learn the most useful nonconvex combination of control unit outcomes at each time-step for generating counterfactual predictions. Relaxing the convexity restriction is useful when the data-generating process underlying the outcome of interest depends nonlinearly on the history of its inputs. RNNs have been shown to outperform various linear models on time-series prediction tasks \citep{cinar2017position}. 
 
 The proposed method builds on a new literature that uses machine learning methods for data-driven synthetic controls, such as matrix completion \citep{athey2017matrix,2019arXiv190308028P}, or two-stage estimators that reduces data dimensionality via L1-regularized regression \citep{doudchenko2016balancing,carvalho2018arco} or matrix factorization \citep{amjad2018robust} prior to regressing the outcomes on the reduced data. These methods are data-driven in the sense that they are capable of finding an appropriate subset of control units for comparison in the absence of domain knowledge or pre-intervention covariates. 
 
@@ -198,7 +198,7 @@ The potential outcomes framework also implicitly assumes treatment is well-defin
 
 The proposed approach is similar to the method of matrix completion via nuclear norm minimization (MC-NNM) proposed by \citet{athey2017matrix} to predict counterfactual outcomes. Matrix completion methods attempt to impute missing entries in a low-rank matrix by solving a convex optimization problem via NNM, even when relatively few values are observed in $\boldsymbol{Y}$ \citep{candes2009exact,candes2010matrix}. The estimator recovers a $\text{N} \times \text{T}$ low-rank matrix by minimizing the sum of squared errors via nuclear norm regularized least squares. The estimator reconstructs the matrix by iteratively replacing missing values with those recovered from a singular value decomposition \citep{mazumder2010spectral}. 
 
-\citet{athey2017matrix} note two drawbacks of MC-NNM. First, the errors may be autocorrelated because the estimator does not account for time-series dependencies in the observed data. The estimator estimate patterns row- and column-wise, but treat the data as perfectly synchronized \citep{yoon2018estimating}. In contrast, the RNN-based approach described in Section \ref{RNNs-section} exploits the temporal component of the data and therefore does not have the problem of autocorrelated errors. 
+\citet{athey2017matrix} note two drawbacks of MC-NNM. First, the errors may be autocorrelated because the estimator does not account for temporal dependencies in the observed data. The estimator estimate patterns row- and column-wise, but treat the data as perfectly synchronized \citep{yoon2018estimating}. In contrast, the RNN-based approach described in Section \ref{RNNs-section} exploits the temporal component of the data and therefore does not have the problem of autocorrelated errors. 
 
 Second, the MC-NNM estimator penalizes the errors for each observed value equally without regard to the fact that the probability of missingness (i.e, the propensity score), increases with $t$. \citet{athey2017matrix} suggest weighting the loss function by the propensity score, which is similar to the importance weighting scheme proposed by \citet{cortes2008sample} to address the problem of covariate shift, which is a special case of domain adaptation \citep{huang2007correcting,ben2007analysis,bickel2009discriminative,cortes2010learning,2015arXiv150507818G}.\footnote{\citet{schnabel2016recommendations} first connected the matrix completion problem with causal inference in observational settings in the context of recommender systems under confounding. \citet{johansson2016learning} formulates the general problem of counterfactual inference as a covariate shift problem.} 
 
@@ -336,7 +336,7 @@ Figure \ref{stock-sim} reports the average RMSE for each pair with standard erro
 
 \begin{figure}[htbp]
 	\centering
-	\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/stock-sim.png}
+	\includegraphics[width=0.9\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/stock-sim.png}
 	\caption{Placebo tests on stock market data: 
 		{\protect\tikz \protect\draw[color={rgb:red,4;green,0;yellow,1}] (0,0) -- plot[mark=o, mark options={scale=2}] (0.25,0) -- (0.5,0);}, DID;
 		{\protect\tikz \protect\draw[color={rgb:red,244;green,226;blue,66}] (0,0) -- plot[mark=triangle*, mark options={scale=2,fill=white}] (0.25,0) -- (0.5,0);}, ED; 
@@ -345,21 +345,6 @@ Figure \ref{stock-sim} reports the average RMSE for each pair with standard erro
 		{\protect\tikz \protect\draw[color={rgb:red,66;green,107;blue,244}] (0,0) -- plot[mark=diamond, mark options={scale=2}] (0.25,0) -- (0.5,0);}, SCM;
 		{\protect\tikz \protect\draw[color={rgb:red,244;pink,66;blue,223}] (0,0) -- plot[mark=triangle, mark options={scale=2, rotate=180}] (0.25,0) -- (0.5,0);}, VT-EN.\label{stock-sim}}
 \end{figure}
-
-\section{Hypothesis testing} \label{eval}
-
-In the placebo tests, the counterfactual outcome is known and the estimators can be evaluated in terms of the RMSE between the predicted and actual post-intervention outcomes of placebo treated units. RMSE measures the accuracy of the counterfactual predictions, and consequently the accuracy of the estimated treatment effect. However, this metric does not tell us anything about the statistical significance of estimated treatment effects. 
-
-\citet{abadie2010synthetic} propose a randomization inference approach for calculating the exact distribution of placebo effects under the sharp null hypothesis of no effect. \citet{cavallo2013catastrophic} extends the placebo-based testing approach to the case of multiple (placebo) treated units by constructing a distribution of \emph{average} placebo effects under the null hypothesis. \citet{firpo2018synthetic} derive the conditions under which the randomization inference approach is valid from a finite sample perspective.\footnote{\citet{hahn2017synthetic} analyze the approach from a repeated sampling perspective.} Randomization $p$-values are obtained following these steps:
-
-\begin{enumerate} 
-	\item Estimate the observed test static $\upmu^{*}$ by calculating the MSE for all $\text{J}$ control units, which results in a matrix of dimension $(\text{T}-\text{T}_0) \times \text{J}$. Taking the row-wise mean results in a $\text{T}-\text{T}_0$-length array of observed average placebo treated effects. 
-	\item Calculate every possible average placebo effect $\upmu$ by randomly sampling without replacement which $\text{J}-1$ control units are assumed to be treated. There are $\mathcal{Q} = \sum\limits_{\text{g}=1}^{\text{J}-1} {\text{J} \choose \text{g}}$ possible average placebo effects. The result is a matrix of dimension $(\text{T}-\text{T}_0) \times \mathcal{Q}$.\footnote{Note that $\mathcal{Q}$ can be computationally burdensome when there are many control units. I set $\mathcal{Q} = 10,000$ in which $\text{J} > 16$.}
-	\item Take a column-wise sum of the number of $\upmu$ that are greater than or equal to $\upmu^{*}$.  
-\end{enumerate}
-
-Each element of the $(\text{T}-\text{T}_0) \times J$ matrix of counts obtained from the last step is divided by $\mathcal{Q}$ to estimate an array of exact two-sided $p$ values, $\hat{p}$. Assuming that treatment has a constant additive effect $\Delta$, I construct an interval estimate for $\Delta$ by inverting the randomization test. Let $\delta_\Delta$ be the test statistic calculated by subtracting all possible $\mu$ by $\Delta$. I derive a two-sided randomization confidence interval by collecting all values of $\delta_\Delta$ that yield $\hat{p}$ values greater than or equal to a significance level $\alpha$. I find the endpoints of the confidence interval by randomly sampling 500 values of $\Delta$.
-
 
 \section{Application: Homestead acts and public schooling} \label{schooling-app}
 
@@ -387,7 +372,7 @@ Aggregating to the state level approximately 1.46 million individual land patent
 
 Prior to analyzing the data, I conduct placebo tests on the education spending data similar to those described in Section \ref{synth-placebo}. Figure \ref{educ-sim} presents the average RMSE calculated on the control unit outcomes with standard errors originating from 10 runs. In line with the previous placebo tests, the RNN-based estimators yield error rates comparable to the alternative estimators only when there are sufficient pre-period observations to train on; in this case, when $\text{T}_0/\text{T} \geq 0.5$. We can be reasonably confident that the RNN-based estimators will be at least as accurate as the other estimators since $\text{T}_0/\text{T} = 0.55$ in this application. 
 
-Next, I train a encoder-decoder network on the training set of state land states and use the learned weights to predict the counterfactual time-series of public land states.\footnote{Figure \ref{educ-loss} records the evolution of training and validation loss of the networks over 1,000 epochs.} The top panel of Figure \ref{educ-ed} compares the observed time-series of treated units and control units along with the predicted outcomes of treated units. The dashed vertical line represents the first year of treatment exposure in 1869. We are primarily interested in the difference in the observed and predicted treated unit outcomes, which is the quantity $\boldsymbol{\hat{\phi}}$ calculated by (\ref{eq:pointwise}). These per-period causal impacts are plotted in the bottom panel and are bounded by 95\% randomization confidence intervals. 
+Next, I train a encoder-decoder network on the training set of state land states and use the learned weights to predict the counterfactual outcomes of public land states.\footnote{Figure \ref{educ-loss} records the evolution of training and validation loss of the networks over 1,000 epochs.} The top panel of Figure \ref{educ-ed} compares the average outcomes of treated units and control units along with the average predicted outcomes of treated units. The dashed vertical line represents the first year of treatment exposure in 1869. We are primarily interested in the difference in the observed and predicted treated unit outcomes, which is the quantity $\boldsymbol{\hat{\phi}}$ calculated by (\ref{eq:pointwise}). These per-period causal impacts are plotted in the bottom panel and are bounded by 95\% randomization confidence intervals. 
 
 Counterfactual predictions of state government education spending in the absence of the HSA generally tracks the observed control time-series until the turn of the 19$^\text{th}$ century, at which the counterfactual flattens and diverges from the increasing observed control time-series. This delay can potentially be explained by the fact that homestead entries did not substantially accumulate until after Congress prohibited the sale of public land in 1889 in all states except Missouri \citep{gates1941land,gates1979federal}, as visualized by the per-capita number of homestead entries in each state (Figure \ref{fig:homestead-heatmap}). 
 
@@ -408,7 +393,7 @@ This paper makes a methodological contribution in proposing a novel alternative 
 
 The RNN-based approach joins a new generation of data-driven machine learning techniques for generating counterfactual predictions. Machine learning techniques in general have an advantage over the SCM in that they automatically choose appropriate predictors without relying on pretreatment covariates; this capability limits ``researcher degrees of freedom'' that arises from choices on how to specify the model. 
 
-RNNs have an advantage over alternative estimators because they do not assume a specific functional distribution, are specifically structured to exploit temporal dependencies in panel data. RNNs are also capable of handling multiple treated units and can learn nonconvex combinations of control units, which is useful because the model can share parameters across treated units, and thus generate more precise predictions in settings in which treated units share similar data-generating processes. 
+RNNs have an advantage over alternative estimators because they do not assume a specific functional distribution of the data, are specifically structured to exploit temporal dependencies in panel data. RNNs are also capable of handling multiple treated units and can learn nonconvex combinations of control units, which is useful because the model can share parameters across treated units, and thus generate more precise predictions in settings in which treated units share similar data-generating processes. 
 
 In placebo tests, RNN-based estimators perform comparatively worse than the alternatives on small dimensional datasets such as those featured in the original synthetic control papers. Both RNN-based estimators require sufficient pre-period observations in order to learn an informative representation of the control units. The RVAE in particular requires a a large amount of training data since it is a self-supervised method that learns without outputs. In higher dimensional datasets such as the stock market data, the RNN-based methods generally outperform the alternatives when  $N \ll T$. The estimators underperform when $N \gg T$, which again reflects the need for sufficient pre-period observations. 
 
@@ -433,6 +418,20 @@ A second area of future research would explore ways to relax the assumption of e
 
 \setcounter{figure}{0}
 \renewcommand{\thefigure}{A\arabic{figure}}
+
+\section{Hypothesis testing} \label{eval}
+
+In the placebo tests, the counterfactual outcome is known and the estimators can be evaluated in terms of the RMSE between the predicted and actual post-intervention outcomes of placebo treated units. RMSE measures the accuracy of the counterfactual predictions, and consequently the accuracy of the estimated treatment effect. However, this metric does not tell us anything about the statistical significance of estimated treatment effects. 
+
+\citet{abadie2010synthetic} propose a randomization inference approach for calculating the exact distribution of placebo effects under the sharp null hypothesis of no effect. \citet{cavallo2013catastrophic} extends the placebo-based testing approach to the case of multiple (placebo) treated units by constructing a distribution of \emph{average} placebo effects under the null hypothesis. \citet{firpo2018synthetic} derive the conditions under which the randomization inference approach is valid from a finite sample perspective.\footnote{\citet{hahn2017synthetic} analyze the approach from a repeated sampling perspective.} Randomization $p$-values are obtained following these steps:
+
+\begin{enumerate} 
+	\item Estimate the observed test static $\upmu^{*}$ by calculating the MSE for all $\text{J}$ control units, which results in a matrix of dimension $(\text{T}-\text{T}_0) \times \text{J}$. Taking the row-wise mean results in a $\text{T}-\text{T}_0$-length array of observed average placebo treated effects. 
+	\item Calculate every possible average placebo effect $\upmu$ by randomly sampling without replacement which $\text{J}-1$ control units are assumed to be treated. There are $\mathcal{Q} = \sum\limits_{\text{g}=1}^{\text{J}-1} {\text{J} \choose \text{g}}$ possible average placebo effects. The result is a matrix of dimension $(\text{T}-\text{T}_0) \times \mathcal{Q}$.\footnote{Note that $\mathcal{Q}$ can be computationally burdensome when there are many control units. I set $\mathcal{Q} = 10,000$ in which $\text{J} > 16$.}
+	\item Take a column-wise sum of the number of $\upmu$ that are greater than or equal to $\upmu^{*}$.  
+\end{enumerate}
+
+Each element of the $(\text{T}-\text{T}_0) \times J$ matrix of counts obtained from the last step is divided by $\mathcal{Q}$ to estimate an array of exact two-sided $p$ values, $\hat{p}$. Assuming that treatment has a constant additive effect $\Delta$, I construct an interval estimate for $\Delta$ by inverting the randomization test. Let $\delta_\Delta$ be the test statistic calculated by subtracting all possible $\mu$ by $\Delta$. I derive a two-sided randomization confidence interval by collecting all values of $\delta_\Delta$ that yield $\hat{p}$ values greater than or equal to a significance level $\alpha$. I find the endpoints of the confidence interval by randomly sampling 500 values of $\Delta$.
 	
 \begin{figure}[htbp]
 		\centering
@@ -462,21 +461,17 @@ A second area of future research would explore ways to relax the assumption of e
 	\caption{Pre-period densities of log per-capita state government education spending by treatment status. Density in Figure \ref{educ-dense-w} weighted by propensity score. \label{educ-dense}} 
 \end{figure*}
 
-\begin{figure}[htbp]
-	\centering
-	\begin{subfigure}[t]{1\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/educ-ed-loss.png}
-	%	\caption{Encoder-decoder networks} 
-	\end{subfigure}
-%	~ 
-%	\begin{subfigure}[t]{0.8\textwidth}
+%\begin{figure}[htbp]
 %		\centering
-%		\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/educ-rvae-loss.png}
-%		\caption{RVAE}
-%	\end{subfigure}
-	\caption{Encoder-decoder networks training and validation loss on education spending data. \label{educ-loss}} 
-\end{figure}
+%		\includegraphics[width=0.9\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/educ-ed-loss.png}
+%%	~ 
+%%	\begin{subfigure}[t]{0.8\textwidth}
+%%		\centering
+%%		\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/educ-rvae-loss.png}
+%%		\caption{RVAE}
+%%	\end{subfigure}
+%	\caption{Encoder-decoder networks training and validation loss on education spending data. \label{educ-loss}} 
+%\end{figure}
 
 %\begin{figure}[htbp]
 %	\centering
@@ -484,12 +479,12 @@ A second area of future research would explore ways to relax the assumption of e
 %	\caption{RVAE estimates of the homestead act on state government education spending, 1809 to 1982.\label{rvae-ed}} 
 %\end{figure}
 
-\begin{figure}[htbp]
-	\begin{center}
-		\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/land-reform/paper/plots/homestead-heatmap.png}
-	\end{center}
-	\caption{Per-capita homestead entries in state $i$ and year $t$, 1869-1922. \label{fig:homestead-heatmap}}
-\end{figure}
+%\begin{figure}[htbp]
+%	\begin{center}
+%		\includegraphics[width=0.9\textwidth]{/media/jason/Dropbox/github/land-reform/paper/plots/homestead-heatmap.png}
+%	\end{center}
+%	\caption{Per-capita homestead entries in state $i$ and year $t$, 1869-1922. \label{fig:homestead-heatmap}}
+%\end{figure}
 
 \end{appendices}
 

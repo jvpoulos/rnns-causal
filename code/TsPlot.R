@@ -70,9 +70,9 @@ TsPlot <- function(df, main = "",y.title,limits,breaks) {
      #      , axis.ticks.y=element_blank()
            , legend.text=element_text(size=14, family = "serif")
            , legend.box = "horizontal" # not working?)
-    ) + #geom_text(data = ann_text,aes(y = value, label =lab), family="serif", fontface="italic",  size=6) +
+    ) + geom_text(data = ann_text,aes(y = value, label =lab), family="serif", fontface="italic",  size=6) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-            axis.line = element_line(colour = "black")) + # rm background: panel.background = element_blank(), 
+          panel.background = element_blank(), axis.line = element_line(colour = "black")) + # rm background
   #  scale_y_continuous(name=y.title) +
     scale_colour_manual(name="", values = c(  "observed.pls" = wes_palette("Darjeeling1")[5], 
                                               "observed.sls" = wes_palette("Darjeeling1")[1], 

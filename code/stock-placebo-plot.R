@@ -3,8 +3,12 @@ library(latex2exp)
 
 df1<- readRDS(paste0(results.directory, "plots/stock-placebo-results.rds"))
 
+df1 <- df1 %>% group_by(N) %>% mutate(y = log(y),
+                                      lb= log(lb),
+                                      ub = log(ub))
+
 stock <- ggplot(data = df1, aes(log(N), y, color = Method, shape = Method)) +
-  geom_point(size = 2, position=position_dodge(width=0.3)) +
+  geom_point(size = 3, position=position_dodge(width=0.3)) +
   geom_line(position=position_dodge(width=0.3)) +
   geom_errorbar(
     aes(ymin = lb, ymax = ub),
@@ -14,7 +18,7 @@ stock <- ggplot(data = df1, aes(log(N), y, color = Method, shape = Method)) +
   scale_shape_manual(values=c(1:8)) +
   theme_bw() +
   xlab(TeX('log(N)')) +
-  ylab("Average RMSE") +
+  ylab("Average RMSE (ln)") +
   theme(axis.title=element_text(family="serif", size=16)) +
   theme(axis.text=element_text(family="serif", size=14)) +
   theme(legend.text=element_text(family="serif", size = 12)) +
