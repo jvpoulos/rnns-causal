@@ -15,7 +15,7 @@
 \def\Minus{\texttt{-}}
 
 \title{RNN-Based Counterfactual Prediction} 
-\author[ ]{Jason Poulos\thanks{PhD Candidate, Department of Political Science, 210 Barrows Hall \#1950, Berkeley, CA 94720-1950. \emph{Email:} \href{mailto:poulos@berkeley.edu}{\nolinkurl{poulos@berkeley.edu}}. \emph{Telephone:} \Plus 1\Minus 510\Minus 642\Minus 6323. I acknowledge support of the National Science Foundation Graduate Research Fellowship (DGE 1106400). This work used the computer resources of Stampede2 at the Texas Advanced Computing Center (TACC) under an Extreme Science and Engineering Discovery Environment (XSEDE) startup allocation (TG-SES180010). The Titan Xp GPU used for this research was donated by the NVIDIA Corporation.}}
+\author[ ]{Jason Poulos\thanks{\emph{Address for correspondence:} Department of Political Science, 210 Barrows Hall \#1950, Berkeley, CA 94720-1950. \emph{E-mail:} poulos@berkeley.edu. I acknowledge support of the National Science Foundation Graduate Research Fellowship (DGE 1106400). This work used the computer resources of Stampede2 at the Texas Advanced Computing Center (TACC) under an Extreme Science and Engineering Discovery Environment (XSEDE) startup allocation (TG-SES180010). The Titan Xp GPU used for this research was donated by the NVIDIA Corporation.}}
 \affil[ ]{University of California, Berkeley}
 \date{}
 \setcounter{Maxaffil}{0}
@@ -103,21 +103,6 @@
 % Set Spacing
 \doublespacing
 
-% Number assumptions
-\newtheorem*{assumption*}{\assumptionnumber}
-\providecommand{\assumptionnumber}{}
-\makeatletter
-\newenvironment{assumption}[2]
-{%
-	\renewcommand{\assumptionnumber}{Assumption #1}%
-	\begin{assumption*}%
-		\protected@edef\@currentlabel{#1}%
-	}
-	{%
-	\end{assumption*}
-}
-\makeatother
-
 % Macros
 \newcommand{\Adv}{{\boldsymbol{Adv}}}       
 \newcommand{\prp}{{\mathrm{prp}}}                  % How to define new commands 
@@ -149,11 +134,11 @@
 \pagenumbering{roman}% Roman-numbered pages (start from i)
 \begin{abstract}  % abstract of 150 to 250 words
 \noindent 
-This paper proposes an alternative to the synthetic control method (SCM) for estimating the effect of a policy intervention on an outcome over time. Recurrent neural networks (RNNs) are used to predict the counterfactual outcomes of treated units using only the pre-intervention outcomes of control units as predictors. The proposed approach is less susceptible to $p$-hacking because it not require the researcher to specify predictors or use pre-intervention covariates to construct the control group. RNNs do not assume a functional distribution, can learn nonconvex combinations of control units, and are specifically structured to exploit temporal dependencies in panel data. In placebo tests, the RNN-based approach outperforms the SCM and a matrix completion estimators in high-dimensional data settings where the number of time periods exceeds the size of the predictor set. 
-\\
-\begin{singlespace}
-	\emph{Keywords:} Counterfactual Prediction; Encoder-Decoder Networks; Recurrent Neural Networks; Synthetic Controls; Variational Autoencoder
-\end{singlespace}
+This paper proposes an alternative to the synthetic control method (SCM) for estimating the effect of a policy intervention on an outcome over time. Recurrent neural networks (RNNs) are used to predict the counterfactual outcomes of treated units using only the pre-intervention outcomes of control units as predictors. The proposed approach is less susceptible to $p$-hacking because it not require the researcher to specify predictors or choose pre-intervention covariates to construct the control group. RNNs do not assume a functional form, can learn nonconvex combinations of control units, and are specifically structured to exploit temporal dependencies in sequential data. In placebo tests, the RNN-based approach outperforms the SCM and matrix completion method when the number of time periods exceed the number of predictors in high-dimensional panel data settings. 
+%\\
+%\begin{singlespace}
+%	\emph{Keywords:} Counterfactual Prediction; Encoder-Decoder Networks; Recurrent Neural Networks; Synthetic Controls; Variational Autoencoder
+%\end{singlespace}
 \end{abstract}
 
 %Move introduction to second page
@@ -293,34 +278,19 @@ For each trial run, I randomly select half of the units in the dataset to be tre
 
 I first conduct placebo tests on three datasets common to the synthetic control literature, with the actual treated unit removed from each dataset: \possessivecite{abadie2003economic} study of the economic impact of terrorism in the Basque Country during the late 1960s ($\text{N}=16$, $\text{T}=43$); \possessivecite{abadie2010synthetic} study of the effects of a large-scale tobacco control program implemented in California in 1988 ($\text{N}=38$, $\text{T}=31$); and \possessivecite{abadie2015comparative} study of the economic impact of the 1990 German reunification on West Germany ($\text{N}=16$, $\text{T}=44$). Each dataset is log-transformed to alleviate exponential effects.
 
-Figure \ref{synth-sim} reports the estimated average prediction error with the estimates jittered horizontally to reduce overlap. Error bars are calculated using the standard deviation of the error distribution generated by multiple runs. The RNN-based estimators yield comparable error rates vis-à-vis the alternatives only for high ratios of $\text{T}_0/\text{T}$, which reflect the need for sizeable training sets for the RNN-based approach. The RVAE performs the worse on comparatively small training data since it is learning from less information than the encoder-decoder networks; i.e., without the post-period observations of the control units. The MC-NNM estimator does comparatively well in the simulations due to the fact that it is capable of using additional information in the form of pre-period observations of the treated units, whereas the other estimators train only on the control observations. 
+Figure \ref{california-sim} reports the estimated average prediction error on the California smoking dataset, with the estimates jittered horizontally to reduce overlap.\footnote{Figures \ref{basque-sim} and \ref{germany-sim} report the estimates for the Basque Country and West Germany datasets.} Error bars are calculated using the standard deviation of the error distribution generated by multiple runs. The RNN-based estimators yield comparable error rates vis-à-vis the alternatives only for high ratios of $\text{T}_0/\text{T}$, which reflect the need for sizeable training sets for the RNN-based approach. The RVAE performs the worse on comparatively small training data since it is learning from less information than the encoder-decoder networks; i.e., without the post-period observations of the control units. The MC-NNM estimator does comparatively well in the simulations due to the fact that it is capable of using additional information in the form of pre-period observations of the treated units, whereas the other estimators train only on the control observations. 
 
 \begin{figure}[htbp]
 	\centering
-	\begin{subfigure}[t]{0.48\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/basque-sim.png}
-		\caption{Basque Country terrorism data} 
-	\end{subfigure}
-	~ 
-	\begin{subfigure}[t]{0.48\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/california-sim.png}
-		\caption{California smoking ban data} 
-	\end{subfigure}
-	~ 
-	\begin{subfigure}[t]{0.48\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/germany-sim.png}
-		\caption{West German reunification data}%,
-	\end{subfigure}
-	\caption{Placebo tests on synthetic control datasets: 
+		\includegraphics[width=0.9\textwidth]{plots/california-sim.png}
+		\caption{California smoking data} 
+	\caption{Placebo tests on California smoking data: 
 		{\protect\tikz \protect\draw[color={rgb:red,4;green,0;yellow,1}] (0,0) -- plot[mark=o, mark options={scale=2}] (0.25,0) -- (0.5,0);}, DID;
 		{\protect\tikz \protect\draw[color={rgb:red,244;green,226;blue,66}] (0,0) -- plot[mark=triangle*, mark options={scale=2,fill=white}] (0.25,0) -- (0.5,0);}, ED; 
 		{\protect\tikz \protect\draw[color={rgb:red,0;green,5;blue,1}] (0,0) -- plot[mark=+, mark options={scale=2}] (0.25,0) -- (0.5,0);}, MC-NNM;
 		{\protect\tikz \protect\draw[color={rgb:red,66;green,200;blue,244}] (0,0) -- plot[mark=x, mark options={scale=2}] (0.25,0) -- (0.5,0);}, RVAE;
 		{\protect\tikz \protect\draw[color={rgb:red,66;green,107;blue,244}] (0,0) -- plot[mark=diamond, mark options={scale=2}] (0.25,0) -- (0.5,0);}, SCM;
-		{\protect\tikz \protect\draw[color={rgb:red,244;pink,66;blue,223}] (0,0) -- plot[mark=triangle, mark options={scale=2, rotate=180}] (0.25,0) -- (0.5,0);}, VT-EN.\label{synth-sim}}
+		{\protect\tikz \protect\draw[color={rgb:red,244;pink,66;blue,223}] (0,0) -- plot[mark=triangle, mark options={scale=2, rotate=180}] (0.25,0) -- (0.5,0);}, VT-EN.\label{california-sim}}
 \end{figure}
 
 \subsection{Stock market data}
@@ -331,7 +301,7 @@ Figure \ref{stock-sim} reports the average RMSE for each pair with standard erro
 
 \begin{figure}[htbp]
 	\centering
-	\includegraphics[width=0.9\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/stock-sim.png}
+	\includegraphics[width=0.9\textwidth]{plots/stock-sim.png}
 	\caption{Placebo tests on stock market data: 
 		{\protect\tikz \protect\draw[color={rgb:red,4;green,0;yellow,1}] (0,0) -- plot[mark=o, mark options={scale=2}] (0.25,0) -- (0.5,0);}, DID;
 		{\protect\tikz \protect\draw[color={rgb:red,244;green,226;blue,66}] (0,0) -- plot[mark=triangle*, mark options={scale=2,fill=white}] (0.25,0) -- (0.5,0);}, ED; 
@@ -373,7 +343,7 @@ Taking the mean of post-period impacts, I estimate that the impact of the HSA on
  
 \begin{figure}[htbp]
 	\centering
-	\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/educ-ed.png}
+	\includegraphics[width=0.9\textwidth]{plots/educ-ed.png}
 	\caption{Encoder-decoder estimates of the impact of the HSA on state government education spending, 1809 to 1982:		{\color{Darjeeling15}{\sampleline{}}}, observed treated;
 		{\color{Darjeeling11}{\sampleline{dashed}}}, observed control;
 		{\color{Darjeeling15}{\sampleline{dotted}}}, counterfactual treated;
@@ -441,8 +411,33 @@ Under the assumption that treatment has a constant additive effect $\Delta$, I c
 \section{Appendix Figures}
 
 \begin{figure}[htbp]
+	\centering
+		\includegraphics[width=0.9\textwidth]{plots/basque-sim.png}
+	\caption{Placebo tests on Basque Country terrorism data: 
+		{\protect\tikz \protect\draw[color={rgb:red,4;green,0;yellow,1}] (0,0) -- plot[mark=o, mark options={scale=2}] (0.25,0) -- (0.5,0);}, DID;
+		{\protect\tikz \protect\draw[color={rgb:red,244;green,226;blue,66}] (0,0) -- plot[mark=triangle*, mark options={scale=2,fill=white}] (0.25,0) -- (0.5,0);}, ED; 
+		{\protect\tikz \protect\draw[color={rgb:red,0;green,5;blue,1}] (0,0) -- plot[mark=+, mark options={scale=2}] (0.25,0) -- (0.5,0);}, MC-NNM;
+		{\protect\tikz \protect\draw[color={rgb:red,66;green,200;blue,244}] (0,0) -- plot[mark=x, mark options={scale=2}] (0.25,0) -- (0.5,0);}, RVAE;
+		{\protect\tikz \protect\draw[color={rgb:red,66;green,107;blue,244}] (0,0) -- plot[mark=diamond, mark options={scale=2}] (0.25,0) -- (0.5,0);}, SCM;
+		{\protect\tikz \protect\draw[color={rgb:red,244;pink,66;blue,223}] (0,0) -- plot[mark=triangle, mark options={scale=2, rotate=180}] (0.25,0) -- (0.5,0);}, VT-EN.\label{basque-sim}}
+\end{figure}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.9\textwidth]{plots/germany-sim.png}
+	\caption{Placebo tests on West German reunification data: 
+		{\protect\tikz \protect\draw[color={rgb:red,4;green,0;yellow,1}] (0,0) -- plot[mark=o, mark options={scale=2}] (0.25,0) -- (0.5,0);}, DID;
+		{\protect\tikz \protect\draw[color={rgb:red,244;green,226;blue,66}] (0,0) -- plot[mark=triangle*, mark options={scale=2,fill=white}] (0.25,0) -- (0.5,0);}, ED; 
+		{\protect\tikz \protect\draw[color={rgb:red,0;green,5;blue,1}] (0,0) -- plot[mark=+, mark options={scale=2}] (0.25,0) -- (0.5,0);}, MC-NNM;
+		{\protect\tikz \protect\draw[color={rgb:red,66;green,200;blue,244}] (0,0) -- plot[mark=x, mark options={scale=2}] (0.25,0) -- (0.5,0);}, RVAE;
+		{\protect\tikz \protect\draw[color={rgb:red,66;green,107;blue,244}] (0,0) -- plot[mark=diamond, mark options={scale=2}] (0.25,0) -- (0.5,0);}, SCM;
+		{\protect\tikz \protect\draw[color={rgb:red,244;pink,66;blue,223}] (0,0) -- plot[mark=triangle, mark options={scale=2, rotate=180}] (0.25,0) -- (0.5,0);}, VT-EN.\label{germany-sim}}
+\end{figure}
+
+
+\begin{figure}[htbp]
 		\centering
-		\includegraphics[width=0.9\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/educ-sim.png}
+		\includegraphics[width=0.9\textwidth]{plots/educ-sim.png}
 		\caption{Placebo tests on education spending data: 		{\protect\tikz \protect\draw[color={rgb:red,4;green,0;yellow,1}] (0,0) -- plot[mark=o, mark options={scale=2}] (0.25,0) -- (0.5,0);}, DID;
 			{\protect\tikz \protect\draw[color={rgb:red,244;green,226;blue,66}] (0,0) -- plot[mark=triangle*, mark options={scale=2,fill=white}] (0.25,0) -- (0.5,0);}, ED; 
 			{\protect\tikz \protect\draw[color={rgb:red,0;green,5;blue,1}] (0,0) -- plot[mark=+, mark options={scale=2}] (0.25,0) -- (0.5,0);}, MC-NNM;
@@ -456,13 +451,13 @@ Under the assumption that treatment has a constant additive effect $\Delta$, I c
 	\centering
 	\begin{subfigure}[t]{0.48\textwidth}
 		\centering
-		\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/educ-dens.png}
+		\includegraphics[width=\textwidth]{plots/educ-dens.png}
 		\caption{Unweighted} 
 	\end{subfigure}
 	~ 
 	\begin{subfigure}[t]{0.48\textwidth}
 		\centering
-		\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/educ-dens-w.png}
+		\includegraphics[width=\textwidth]{plots/educ-dens-w.png}
 		\caption{Weighted\label{educ-dense-w}}
 	\end{subfigure}
 	\caption{Pre-period densities of log per-capita state government education spending by treatment status. Density in Figure \ref{educ-dense-w} weighted by propensity score. \label{educ-dense}} 
@@ -470,11 +465,11 @@ Under the assumption that treatment has a constant additive effect $\Delta$, I c
 
 %\begin{figure}[htbp]
 %		\centering
-%		\includegraphics[width=0.9\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/educ-ed-loss.png}
+%		\includegraphics[width=0.9\textwidth]{plots/educ-ed-loss.png}
 %%	~ 
 %%	\begin{subfigure}[t]{0.8\textwidth}
 %%		\centering
-%%		\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/educ-rvae-loss.png}
+%%		\includegraphics[width=\textwidth]{plots/educ-rvae-loss.png}
 %%		\caption{RVAE}
 %%	\end{subfigure}
 %	\caption{Encoder-decoder networks training and validation loss on education spending data. \label{educ-loss}} 
@@ -482,7 +477,7 @@ Under the assumption that treatment has a constant additive effect $\Delta$, I c
 
 %\begin{figure}[htbp]
 %	\centering
-%		\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/results/plots/educ-rvae.png}
+%		\includegraphics[width=\textwidth]{plots/educ-rvae.png}
 %	\caption{RVAE estimates of the homestead act on state government education spending, 1809 to 1982.\label{rvae-ed}} 
 %\end{figure}
 
