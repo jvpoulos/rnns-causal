@@ -99,6 +99,21 @@ p <- ggplot(data = df.m, aes(x=value)) + geom_density(aes(fill=status), alpha = 
   ylab("Density") + 
   xlab("Log per-capita education spending") +
   scale_fill_manual(values = c("red","blue"), labels= c("Control", "Treated"), name="Treatment status") +
+  theme( legend.title = element_blank()
+         , plot.title = element_text(hjust = 0.5)
+         #      , legend.position = c(0.2,0.85)
+         , legend.justification = c(1,0)
+         , legend.background = element_rect()
+         , axis.text=element_text(size=14)
+         , axis.title.x=element_text(size = 16)
+         , axis.title.y=element_text(size = 16)
+         #     , axis.ticks.x=element_blank()
+         #      , axis.ticks.y=element_blank()
+         , legend.text=element_text(size=16, family = "serif")
+         , legend.box = "horizontal" # not working?)
+  ) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black")) + # rm background
   theme(legend.justification = c(0.95, 0.95), legend.position = c(0.25, 0.95),legend.background = element_rect(colour = "black"))
 
 ggsave(paste0(results.directory,"plots/educ-dens.png"), p, width=8.5, height=11)
@@ -108,6 +123,21 @@ pw <- ggplot(data = df.m, aes(x=value)) + geom_density(aes(fill=status, weights=
   ylab("Density") + 
   xlab("Log per-capita education spending") +
   scale_fill_manual(values = c("red","blue"), labels= c("Control", "Treated"), name="Treatment status") +
+  theme( legend.title = element_blank()
+         , plot.title = element_text(hjust = 0.5)
+         #      , legend.position = c(0.2,0.85)
+         , legend.justification = c(1,0)
+         , legend.background = element_rect()
+         , axis.text=element_text(size=14)
+         , axis.title.x=element_text(size = 16)
+         , axis.title.y=element_text(size = 16)
+         #     , axis.ticks.x=element_blank()
+         #      , axis.ticks.y=element_blank()
+         , legend.text=element_text(size=16, family = "serif")
+         , legend.box = "horizontal" # not working?)
+  ) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black")) + # rm background
   theme(legend.justification = c(0.95, 0.95), legend.position = c(0.25, 0.95),legend.background = element_rect(colour = "black"))
 
 ggsave(paste0(results.directory,"plots/educ-dens-w.png"), pw, width=8.5, height=11)

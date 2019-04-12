@@ -1,4 +1,4 @@
-\begin{thebibliography}{70}
+\begin{thebibliography}{71}
 \expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
 \expandafter\ifx\csname url\endcsname\relax
   \def\url#1{\texttt{#1}}\fi
@@ -7,8 +7,8 @@
 \bibitem[{Abadie et~al.(2010)Abadie, Diamond and
   Hainmueller}]{abadie2010synthetic}
 Abadie, A., Diamond, A. and Hainmueller, J. (2010) Synthetic control methods
-  for comparative case studies: Estimating the effect of california’s tobacco
-  control program.
+  for comparative case studies: Estimating the effect of {C}alifornia’s
+  tobacco control program.
 \newblock \textit{Journal of the American Statistical Association},
   \textbf{105}, 493--505.
 
@@ -20,7 +20,7 @@ Abadie, A., Diamond, A. and Hainmueller, J. (2010) Synthetic control methods
 
 \bibitem[{Abadie and Gardeazabal(2003)}]{abadie2003economic}
 Abadie, A. and Gardeazabal, J. (2003) The economic costs of conflict: A case
-  study of the basque country.
+  study of the {B}asque {C}ountry.
 \newblock \textit{The American Economic Review}, \textbf{93}, 113--132.
 
 \bibitem[{Acemoglu and Robinson(2008)}]{acemoglu2008persistence}
@@ -28,9 +28,10 @@ Acemoglu, D. and Robinson, J.~A. (2008) Persistence of power, elites, and
   institutions.
 \newblock \textit{American Economic Review}, \textbf{98}, 267--293.
 
-\bibitem[{Alesina and Reich(2013)}]{alesina2013nation}
-Alesina, A. and Reich, B. (2013) Nation building.
-\newblock \textit{Tech. rep.}, National Bureau of Economic Research.
+\bibitem[{Alesina et~al.(2013)Alesina, Giuliano and Reich}]{alesina2013nation}
+Alesina, A., Giuliano, P. and Reich, B. (2013) Nation-building and education.
+\newblock \textit{Working Paper 18839}, National Bureau of Economic Research.
+\newblock Available at: \url{http://www.nber.org/papers/w18839}.
 
 \bibitem[{Amjad et~al.(2018)Amjad, Shah and Shen}]{amjad2018robust}
 Amjad, M., Shah, D. and Shen, D. (2018) Robust synthetic control.
@@ -39,7 +40,7 @@ Amjad, M., Shah, D. and Shen, D. (2018) Robust synthetic control.
 
 \bibitem[{Atack(2013)}]{atack2013use}
 Atack, J. (2013) On the use of geographic information systems in economic
-  history: The american transportation revolution revisited.
+  history: The {A}merican transportation revolution revisited.
 \newblock \textit{The Journal of Economic History}, \textbf{73}, 313--338.
 
 \bibitem[{{Athey} et~al.(2017){Athey}, {Bayati}, {Doudchenko}, {Imbens} and
@@ -85,8 +86,8 @@ Bowman, S.~R., Vilnis, L., Vinyals, O., Dai, A.~M., Jozefowicz, R. and Bengio,
   S. (2015) Generating sentences from a continuous space.
 \newblock \textit{arXiv:1511.06349}.
 
-\bibitem[{Candes and Plan(2010)}]{candes2010matrix}
-Candes, E.~J. and Plan, Y. (2010) Matrix completion with noise.
+\bibitem[{Cand{\`e}s and Plan(2010)}]{candes2010matrix}
+Cand{\`e}s, E.~J. and Plan, Y. (2010) Matrix completion with noise.
 \newblock \textit{Proceedings of the IEEE}, \textbf{98}, 925--936.
 
 \bibitem[{Cand{\`e}s and Recht(2009)}]{candes2009exact}
@@ -96,7 +97,7 @@ Cand{\`e}s, E.~J. and Recht, B. (2009) Exact matrix completion via convex
 
 \bibitem[{Carvalho et~al.(2018)Carvalho, Masini and
   Medeiros}]{carvalho2018arco}
-Carvalho, C., Masini, R. and Medeiros, M.~C. (2018) Arco: an artificial
+Carvalho, C., Masini, R. and Medeiros, M.~C. (2018) Ar{C}o: {A}n artificial
   counterfactual approach for high-dimensional panel time-series data.
 \newblock \textit{Journal of Econometrics}, \textbf{207}, 352--380.
 
@@ -141,7 +142,7 @@ Chung, J., Kastner, K., Dinh, L., Goel, K., Courville, A.~C. and Bengio, Y.
   and Strijov}]{cinar2017position}
 Cinar, Y.~G., Mirisaee, H., Goswami, P., Gaussier, E., A{\"i}t-Bachir, A. and
   Strijov, V. (2017) Position-based content attention for time series
-  forecasting with sequence-to-sequence rnns.
+  forecasting with sequence-to-sequence {RNN}s.
 \newblock In \textit{International Conference on Neural Information
   Processing}, 533--544. Springer.
 
@@ -166,6 +167,8 @@ Cortes, C., Mohri, M., Riley, M. and Rostamizadeh, A. (2008) Sample selection
 \bibitem[{Dube and Zipperer(2015)}]{dube2015pooling}
 Dube, A. and Zipperer, B. (2015) Pooling multiple case studies using synthetic
   controls: An application to minimum wage policies.
+\newblock IZA Discussion Paper No. 8944. Available at:
+  \url{http://ftp.iza.org/dp8944.pdf}.
 
 \bibitem[{El~Hihi and Bengio(1995)}]{el1995}
 El~Hihi, S. and Bengio, Y. (1995) Hierarchical recurrent neural networks for
@@ -276,7 +279,7 @@ Kaul, A., Kl{\"o}{\ss}ner, S., Pfeifer, G. and Schieler, M. (2015) Synthetic
 \bibitem[{{Kingma} and {Ba}(2014)}]{kingma2014adam}
 {Kingma}, D.~P. and {Ba}, J. (2014) {Adam: A Method for Stochastic
   Optimization}.
-\newblock \textit{ArXiv e-prints}.
+\newblock \textit{arXiv e-prints}, arXiv:1412.6980.
 
 \bibitem[{Kingma and Welling(2013)}]{kingma2013auto}
 Kingma, D.~P. and Welling, M. (2013) Auto-encoding variational bayes.
@@ -311,8 +314,8 @@ Mazumder, R., Hastie, T. and Tibshirani, R. (2010) Spectral regularization
 
 \bibitem[{Meyer et~al.(1979)Meyer, Tyack, Nagel and Gordon}]{meyer1979public}
 Meyer, J.~W., Tyack, D., Nagel, J. and Gordon, A. (1979) Public education as
-  nation-building in america: Enrollments and bureaucratization in the american
-  states, 1870-1930.
+  nation-building in {A}merica: Enrollments and bureaucratization in the
+  {A}merican states, 1870-1930.
 \newblock \textit{American Journal of Sociology}, \textbf{85}, 591--613.
 
 \bibitem[{Neyman(1923)}]{neyman1923}
@@ -400,5 +403,11 @@ Yoon, J., Zame, W.~R. and van~der Schaar, M. (2018) Estimating missing data in
 {Zhu}, L. and {Laptev}, N. (2017) {Deep and Confident Prediction for Time
   Series at Uber}.
 \newblock \textit{ArXiv e-prints}.
+
+\bibitem[{Zou and Hastie(2005)}]{zou2005regularization}
+Zou, H. and Hastie, T. (2005) Regularization and variable selection via the
+  elastic net.
+\newblock \textit{Journal of the Royal Statistical Society: Series B
+  (Statistical Methodology)}, \textbf{67}, 301--320.
 
 \end{thebibliography}

@@ -5,12 +5,14 @@
 \BOOKMARK [1][-]{section.3}{RNNs for counteractual prediction}{}% 5
 \BOOKMARK [2][-]{subsection.3.1}{Encoder-decoder networks}{section.3}% 6
 \BOOKMARK [2][-]{subsection.3.2}{Recurrent variational autoencoder}{section.3}% 7
-\BOOKMARK [2][-]{subsection.3.3}{Implementation details}{section.3}% 8
-\BOOKMARK [1][-]{section.4}{Placebo tests}{}% 9
-\BOOKMARK [2][-]{subsection.4.1}{Synthetic control datasets}{section.4}% 10
-\BOOKMARK [2][-]{subsection.4.2}{Stock market data}{section.4}% 11
-\BOOKMARK [1][-]{section.5}{Application: Homestead acts and public schooling}{}% 12
-\BOOKMARK [2][-]{subsection.5.1}{Data and assumptions}{section.5}% 13
-\BOOKMARK [2][-]{subsection.5.2}{Estimates}{section.5}% 14
-\BOOKMARK [1][-]{section.6}{Conclusion}{}% 15
-\BOOKMARK [1][-]{Appendix.1.A}{Hypothesis testing}{}% 16
+\BOOKMARK [1][-]{section.4}{Placebo tests}{}% 8
+\BOOKMARK [2][-]{subsection.4.1}{Synthetic control datasets}{section.4}% 9
+\BOOKMARK [2][-]{subsection.4.2}{Stock market data}{section.4}% 10
+\BOOKMARK [1][-]{section.5}{Application: Homestead policy and public schooling}{}% 11
+\BOOKMARK [2][-]{subsection.5.1}{Data and assumptions}{section.5}% 12
+\BOOKMARK [2][-]{subsection.5.2}{Estimates}{section.5}% 13
+\BOOKMARK [1][-]{section.6}{Conclusion}{}% 14
+\BOOKMARK [1][-]{Appendix.1.A}{Implementation details}{}% 15
+\BOOKMARK [1][-]{Appendix.1.B}{Hypothesis testing}{}% 16
+\BOOKMARK [2][-]{subsection.1.B.1}{Randomization confidence intervals}{Appendix.1.B}% 17
+\BOOKMARK [1][-]{Appendix.1.C}{Appendix Figures}{}% 18
