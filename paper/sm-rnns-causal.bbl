@@ -1,0 +1,54 @@
+\begin{thebibliography}{9}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+\expandafter\ifx\csname url\endcsname\relax
+  \def\url#1{\texttt{#1}}\fi
+\expandafter\ifx\csname urlprefix\endcsname\relax\def\urlprefix{URL: }\fi
+
+\bibitem[{Abadie et~al.(2010)Abadie, Diamond and
+  Hainmueller}]{abadie2010synthetic}
+Abadie, A., Diamond, A. and Hainmueller, J. (2010) Synthetic control methods
+  for comparative case studies: Estimating the effect of {C}alifornia's tobacco
+  control program.
+\newblock \textit{Journal of the American Statistical Association},
+  \textbf{105}, 493--505.
+
+\bibitem[{Cavallo et~al.(2013)Cavallo, Galiani, Noy and
+  Pantano}]{cavallo2013catastrophic}
+Cavallo, E., Galiani, S., Noy, I. and Pantano, J. (2013) Catastrophic natural
+  disasters and economic growth.
+\newblock \textit{Review of Economics and Statistics}, \textbf{95}, 1549--1561.
+
+\bibitem[{Chollet(2015)}]{chollet2015keras}
+Chollet, F. (2015) Keras.
+\newblock Available at: \url{https://github.com/fchollet/keras}.
+
+\bibitem[{{Chung} et~al.(2014){Chung}, {Gulcehre}, {Cho} and
+  {Bengio}}]{chung2014}
+{Chung}, J., {Gulcehre}, C., {Cho}, K. and {Bengio}, Y. (2014) {Empirical
+  Evaluation of Gated Recurrent Neural Networks on Sequence Modeling}.
+\newblock \textit{arXiv e-prints}, arXiv:1412.3555.
+
+\bibitem[{Firpo and Possebom(2018)}]{firpo2018synthetic}
+Firpo, S. and Possebom, V. (2018) Synthetic control method: Inference,
+  sensitivity analysis and confidence sets.
+\newblock \textit{Journal of Causal Inference}, \textbf{6}.
+
+\bibitem[{Glorot and Bengio(2010)}]{glorot2010}
+Glorot, X. and Bengio, Y. (2010) Understanding the difficulty of training deep
+  feedforward neural networks.
+\newblock In \textit{Artificial Intelligence and Statistics}, vol.~9, 249--256.
+
+\bibitem[{Hahn and Shi(2017)}]{hahn2017synthetic}
+Hahn, J. and Shi, R. (2017) Synthetic control and inference.
+\newblock \textit{Econometrics}, \textbf{5}, 52.
+
+\bibitem[{{Kingma} and {Ba}(2014)}]{kingma2014adam}
+{Kingma}, D.~P. and {Ba}, J. (2014) {Adam: A Method for Stochastic
+  Optimization}.
+\newblock \textit{arXiv e-prints}, arXiv:1412.6980.
+
+\bibitem[{Schmidhuber and Hochreiter(1997)}]{schmidhuber1997long}
+Schmidhuber, J. and Hochreiter, S. (1997) Long short-term memory.
+\newblock \textit{Neural Computation}, \textbf{9}, 1735--1780.
+
+\end{thebibliography}

@@ -1,0 +1,4 @@
+\contentsline {section}{\numberline {1}Implementation details}{1}{section.1}
+\contentsline {section}{\numberline {2}Hypothesis testing}{2}{section.2}
+\contentsline {subsection}{\numberline {2.1}Randomization confidence intervals}{2}{subsection.2.1}
+\contentsline {section}{\numberline {3}Supporting Figures}{3}{section.3}

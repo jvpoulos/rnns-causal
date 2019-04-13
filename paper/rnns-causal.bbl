@@ -1,4 +1,4 @@
-\begin{thebibliography}{71}
+\begin{thebibliography}{69}
 \expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
 \expandafter\ifx\csname url\endcsname\relax
   \def\url#1{\texttt{#1}}\fi
@@ -47,13 +47,13 @@ Atack, J. (2013) On the use of geographic information systems in economic
   {Khosravi}}]{athey2017matrix}
 {Athey}, S., {Bayati}, M., {Doudchenko}, N., {Imbens}, G. and {Khosravi}, K.
   (2017) {Matrix Completion Methods for Causal Panel Data Models}.
-\newblock \textit{ArXiv e-prints}.
+\newblock \textit{arXiv e-prints}, arXiv:1710.10251.
 
 \bibitem[{{Bahdanau} et~al.(2014){Bahdanau}, {Cho} and
   {Bengio}}]{bahdanau2014neural}
 {Bahdanau}, D., {Cho}, K. and {Bengio}, Y. (2014) {Neural Machine Translation
   by Jointly Learning to Align and Translate}.
-\newblock \textit{ArXiv e-prints}.
+\newblock \textit{arXiv e-prints}, arXiv:1409.0473.
 
 \bibitem[{Bandiera et~al.(2018)Bandiera, Mohnen, Rasul and
   Viarengo}]{bandiera2018nation}
@@ -65,7 +65,7 @@ Bandiera, O., Mohnen, M., Rasul, I. and Viarengo, M. (2018) Nation-building
   Pereira}]{ben2007analysis}
 Ben-David, S., Blitzer, J., Crammer, K. and Pereira, F. (2007) Analysis of
   representations for domain adaptation.
-\newblock In \textit{Advances in neural information processing systems},
+\newblock In \textit{Advances in Neural Information Processing Systems},
   137--144.
 
 \bibitem[{Besley and Persson(2009)}]{besley2009origins}
@@ -80,11 +80,11 @@ Bickel, S., Br{\"u}ckner, M. and Scheffer, T. (2009) Discriminative learning
 \newblock \textit{Journal of Machine Learning Research}, \textbf{10},
   2137--2155.
 
-\bibitem[{Bowman et~al.(2015)Bowman, Vilnis, Vinyals, Dai, Jozefowicz and
-  Bengio}]{bowman2015generating}
-Bowman, S.~R., Vilnis, L., Vinyals, O., Dai, A.~M., Jozefowicz, R. and Bengio,
-  S. (2015) Generating sentences from a continuous space.
-\newblock \textit{arXiv:1511.06349}.
+\bibitem[{{Bowman} et~al.(2015){Bowman}, {Vilnis}, {Vinyals}, {Dai},
+  {Jozefowicz} and {Bengio}}]{bowman2015generating}
+{Bowman}, S.~R., {Vilnis}, L., {Vinyals}, O., {Dai}, A.~M., {Jozefowicz}, R.
+  and {Bengio}, S. (2015) {Generating Sentences from a Continuous Space}.
+\newblock \textit{arXiv e-prints}, arXiv:1511.06349.
 
 \bibitem[{Cand{\`e}s and Plan(2010)}]{candes2010matrix}
 Cand{\`e}s, E.~J. and Plan, Y. (2010) Matrix completion with noise.
@@ -112,11 +112,11 @@ Cavallo, E., Galiani, S., Noy, I. and Pantano, J. (2013) Catastrophic natural
 {Cho}, K., {van Merrienboer}, B., {Gulcehre}, C., {Bahdanau}, D., {Bougares},
   F., {Schwenk}, H. and {Bengio}, Y. (2014) {Learning Phrase Representations
   using RNN Encoder-Decoder for Statistical Machine Translation}.
-\newblock \textit{ArXiv e-prints}.
+\newblock \textit{arXiv e-prints}, arXiv:1406.1078.
 
-\bibitem[{Chollet et~al.(2015)}]{chollet2015keras}
-Chollet, F. et~al. (2015) Keras.
-\newblock \url{https://keras.io}.
+\bibitem[{Chollet(2015)}]{chollet2015keras}
+Chollet, F. (2015) Keras.
+\newblock Available at: \url{https://github.com/fchollet/keras}.
 
 \bibitem[{Chorowski et~al.(2015)Chorowski, Bahdanau, Serdyuk, Cho and
   Bengio}]{chorowski2015attention}
@@ -129,7 +129,7 @@ Chorowski, J.~K., Bahdanau, D., Serdyuk, D., Cho, K. and Bengio, Y. (2015)
   {Bengio}}]{chung2014}
 {Chung}, J., {Gulcehre}, C., {Cho}, K. and {Bengio}, Y. (2014) {Empirical
   Evaluation of Gated Recurrent Neural Networks on Sequence Modeling}.
-\newblock \textit{ArXiv e-prints}.
+\newblock \textit{arXiv e-prints}, arXiv:1412.3555.
 
 \bibitem[{Chung et~al.(2015)Chung, Kastner, Dinh, Goel, Courville and
   Bengio}]{chung2015recurrent}
@@ -162,7 +162,7 @@ Cortes, C., Mohri, M., Riley, M. and Rostamizadeh, A. (2008) Sample selection
 \bibitem[{{Doudchenko} and {Imbens}(2016)}]{doudchenko2016balancing}
 {Doudchenko}, N. and {Imbens}, G.~W. (2016) {Balancing, Regression,
   Difference-In-Differences and Synthetic Control Methods: A Synthesis}.
-\newblock \textit{ArXiv e-prints}.
+\newblock \textit{arXiv e-prints}, arXiv:1610.07748.
 
 \bibitem[{Dube and Zipperer(2015)}]{dube2015pooling}
 Dube, A. and Zipperer, B. (2015) Pooling multiple case studies using synthetic
@@ -180,14 +180,15 @@ Engerman, S.~L. and Sokoloff, K.~L. (2005) The evolution of suffrage
   institutions in the new world.
 \newblock \textit{The Journal of Economic History}, \textbf{65}, 891--921.
 
-\bibitem[{Fabius and van Amersfoort(2014)}]{fabius2014variational}
-Fabius, O. and van Amersfoort, J.~R. (2014) Variational recurrent
-  auto-encoders.
-\newblock \textit{arXiv:1412.6581}.
+\bibitem[{{Fabius} and {van Amersfoort}(2014)}]{fabius2014variational}
+{Fabius}, O. and {van Amersfoort}, J.~R. (2014) {Variational Recurrent
+  Auto-Encoders}.
+\newblock \textit{arXiv e-prints}, arXiv:1412.6581.
 
 \bibitem[{Ferman and Pinto(2016)}]{ferman2016revisiting}
 Ferman, B. and Pinto, C. (2016) Revisiting the synthetic control estimator.
-\newblock Available at \url{https://mpra.ub.uni-muenchen.de/81941/}.
+\newblock Available at
+  \url{https://mpra.ub.uni-muenchen.de/81941/1/MPRA_paper_81941.pdf}.
 
 \bibitem[{Ferman and Pinto(2018)}]{ferman2018synthetic}
 --- (2018) Synthetic controls with imperfect pre-treatment fit.
@@ -281,9 +282,9 @@ Kaul, A., Kl{\"o}{\ss}ner, S., Pfeifer, G. and Schieler, M. (2015) Synthetic
   Optimization}.
 \newblock \textit{arXiv e-prints}, arXiv:1412.6980.
 
-\bibitem[{Kingma and Welling(2013)}]{kingma2013auto}
-Kingma, D.~P. and Welling, M. (2013) Auto-encoding variational bayes.
-\newblock \textit{arXiv:1312.6114}.
+\bibitem[{{Kingma} and {Welling}(2013)}]{kingma2013auto}
+{Kingma}, D.~P. and {Welling}, M. (2013) {Auto-Encoding Variational Bayes}.
+\newblock \textit{arXiv e-prints}, arXiv:1312.6114.
 
 \bibitem[{Kl{\"o}{\ss}ner et~al.(2017)Kl{\"o}{\ss}ner, Kaul, Pfeifer and
   Schieler}]{klossner2017comparative}
@@ -299,11 +300,6 @@ Lamb, A.~M., Goyal, A. G. A.~P., Zhang, Y., Zhang, S., Courville, A.~C. and
   networks.
 \newblock In \textit{Advances In Neural Information Processing Systems},
   4601--4609.
-
-\bibitem[{Little and Rubin(2014)}]{little2014}
-Little, R.~J. and Rubin, D.~B. (2014) \textit{Statistical Analysis with Missing
-  Data}.
-\newblock Hoboken, NJ: John Wiley \& Sons.
 
 \bibitem[{Mazumder et~al.(2010)Mazumder, Hastie and
   Tibshirani}]{mazumder2010spectral}
@@ -324,11 +320,6 @@ Neyman, J. (1923) On the application of probability theory to agricultural
 \newblock \textit{Annals of Agricultural Sciences}, \textbf{51}.
 \newblock Reprinted in \cite{splawa1990}.
 
-\bibitem[{{Poulos}(2019)}]{2019arXiv190308028P}
-{Poulos}, J. (2019) {State-Building through Public Land Disposal? An
-  Application of Matrix Completion for Counterfactual Prediction}.
-\newblock \textit{arXiv e-prints}, arXiv:1903.08028.
-
 \bibitem[{Rubin(1990)}]{rubin1990}
 Rubin, D.~B. (1990) Comment: Neyman (1923) and causal inference in experiments
   and observational studies.
@@ -338,11 +329,11 @@ Rubin, D.~B. (1990) Comment: Neyman (1923) and causal inference in experiments
 Schmidhuber, J. and Hochreiter, S. (1997) Long short-term memory.
 \newblock \textit{Neural Computation}, \textbf{9}, 1735--1780.
 
-\bibitem[{Schnabel et~al.(2016)Schnabel, Swaminathan, Singh, Chandak and
-  Joachims}]{schnabel2016recommendations}
-Schnabel, T., Swaminathan, A., Singh, A., Chandak, N. and Joachims, T. (2016)
-  Recommendations as treatments: Debiasing learning and evaluation.
-\newblock \textit{arXiv:1602.05352}.
+\bibitem[{{Schnabel} et~al.(2016){Schnabel}, {Swaminathan}, {Singh}, {Chandak}
+  and {Joachims}}]{schnabel2016recommendations}
+{Schnabel}, T., {Swaminathan}, A., {Singh}, A., {Chandak}, N. and {Joachims},
+  T. (2016) {Recommendations as Treatments: Debiasing Learning and Evaluation}.
+\newblock \textit{arXiv e-prints}, arXiv:1602.05352.
 
 \bibitem[{Snyder and Dillow(2010)}]{snyder2010digest}
 Snyder, T.~D. and Dillow, S.~A. (2010) Digest of education statistics, 2009.
@@ -381,13 +372,12 @@ Sylla, R.~E., Legler, J.~B. and Wallis, J. (1993) {S}ources and {U}ses of
   {Sutskever} and {Hinton}}]{vinyals2014grammar}
 {Vinyals}, O., {Kaiser}, L., {Koo}, T., {Petrov}, S., {Sutskever}, I. and
   {Hinton}, G. (2014) {Grammar as a Foreign Language}.
-\newblock \textit{ArXiv e-prints}.
+\newblock \textit{arXiv e-prints}, arXiv:1412.7449.
 
 \bibitem[{Williamson(2017)}]{williamson2017seven}
 Williamson, S.~H. (2017) Seven ways to compute the relative value of a us
   dollar amount, 1774 to present.
-\newblock \url{MeasuringWorth.com}.
-\newblock [Online; accessed 01-October-2017].
+\newblock Available at: \url{http://www.measuringworth.com}.
 
 \bibitem[{Xu(2017)}]{xu2017generalized}
 Xu, Y. (2017) Generalized synthetic control method: Causal inference with
@@ -402,7 +392,7 @@ Yoon, J., Zame, W.~R. and van~der Schaar, M. (2018) Estimating missing data in
 \bibitem[{{Zhu} and {Laptev}(2017)}]{zhu2017deep}
 {Zhu}, L. and {Laptev}, N. (2017) {Deep and Confident Prediction for Time
   Series at Uber}.
-\newblock \textit{ArXiv e-prints}.
+\newblock \textit{arXiv e-prints}, arXiv:1709.01907.
 
 \bibitem[{Zou and Hastie(2005)}]{zou2005regularization}
 Zou, H. and Hastie, T. (2005) Regularization and variable selection via the

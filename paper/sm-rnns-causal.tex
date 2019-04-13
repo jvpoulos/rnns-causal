@@ -1,18 +1,21 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Main Paper labels
+\begin{filecontents*}{labels.aux} 
 \relax 
 \providecommand\hyper@newdestlabel[2]{}
 \providecommand\zref@newlabel[2]{}
 \providecommand\HyperFirstAtBeginDocument{\AtBeginDocument}
 \HyperFirstAtBeginDocument{\ifx\hyper@anchor\@undefined
-\global\let\oldcontentsline\contentsline
-\gdef\contentsline#1#2#3#4{\oldcontentsline{#1}{#2}{#3}}
-\global\let\oldnewlabel\newlabel
-\gdef\newlabel#1#2{\newlabelxx{#1}#2}
-\gdef\newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
-\AtEndDocument{\ifx\hyper@anchor\@undefined
-\let\contentsline\oldcontentsline
-\let\newlabel\oldnewlabel
-\fi}
-\fi}
+	\global\let\oldcontentsline\contentsline
+	\gdef\contentsline#1#2#3#4{\oldcontentsline{#1}{#2}{#3}}
+	\global\let\oldnewlabel\newlabel
+	\gdef\newlabel#1#2{\newlabelxx{#1}#2}
+	\gdef\newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
+	\AtEndDocument{\ifx\hyper@anchor\@undefined
+		\let\contentsline\oldcontentsline
+		\let\newlabel\oldnewlabel
+		\fi}
+	\fi}
 \global\let\hyper@last\relax 
 \gdef\HyperFirstAtBeginDocument#1{#1}
 \providecommand\HyField@AuxAddToFields[1]{}
@@ -178,3 +181,254 @@
 \bibcite{yoon2018estimating}{{67}{2018}{{Yoon et~al.}}{{Yoon, Zame and van~der Schaar}}}
 \bibcite{zhu2017deep}{{68}{2017}{{{Zhu} and {Laptev}}}{{}}}
 \bibcite{zou2005regularization}{{69}{2005}{{Zou and Hastie}}{{}}}
+\end{filecontents*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{Web-Based Supporting Materials for\\
+	``RNN-based counterfactual prediction'' by Jason Poulos}
+
+\date{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Set document class
+\documentclass[hidelinks,12pt]{article}
+
+% Define packages
+\usepackage{hyperref, url} 
+\usepackage{graphicx,amsfonts,psfrag,layout,subcaption,array,longtable,lscape,booktabs,dcolumn,amsmath,amssymb,amssymb,amsthm,setspace,epigraph,chronology,color,colortbl,caption,wasysym,diagbox,natbib,colortbl,upgreek}
+\usepackage[]{graphicx}\usepackage[]{color}
+\usepackage[page]{appendix}
+\usepackage[section]{placeins}
+\usepackage[linewidth=1pt]{mdframed}
+\usepackage[margin={1in}]{geometry} %1 inch margins
+
+%% Reference labels in the online appendix
+\usepackage{xr}
+\externaldocument{labels}
+
+% Footnotes stick at the bottom
+\usepackage[bottom]{footmisc}
+
+% Caption keys
+\usepackage{mathtools,tikz,caption}
+\captionsetup{labelfont=sc,labelsep=period}
+\DeclareRobustCommand\sampleline[1]{%
+	\tikz\draw[#1] (0,0) (0,\the\dimexpr\fontdimen22\textfont2\relax)
+	-- (2em,\the\dimexpr\fontdimen22\textfont2\relax);%
+}
+
+\usetikzlibrary{plotmarks}
+
+% Wes Anderson colors
+
+\usepackage{xcolor}
+
+\definecolor{Darjeeling11}{HTML}{FF0000}
+\definecolor{Darjeeling15}{HTML}{5BBCD6}
+
+% New footnote characters
+\usepackage{footmisc}
+\DefineFNsymbols{mySymbols}{{\ensuremath\dagger}{\ensuremath\ddagger}\S\P
+	*{**}{\ensuremath{\dagger\dagger}}{\ensuremath{\ddagger\ddagger}}}
+\setfnsymbol{mySymbols}
+
+% New tabular environment
+\usepackage{tabularx}
+\newcolumntype{Y}{>{\raggedleft\arraybackslash}X}% raggedleft column X
+
+% Define appendix 
+\renewcommand*\appendixpagename{Appendix}
+\renewcommand*\appendixtocname{Appendix}
+
+% Position floats
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\bottomfraction}{0.95}
+\renewcommand{\floatpagefraction}{0.35}
+\setcounter{totalnumber}{5}
+
+% Colors for highlighting tables
+\definecolor{Gray}{gray}{0.9}
+
+% Different font in captions
+\newcommand{\captionfonts}{\normalsize}
+
+\makeatletter  % Allow the use of @ in command names
+\long\def\@makecaption#1#2{%
+	\vskip\abovecaptionskip
+	\sbox\@tempboxa{{\captionfonts #1: #2}}%
+	\ifdim \wd\@tempboxa >\hsize
+	{\captionfonts #1: #2\par}
+	\else
+	\hbox to\hsize{\hfil\box\@tempboxa\hfil}%
+	\fi
+	\vskip\belowcaptionskip}
+%\makeatother   % Cancel the effect of \makeatletter
+
+% Set Spacing
+%\doublespacing
+
+% Number assumptions
+\newtheorem*{assumption*}{\assumptionnumber}
+\providecommand{\assumptionnumber}{}
+\makeatletter
+\newenvironment{assumption}[2]
+{%
+	\renewcommand{\assumptionnumber}{Assumption #1}%
+	\begin{assumption*}%
+		\protected@edef\@currentlabel{#1}%
+	}
+	{%
+	\end{assumption*}
+}
+\makeatother
+
+% Macros
+\newcommand{\Adv}{{\mathbf{Adv}}}       
+\newcommand{\prp}{{\mathrm{prp}}}                  % How to define new commands 
+\newcommand{\calK}{{\cal K}}
+\newcommand{\outputs}{{\Rightarrow}}                
+\newcommand{\getsr}{{\:\stackrel{{\scriptscriptstyle\hspace{0.2em}\$}}{\leftarrow}\:}}
+\newcommand{\andthen}{{\::\;\;}}    %  \: \; for thinspace, medspace, thickspace
+\newcommand{\Rand}[1]{{\mathrm{Rand}[{#1}]}}       % A command with one argument
+\newcommand{\Perm}[1]{{\mathrm{Perm}[{#1}]}}       
+\newcommand{\Randd}[2]{{\mathrm{Rand}[{#1},{#2}]}} % and with two arguments
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Cov}{\mathrm{Cov}}
+\DeclareMathOperator*{\plim}{plim}
+\newcommand\independent{\protect\mathpalette{\protect\independenT}{\perp}}
+\def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
+\newcommand{\possessivecite}[1]{\citeauthor{#1}'s [\citeyear{#1}]} 
+
+\renewcommand*\contentsname{Table of contents}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\begin{singlespacing}
+\maketitle \thispagestyle{empty}
+\tableofcontents \thispagestyle{empty}
+\end{singlespacing}
+
+\pagenumbering{roman}% Roman-numbered pages (start from i)
+
+\pagebreak
+\pagenumbering{arabic}% Arabic-numbered pages (start from 1)
+
+\section{Implementation details} \label{imp}
+
+The networks are implemented with the \texttt{Keras} neural network library \citep{chollet2015keras} in Python on top of a TensorFlow backend. When implementing encoder-decoder networks, the encoder takes the form of a two-layer Long Short-Term Memory (LSTM) network \citep{schmidhuber1997long}, each with 128 hidden units, and the decoder is a single-layer Gated Recurrent Unit (GRU) \citep{chung2014} also with 128 hidden units. Each recurrent layer uses a linear activation function ($f_1$) with weights initialized using Xavier initialization \citep{glorot2010}. The loss function internally computes the predicted outputs as a linear function ($f_2$) of the log probabilities. 
+
+RNN weights are learned with mini-batch gradient descent on the WMSE using \texttt{Adam} stochastic optimization with the learning rate set to $5\,\cdot\,10^{-4}$ \citep{kingma2014adam}. As a regularization strategy, I apply dropout to the inputs and L2 regularization losses to the network weights. The networks are trained for 1,000 epochs, which takes 10 minutes to run on a laptop CPU. The model is validated on the last 20\% of the training set input-out pairs.  
+
+The RVAE is implemented similarly, but with the following differences: the encoder takes the form of a single-layer LSTM with 32 hidden units and the decoder is a two-layer LSTM with the number of hidden units equal to 32 and the number of predictors, respectively. The latent space $\boldsymbol{z}$ is implemented as a densely-connected layer with a dimension of 200 units and $f_3(\cdot)$ takes the form of a log-normal distribution. The RVAE is trained with stochastic gradient descent for 5,000 epochs, which takes seven minutes to run on the same CPU.
+
+\clearpage
+\section{Hypothesis testing} \label{eval}
+
+\citet{abadie2010synthetic} propose a randomization inference approach for calculating the exact distribution of placebo effects under the sharp null hypothesis of no effect. \citet{cavallo2013catastrophic} extends the placebo-based testing approach to the case of multiple (placebo) treated units by constructing a distribution of \emph{average} placebo effects under the null hypothesis. \citet{firpo2018synthetic} derive the conditions under which the randomization inference approach is valid from a finite sample perspective and \citet{hahn2017synthetic} analyze the approach from a repeated sampling perspective.
+
+Randomization $p$-values are obtained following these steps:
+
+\begin{enumerate} 
+	\item Estimate the observed test static $\boldsymbol{\hat{\upphi}}$ from (\ref{eq:pointwise}). Averaging over the time dimension results in a $\text{T}_\star$-length array of observed average treatment effects. 
+	\item Calculate every possible average placebo treated effect $\upmu$ by randomly sampling without replacement which $\text{J}-1$ control units are assumed to be treated. There are $\mathcal{Q} = \sum\limits_{\text{g}=1}^{\text{J}-1} {\text{J} \choose \text{g}}$ possible average placebo effects. Since calculating $\mathcal{Q}$ can be computationally burdensome for relatively high values of $J$, I artificially set $\mathcal{Q} = 10,000$ in cases when $\text{J} > 16$. The result is a matrix of dimension $\mathcal{Q} \times \text{T}_\star$
+	\item Sum over the time dimension the number of $\upmu$ that are greater than or equal to $\boldsymbol{\hat{\upphi}}$.  \label{counts}
+\end{enumerate}
+
+Each element of the vector obtained from Step \ref{counts} is divided by $\mathcal{Q}$ to estimate a $\text{T}_\star$-length vector of exact two-sided $p$ values, $\hat{p}$. 
+
+\subsection{Randomization confidence intervals}
+
+Under the assumption that treatment has a constant additive effect $\Delta$, I construct an interval estimate for $\Delta$ by inverting the randomization test. Let $\updelta_\Delta$ be the test statistic calculated by subtracting all possible $\upmu$ by $\Delta$. I derive a two-sided randomization confidence interval by collecting all values of $\updelta_\Delta$ that yield $\hat{p}$ values greater than or equal to significance level $\upalpha=0.05$. I find the endpoints of the confidence interval by randomly sampling 500 values of $\Delta$.
+
+\clearpage
+\section{Supporting Figures}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.9\textwidth]{plots/basque-sim.png}
+	\caption{Placebo tests on Basque Country terrorism data: 
+		{\protect\tikz \protect\draw[color={rgb:red,4;green,0;yellow,1}] (0,0) -- plot[mark=o, mark options={scale=2}] (0.25,0) -- (0.5,0);}, DID;
+		{\protect\tikz \protect\draw[color={rgb:red,244;green,226;blue,66}] (0,0) -- plot[mark=triangle*, mark options={scale=2,fill=white}] (0.25,0) -- (0.5,0);}, ED; 
+		{\protect\tikz \protect\draw[color={rgb:red,0;green,5;blue,1}] (0,0) -- plot[mark=+, mark options={scale=2}] (0.25,0) -- (0.5,0);}, MC-NNM;
+		{\protect\tikz \protect\draw[color={rgb:red,66;green,200;blue,244}] (0,0) -- plot[mark=x, mark options={scale=2}] (0.25,0) -- (0.5,0);}, RVAE;
+		{\protect\tikz \protect\draw[color={rgb:red,66;green,107;blue,244}] (0,0) -- plot[mark=diamond, mark options={scale=2}] (0.25,0) -- (0.5,0);}, SCM;
+		{\protect\tikz \protect\draw[color={rgb:red,244;pink,66;blue,223}] (0,0) -- plot[mark=triangle, mark options={scale=2, rotate=180}] (0.25,0) -- (0.5,0);}, VT-EN.\label{basque-sim}}
+\end{figure}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.9\textwidth]{plots/germany-sim.png}
+	\caption{Placebo tests on West German reunification data: 
+		{\protect\tikz \protect\draw[color={rgb:red,4;green,0;yellow,1}] (0,0) -- plot[mark=o, mark options={scale=2}] (0.25,0) -- (0.5,0);}, DID;
+		{\protect\tikz \protect\draw[color={rgb:red,244;green,226;blue,66}] (0,0) -- plot[mark=triangle*, mark options={scale=2,fill=white}] (0.25,0) -- (0.5,0);}, ED; 
+		{\protect\tikz \protect\draw[color={rgb:red,0;green,5;blue,1}] (0,0) -- plot[mark=+, mark options={scale=2}] (0.25,0) -- (0.5,0);}, MC-NNM;
+		{\protect\tikz \protect\draw[color={rgb:red,66;green,200;blue,244}] (0,0) -- plot[mark=x, mark options={scale=2}] (0.25,0) -- (0.5,0);}, RVAE;
+		{\protect\tikz \protect\draw[color={rgb:red,66;green,107;blue,244}] (0,0) -- plot[mark=diamond, mark options={scale=2}] (0.25,0) -- (0.5,0);}, SCM;
+		{\protect\tikz \protect\draw[color={rgb:red,244;pink,66;blue,223}] (0,0) -- plot[mark=triangle, mark options={scale=2, rotate=180}] (0.25,0) -- (0.5,0);}, VT-EN.\label{germany-sim}}
+\end{figure}
+
+\begin{figure*}[htbp]
+	\centering
+	\begin{subfigure}[t]{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{plots/educ-dens.png}
+		\caption{Unweighted} 
+	\end{subfigure}
+	~ 
+	\begin{subfigure}[t]{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{plots/educ-dens-w.png}
+		\caption{Weighted by propensity score}
+	\end{subfigure}
+	\caption{Pre-period densities of log per-capita state government education spending by treatment status:{\protect\tikz \protect\draw[color=black] (0,0) -- plot[mark=square, mark options={scale=2, fill=white}] (0.25,0) -- (0.5,0);}, Control;
+		{\protect\tikz \protect\draw[color={rgb:red,104;green,122;blue,255}] (0,0) -- plot[mark=square*, mark options={scale=2,fill={rgb:red,104;green,122;blue,255}}] (0.25,0) -- (0.5,0);}, Treated \label{educ-dense}} 
+\end{figure*}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.9\textwidth]{plots/educ-sim.png}
+	\caption{Placebo tests on education spending data: 		{\protect\tikz \protect\draw[color={rgb:red,4;green,0;yellow,1}] (0,0) -- plot[mark=o, mark options={scale=2}] (0.25,0) -- (0.5,0);}, DID;
+		{\protect\tikz \protect\draw[color={rgb:red,244;green,226;blue,66}] (0,0) -- plot[mark=triangle*, mark options={scale=2,fill=white}] (0.25,0) -- (0.5,0);}, ED; 
+		{\protect\tikz \protect\draw[color={rgb:red,0;green,5;blue,1}] (0,0) -- plot[mark=+, mark options={scale=2}] (0.25,0) -- (0.5,0);}, MC-NNM;
+		{\protect\tikz \protect\draw[color={rgb:red,66;green,200;blue,244}] (0,0) -- plot[mark=x, mark options={scale=2}] (0.25,0) -- (0.5,0);}, RVAE;
+		{\protect\tikz \protect\draw[color={rgb:red,66;green,107;blue,244}] (0,0) -- plot[mark=diamond, mark options={scale=2}] (0.25,0) -- (0.5,0);}, SCM;
+		{\protect\tikz \protect\draw[color={rgb:red,244;pink,66;blue,223}] (0,0) -- plot[mark=triangle, mark options={scale=2, rotate=180}] (0.25,0) -- (0.5,0);}, VT-EN.
+		\label{educ-sim}}
+\end{figure}
+
+%\begin{figure}[htbp]
+%		\centering
+%		\includegraphics[width=0.9\textwidth]{plots/educ-ed-loss.png}
+%%	~ 
+%%	\begin{subfigure}[t]{0.8\textwidth}
+%%		\centering
+%%		\includegraphics[width=\textwidth]{plots/educ-rvae-loss.png}
+%%		\caption{RVAE}
+%%	\end{subfigure}
+%	\caption{Encoder-decoder networks training and validation loss on education spending data. \label{educ-loss}} 
+%\end{figure}
+
+%\begin{figure}[htbp]
+%	\centering
+%		\includegraphics[width=\textwidth]{plots/educ-rvae.png}
+%	\caption{RVAE estimates of the homestead act on state government education spending, 1809 to 1982.\label{rvae-ed}} 
+%\end{figure}
+
+%\begin{figure}[htbp]
+%	\begin{center}
+%		\includegraphics[width=0.9\textwidth]{/media/jason/Dropbox/github/land-reform/paper/plots/homestead-heatmap.png}
+%	\end{center}
+%	\caption{Per-capita homestead entries in state $i$ and year $t$, 1869-1922. \label{fig:homestead-heatmap}}
+%\end{figure}
+
+\bibliographystyle{rss}
+\begin{singlespace}
+\bibliography{rnns-causal-sm}
+\end{singlespace}
+
+\itemize
+\end{document}
