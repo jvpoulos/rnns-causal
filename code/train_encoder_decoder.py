@@ -21,18 +21,19 @@ def wrapped_partial(func, *args, **kwargs):
 
 # Select gpu
 import os
-gpu = sys.argv[-6]
+gpu = sys.argv[-7]
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
 os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
 
 from tensorflow.python.client import device_lib
 print(device_lib.list_local_devices())
 
-T = sys.argv[-1] 
-t0 = sys.argv[-2] 
-dataname = sys.argv[-3] 
-nb_batches = int(sys.argv[-4])
-nb_epochs = int(sys.argv[-5])
+imp = sys.argv[-1]
+T = sys.argv[-2] 
+t0 = sys.argv[-3] 
+dataname = sys.argv[-4] 
+nb_batches = int(sys.argv[-5])
+nb_epochs = int(sys.argv[-6])
 
 def weighted_mse(y_true, y_pred, weights):
     return K.mean(K.square(y_true - y_pred) * weights, axis=-1)
@@ -79,7 +80,7 @@ def train_model(model, dataX, dataY, weights, nb_epoches, nb_batches):
     filepath="../results/encoder-decoder/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
     checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=25, save_best_only=True)
 
-    csv_logger = CSVLogger('../results/encoder-decoder/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
+    csv_logger = CSVLogger('../results/encoder-decoder/{}/training_log_{}_{}.csv'.format(dataname,dataname,imp), separator=',', append=False)
 
     history = model.fit(x=[dataX,weights], 
         y=dataY, 
@@ -95,7 +96,7 @@ def test_model():
     n_pre =int(t0)-1
     seq_len = int(T)
 
-    wx = np.array(pd.read_csv("../data/{}-wx.csv".format(dataname)))    
+    wx = np.array(pd.read_csv("../data/{}-wx.csv-{}".format(dataname,imp)))    
 
     print('raw wx shape', wx.shape)  
 
@@ -107,7 +108,7 @@ def test_model():
 
     print('wXC shape:', wXC.shape)
     
-    x = np.array(pd.read_csv("../data/{}-x.csv".format(dataname)))    
+    x = np.array(pd.read_csv("../data/{}-x.csv-{}".format(dataname,imp)))    
 
     print('raw x shape', x.shape)   
 
@@ -141,13 +142,13 @@ def test_model():
 
     print('predictions shape =', preds_train.shape)
 
-    print('Saving to results/encoder-decoder/{}/encoder-decoder-{}-train.csv'.format(dataname,dataname))
+    print('Saving to results/encoder-decoder/{}/encoder-decoder-{}-train-{}.csv'.format(dataname,dataname,imp))
 
-    np.savetxt("../results/encoder-decoder/{}/encoder-decoder-{}-train.csv".format(dataname,dataname), preds_train, delimiter=",")
+    np.savetxt("../results/encoder-decoder/{}/encoder-decoder-{}-train-{}.csv".format(dataname,dataname,imp), preds_train, delimiter=",")
 
     print('Generate predictions on test set')
 
-    wy = np.array(pd.read_csv("../data/{}-wy.csv".format(dataname)))    
+    wy = np.array(pd.read_csv("../data/{}-wy-{}.csv".format(dataname,imp)))    
 
     print('raw wy shape', wy.shape)  
 
@@ -159,7 +160,7 @@ def test_model():
 
     print('wXT shape:', wXT.shape)
 
-    y = np.array(pd.read_csv("../data/{}-y.csv".format(dataname)))
+    y = np.array(pd.read_csv("../data/{}-y-{}.csv".format(dataname,imp)))
      
     print('raw y shape', y.shape)   
 
@@ -177,9 +178,9 @@ def test_model():
 
     print('predictions shape =', preds_test.shape)
 
-    print('Saving to results/encoder-decoder/{}/encoder-decoder-{}-test.csv'.format(dataname,dataname))
+    print('Saving to results/encoder-decoder/{}/encoder-decoder-{}-test-{}.csv'.format(dataname,dataname,imp))
 
-    np.savetxt("../results/encoder-decoder/{}/encoder-decoder-{}-test.csv".format(dataname,dataname), preds_test, delimiter=",")
+    np.savetxt("../results/encoder-decoder/{}/encoder-decoder-{}-test-{}.csv".format(dataname,dataname,imp), preds_test, delimiter=",")
 
 def main():
     test_model()

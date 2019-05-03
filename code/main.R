@@ -36,3 +36,13 @@ source(paste0(code.directory, "synth-placebo-plot.R"))
 # train_rvae.py 
 
 source(paste0(code.directory, "educ-plot.R"))
+
+#imputation sensitivity
+source(paste0(code.directory, "prepare-funds-linear.R"))
+source(paste0(code.directory, "prepare-funds-random.R"))
+source(paste0(code.directory, "prepare-funds-median.R"))
+
+# train_encoder_decoder_linear.py 
+# train_encoder_decoder_random.py 
+# train_encoder_decoder_median.py 
+
