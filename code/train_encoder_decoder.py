@@ -96,7 +96,7 @@ def test_model():
     n_pre =int(t0)-1
     seq_len = int(T)
 
-    wx = np.array(pd.read_csv("../data/{}-wx.csv-{}".format(dataname,imp)))    
+    wx = np.array(pd.read_csv("../data/{}-wx-{}.csv".format(dataname,imp)))    
 
     print('raw wx shape', wx.shape)  
 
@@ -108,7 +108,7 @@ def test_model():
 
     print('wXC shape:', wXC.shape)
     
-    x = np.array(pd.read_csv("../data/{}-x.csv-{}".format(dataname,imp)))    
+    x = np.array(pd.read_csv("../data/{}-x-{}.csv".format(dataname,imp)))    
 
     print('raw x shape', x.shape)   
 
