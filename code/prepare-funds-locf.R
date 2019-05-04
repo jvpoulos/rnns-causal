@@ -2,7 +2,7 @@
 # Prepare education spending data for RNNs #
 ###################################
 
-funds <- readRDS("/media/jason/Dropbox/github/land-reform/data/capacity-outcomes.rds")[['educ.pc']]
+funds <- readRDS("/media/jason/Dropbox/github/land-reform/data/capacity-outcomes-locf.rds")[['educ.pc']]
 
 Y <- funds$M # NxT 
 
@@ -71,10 +71,10 @@ colnames(test_w) <- colnames(test_data)
 # propensity score increases as t increase (penalize earlier weights)
 test_w <- test_w*(log(1:nrow(test_data))-min(log(1:nrow(test_data))))/(max(log(1:nrow(test_data)))-min(log(1:nrow(test_data)))) # norm log values
   
-write.csv(train_data,paste0(data.directory,"educ-x.csv"),row.names = FALSE)
-write.csv(test_data,paste0(data.directory,"educ-y.csv"),row.names = FALSE)
-write.csv(train_w,paste0(data.directory,"educ-wx.csv"),row.names = FALSE)
-write.csv(test_w,paste0(data.directory,"educ-wy.csv"),row.names = FALSE)
+write.csv(train_data,paste0(data.directory,"educ-x-locf.csv"),row.names = FALSE)
+write.csv(test_data,paste0(data.directory,"educ-y-locf.csv"),row.names = FALSE)
+write.csv(train_w,paste0(data.directory,"educ-wx-locf.csv"),row.names = FALSE)
+write.csv(test_w,paste0(data.directory,"educ-wy-locf.csv"),row.names = FALSE)
 
 ## Plot public education spending (pre) by treatment status
 

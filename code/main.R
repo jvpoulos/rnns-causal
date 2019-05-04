@@ -27,7 +27,7 @@ source(paste0(code.directory, "synth-placebo-plot.R"))
 # Causal impact estimates: public education spending
 # "/media/jason/Dropbox/github/land-reform/data/capacity-outcomes.rds"
 
-source(paste0(code.directory, "prepare-funds.R"))
+source(paste0(code.directory, "prepare-funds-locf.R"))
 
 # funds-placebo.R 
 source(paste0(code.directory, "synth-placebo-plot.R"))
@@ -42,7 +42,5 @@ source(paste0(code.directory, "prepare-funds-linear.R"))
 source(paste0(code.directory, "prepare-funds-random.R"))
 source(paste0(code.directory, "prepare-funds-median.R"))
 
-# train_encoder_decoder_linear.py 
-# train_encoder_decoder_random.py 
-# train_encoder_decoder_median.py 
-
+# train_encoder_decoder.py 
+source(paste0(code.directory, "educ-plot.R"))
