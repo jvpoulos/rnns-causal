@@ -317,7 +317,7 @@
 \pagebreak
 \pagenumbering{arabic}% Arabic-numbered pages (start from 1)
 
-\section{Implementation details} \label{imp}
+\section{RNNs implementation details} \label{imp}
 
 The networks are implemented with the \texttt{Keras} neural network library \citep{chollet2015keras} in Python on top of a TensorFlow backend. When implementing encoder-decoder networks, the encoder takes the form of a two-layer Long Short-Term Memory (LSTM) network \citep{schmidhuber1997long}, each with 128 hidden units, and the decoder is a single-layer Gated Recurrent Unit (GRU) \citep{chung2014} also with 128 hidden units. Each recurrent layer uses a linear activation function ($f_1$) with weights initialized using Xavier initialization \citep{glorot2010}. The loss function internally computes the predicted outputs as a linear function ($f_2$) of the log probabilities. 
 
@@ -384,7 +384,7 @@ Under the assumption that treatment has a constant additive effect $\Delta$, I c
 		\includegraphics[width=\textwidth]{plots/educ-dens-w.png}
 		\caption{Weighted by propensity score}
 	\end{subfigure}
-	\caption{Pre-period densities of log per-capita state government education spending by treatment status:{\protect\tikz \protect\draw[color=black] (0,0) -- plot[mark=square, mark options={scale=2, fill=white}] (0.25,0) -- (0.5,0);}, Control;
+	\caption{Pre-period densities of log per-capita state government education spending by treatment status: {\protect\tikz \protect\draw[color=black] (0,0) -- plot[mark=square, mark options={scale=2, fill=white}] (0.25,0) -- (0.5,0);}, Control;
 		{\protect\tikz \protect\draw[color={rgb:red,104;green,122;blue,255}] (0,0) -- plot[mark=square*, mark options={scale=2,fill={rgb:red,104;green,122;blue,255}}] (0.25,0) -- (0.5,0);}, Treated \label{educ-dense}} 
 \end{figure*}
 
@@ -399,6 +399,63 @@ Under the assumption that treatment has a constant additive effect $\Delta$, I c
 		{\protect\tikz \protect\draw[color={rgb:red,244;pink,66;blue,223}] (0,0) -- plot[mark=triangle, mark options={scale=2, rotate=180}] (0.25,0) -- (0.5,0);}, VT-EN.
 		\label{educ-sim}}
 \end{figure}
+
+
+\begin{figure*}[htbp]
+	\centering
+	\begin{subfigure}[t]{0.43\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/paper/plots/educ-ed-linear.png}
+		\caption{Linear interpolation} 
+	\end{subfigure}
+	~ 
+	\begin{subfigure}[t]{0.43\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/paper/plots/educ-ed-median.png}
+		\caption{Median replacement}
+	\end{subfigure}
+	~ 
+	\begin{subfigure}[t]{0.43\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/paper/plots/educ-ed-random.png}
+		\caption{Random replacement}
+	\end{subfigure}
+	\caption{Encoder-decoder estimates of the impact of the HSA on state government education spending, using differently imputed data:		{\color{Darjeeling15}{\sampleline{}}}, observed treated;
+		{\color{Darjeeling11}{\sampleline{dashed}}}, observed control;
+		{\color{Darjeeling15}{\sampleline{dotted}}}, counterfactual treated;
+		{\color{Darjeeling15}{\sampleline{dash pattern=on .7em off .2em on .05em off .2em}}}, $\boldsymbol{\bar{\upphi}^{(t)}}$.\label{educ-ed-imp}}
+\end{figure*}
+
+\begin{figure*}[htbp]
+	\centering
+	\begin{subfigure}[t]{0.43\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/paper/plots/educ-rvae.png}
+		\caption{LOCF interpolation} 
+	\end{subfigure}
+	~ 
+	\begin{subfigure}[t]{0.43\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/paper/plots/educ-rvae-linear.png}
+		\caption{Linear interpolation} 
+	\end{subfigure}
+	~ 
+	\begin{subfigure}[t]{0.43\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/paper/plots/educ-rvae-median.png}
+		\caption{Median replacement}
+	\end{subfigure}
+	~ 
+	\begin{subfigure}[t]{0.43\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{/media/jason/Dropbox/github/rnns-causal/paper/plots/educ-rvae-random.png}
+		\caption{Random replacement}
+	\end{subfigure}
+	\caption{RVAE estimates of the impact of the HSA on state government education spending, using differently imputed data:		{\color{Darjeeling15}{\sampleline{}}}, observed treated;
+		{\color{Darjeeling11}{\sampleline{dashed}}}, observed control;
+		{\color{Darjeeling15}{\sampleline{dotted}}}, counterfactual treated;
+		{\color{Darjeeling15}{\sampleline{dash pattern=on .7em off .2em on .05em off .2em}}}, $\boldsymbol{\bar{\upphi}^{(t)}}$.\label{educ-rvae-imp}}
+\end{figure*}
 
 %\begin{figure}[htbp]
 %		\centering

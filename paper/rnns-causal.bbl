@@ -1,4 +1,4 @@
-\begin{thebibliography}{69}
+\begin{thebibliography}{61}
 \expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
 \expandafter\ifx\csname url\endcsname\relax
   \def\url#1{\texttt{#1}}\fi
@@ -101,12 +101,6 @@ Carvalho, C., Masini, R. and Medeiros, M.~C. (2018) Ar{C}o: {A}n artificial
   counterfactual approach for high-dimensional panel time-series data.
 \newblock \textit{Journal of Econometrics}, \textbf{207}, 352--380.
 
-\bibitem[{Cavallo et~al.(2013)Cavallo, Galiani, Noy and
-  Pantano}]{cavallo2013catastrophic}
-Cavallo, E., Galiani, S., Noy, I. and Pantano, J. (2013) Catastrophic natural
-  disasters and economic growth.
-\newblock \textit{Review of Economics and Statistics}, \textbf{95}, 1549--1561.
-
 \bibitem[{{Cho} et~al.(2014){Cho}, {van Merrienboer}, {Gulcehre}, {Bahdanau},
   {Bougares}, {Schwenk} and {Bengio}}]{cho2014learning}
 {Cho}, K., {van Merrienboer}, B., {Gulcehre}, C., {Bahdanau}, D., {Bougares},
@@ -114,22 +108,12 @@ Cavallo, E., Galiani, S., Noy, I. and Pantano, J. (2013) Catastrophic natural
   using RNN Encoder-Decoder for Statistical Machine Translation}.
 \newblock \textit{arXiv e-prints}, arXiv:1406.1078.
 
-\bibitem[{Chollet(2015)}]{chollet2015keras}
-Chollet, F. (2015) Keras.
-\newblock Available at: \url{https://github.com/fchollet/keras}.
-
 \bibitem[{Chorowski et~al.(2015)Chorowski, Bahdanau, Serdyuk, Cho and
   Bengio}]{chorowski2015attention}
 Chorowski, J.~K., Bahdanau, D., Serdyuk, D., Cho, K. and Bengio, Y. (2015)
   Attention-based models for speech recognition.
 \newblock In \textit{Advances in Neural Information Processing Systems},
   577--585.
-
-\bibitem[{{Chung} et~al.(2014){Chung}, {Gulcehre}, {Cho} and
-  {Bengio}}]{chung2014}
-{Chung}, J., {Gulcehre}, C., {Cho}, K. and {Bengio}, Y. (2014) {Empirical
-  Evaluation of Gated Recurrent Neural Networks on Sequence Modeling}.
-\newblock \textit{arXiv e-prints}, arXiv:1412.3555.
 
 \bibitem[{Chung et~al.(2015)Chung, Kastner, Dinh, Goel, Courville and
   Bengio}]{chung2015recurrent}
@@ -201,22 +185,17 @@ Ferman, B., Pinto, C. and Possebom, V. (2018) Cherry picking with synthetic
 \newblock Available at:
   \url{https://mpra.ub.uni-muenchen.de/85138/1/MPRA_paper_85138.pdf}.
 
-\bibitem[{Firpo and Possebom(2018)}]{firpo2018synthetic}
-Firpo, S. and Possebom, V. (2018) Synthetic control method: Inference,
-  sensitivity analysis and confidence sets.
-\newblock \textit{Journal of Causal Inference}, \textbf{6}.
-
 \bibitem[{Galor et~al.(2009)Galor, Moav and Vollrath}]{galor2009inequality}
 Galor, O., Moav, O. and Vollrath, D. (2009) Inequality in landownership, the
   emergence of human-capital promoting institutions, and the great divergence.
 \newblock \textit{The Review of Economic Studies}, \textbf{76}, 143--179.
 
-\bibitem[{{Ganin} et~al.(2015){Ganin}, {Ustinova}, {Ajakan}, {Germain},
-  {Larochelle}, {Laviolette}, {Marchand} and {Lempitsky}}]{2015arXiv150507818G}
-{Ganin}, Y., {Ustinova}, E., {Ajakan}, H., {Germain}, P., {Larochelle}, H.,
-  {Laviolette}, F., {Marchand}, M. and {Lempitsky}, V. (2015)
-  {Domain-Adversarial Training of Neural Networks}.
-\newblock \textit{arXiv e-prints}, arXiv:1505.07818.
+\bibitem[{Ganin et~al.(2016)Ganin, Ustinova, Ajakan, Germain, Larochelle,
+  Laviolette, March and Lempitsky}]{JMLR:v17:15-239}
+Ganin, Y., Ustinova, E., Ajakan, H., Germain, P., Larochelle, H., Laviolette,
+  F., March, M. and Lempitsky, V. (2016) Domain-adversarial training of neural
+  networks.
+\newblock \textit{Journal of Machine Learning Research}, \textbf{17}, 1--35.
 
 \bibitem[{Gates(1941)}]{gates1941land}
 Gates, P.~W. (1941) Land policy and tenancy in the prairie states.
@@ -225,11 +204,6 @@ Gates, P.~W. (1941) Land policy and tenancy in the prairie states.
 \bibitem[{Gates(1979)}]{gates1979federal}
 --- (1979) Federal land policies in the southern public land states.
 \newblock \textit{Agricultural History}, \textbf{53}, 206--227.
-
-\bibitem[{Glorot and Bengio(2010)}]{glorot2010}
-Glorot, X. and Bengio, Y. (2010) Understanding the difficulty of training deep
-  feedforward neural networks.
-\newblock In \textit{Artificial Intelligence and Statistics}, vol.~9, 249--256.
 
 \bibitem[{Goodfellow et~al.(2016)Goodfellow, Bengio and
   Courville}]{goodfellow2016deep}
@@ -240,10 +214,6 @@ Goodfellow, I., Bengio, Y. and Courville, A. (2016) \textit{Deep Learning}.
 Graves, A. (2012) Neural networks.
 \newblock In \textit{Supervised Sequence Labelling with Recurrent Neural
   Networks}, 15--35. Springer.
-
-\bibitem[{Hahn and Shi(2017)}]{hahn2017synthetic}
-Hahn, J. and Shi, R. (2017) Synthetic control and inference.
-\newblock \textit{Econometrics}, \textbf{5}, 52.
 
 \bibitem[{Haines(2010)}]{haines2010}
 Haines, M.~R. (2010) {H}istorical, {D}emographic, {E}conomic, and {S}ocial
@@ -276,11 +246,6 @@ Kaul, A., Kl{\"o}{\ss}ner, S., Pfeifer, G. and Schieler, M. (2015) Synthetic
   covariates.
 \newblock Available at:
   \url{http://www.oekonometrie.uni-saarland.de/papers/SCM_Predictors.pdf}.
-
-\bibitem[{{Kingma} and {Ba}(2014)}]{kingma2014adam}
-{Kingma}, D.~P. and {Ba}, J. (2014) {Adam: A Method for Stochastic
-  Optimization}.
-\newblock \textit{arXiv e-prints}, arXiv:1412.6980.
 
 \bibitem[{{Kingma} and {Welling}(2013)}]{kingma2013auto}
 {Kingma}, D.~P. and {Welling}, M. (2013) {Auto-Encoding Variational Bayes}.
@@ -318,16 +283,12 @@ Meyer, J.~W., Tyack, D., Nagel, J. and Gordon, A. (1979) Public education as
 Neyman, J. (1923) On the application of probability theory to agricultural
   experiments.
 \newblock \textit{Annals of Agricultural Sciences}, \textbf{51}.
-\newblock Reprinted in \cite{splawa1990}.
+\newblock Reprinted in \citet{splawa1990}.
 
 \bibitem[{Rubin(1990)}]{rubin1990}
 Rubin, D.~B. (1990) Comment: Neyman (1923) and causal inference in experiments
   and observational studies.
 \newblock \textit{Statistical Science}, \textbf{5}, 472--480.
-
-\bibitem[{Schmidhuber and Hochreiter(1997)}]{schmidhuber1997long}
-Schmidhuber, J. and Hochreiter, S. (1997) Long short-term memory.
-\newblock \textit{Neural Computation}, \textbf{9}, 1735--1780.
 
 \bibitem[{{Schnabel} et~al.(2016){Schnabel}, {Swaminathan}, {Singh}, {Chandak}
   and {Joachims}}]{schnabel2016recommendations}
