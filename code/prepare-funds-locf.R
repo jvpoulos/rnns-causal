@@ -2,7 +2,7 @@
 # Prepare education spending data for RNNs #
 ###################################
 
-funds <- readRDS("/media/jason/Dropbox/github/land-reform/data/capacity-outcomes-locf.rds")[['educ.pc']]
+funds <- readRDS("data/capacity-outcomes-locf.rds")[['educ.pc']]
 
 Y <- funds$M # NxT 
 
@@ -33,7 +33,7 @@ train_data <- train_data[, sample(1:ncol(train_data), ncol(test_data))] # dimens
 
 # importance weight matrix
 
-funds.covars <- readRDS("/media/jason/Dropbox/github/land-reform/data/capacity-covariates.rds")
+funds.covars <- readRDS("data/capacity-covariates.rds")
 
 X <- data.frame(funds.covars) 
 X$treat <- ifelse(rownames(X) %in% treated.indices, 1, 0)
