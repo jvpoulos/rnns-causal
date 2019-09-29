@@ -21,7 +21,7 @@ doParallel::registerDoParallel(cores) # register cores (<p)
 RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
 # Load data
-capacity.outcomes <- readRDS("capacity-outcomes.rds")
+capacity.outcomes <- readRDS("data/capacity-outcomes.rds")
 
 ## Reading data
 CapacitySim <- function(outcomes,d,sim,treated.indices){
@@ -50,10 +50,8 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
   ## Matrices for saving RMSE values
   
   MCPanel_RMSE_test <- matrix(0L,num_runs,length(T0))
-#  LSTM_RMSE_test <- matrix(0L,num_runs,length(T0))
   RVAE_RMSE_test <- matrix(0L,num_runs,length(T0))
   ED_RMSE_test <- matrix(0L,num_runs,length(T0))
-#  EN_RMSE_test <- matrix(0L,num_runs,length(T0))
   ENT_RMSE_test <- matrix(0L,num_runs,length(T0))
   DID_RMSE_test <- matrix(0L,num_runs,length(T0))
   ADH_RMSE_test <- matrix(0L,num_runs,length(T0))
@@ -88,16 +86,6 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
       est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
       MCPanel_RMSE_test[i,j] <- est_model_MCPanel$test_RMSE
       
-      # ## ------
-      # ## LSTM
-      # ## ------
-      # 
-      # source("lstm.R")
-      # est_model_LSTM <- lstm(Y_obs, treat_indices, d, t0, T)
-      # est_model_LSTM_msk_err <- (est_model_LSTM - Y[treat_indices,][,(t0+1):T])
-      # est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
-      # LSTM_RMSE_test[i,j] <- est_model_LSTM_test_RMSE
-      
       ## ------
       ## RVAE
       ## ------
@@ -117,15 +105,6 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
       est_model_ED_msk_err <- (est_model_ED - Y[treat_indices,][,(t0+1):T])
       est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
       ED_RMSE_test[i,j] <- est_model_ED_test_RMSE
-      
-      # ## -----
-      # ## HR-EN :
-      # ## -----
-      # 
-      # est_model_EN <- en_mp_rows(Y_obs, treat_mat)
-      # est_model_EN_msk_err <- (est_model_EN - Y)*(1-treat_mat)
-      # est_model_EN_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_EN_msk_err^2, na.rm = TRUE))
-      # EN_RMSE_test[i,j] <- est_model_EN_test_RMSE
       
       ## -----
       ## VT-EN 
@@ -160,17 +139,11 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
   MCPanel_avg_RMSE <- apply(MCPanel_RMSE_test,2,mean)
   MCPanel_std_error <- apply(MCPanel_RMSE_test,2,sd)/sqrt(num_runs)
   
-  # LSTM_avg_RMSE <- apply(LSTM_RMSE_test,2,mean)
-  # LSTM_std_error <- apply(LSTM_RMSE_test,2,sd)/sqrt(num_runs)
-   
   RVAE_avg_RMSE <- apply(RVAE_RMSE_test,2,mean)
   RVAE_std_error <- apply(RVAE_RMSE_test,2,sd)/sqrt(num_runs)
   
   ED_avg_RMSE <- apply(ED_RMSE_test,2,mean)
   ED_std_error <- apply(ED_RMSE_test,2,sd)/sqrt(num_runs)
-  
-  # EN_avg_RMSE <- apply(EN_RMSE_test,2,mean)
-  # EN_std_error <- apply(EN_RMSE_test,2,sd)/sqrt(num_runs)
   
   ENT_avg_RMSE <- apply(ENT_RMSE_test,2,mean)
   ENT_std_error <- apply(ENT_RMSE_test,2,sd)/sqrt(num_runs)
@@ -188,16 +161,12 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
       "y" =  c(DID_avg_RMSE,ED_avg_RMSE,MCPanel_avg_RMSE,RVAE_avg_RMSE,ADH_avg_RMSE,ENT_avg_RMSE),
       "lb" = c(DID_avg_RMSE - 1.96*DID_std_error,
                ED_avg_RMSE - 1.96*ED_std_error,
-       #        EN_avg_RMSE - 1.96*EN_std_error,
-         #      LSTM_avg_RMSE - 1.96*LSTM_std_error, 
                MCPanel_avg_RMSE - 1.96*MCPanel_std_error, 
                RVAE_avg_RMSE - 1.96*RVAE_std_error, 
                ADH_avg_RMSE - 1.96*ADH_std_error,
                ENT_avg_RMSE - 1.96*ENT_std_error),
       "ub" = c(DID_avg_RMSE + 1.96*DID_std_error, 
                ED_avg_RMSE + 1.96*ED_std_error,
-        #       EN_avg_RMSE + 1.96*EN_std_error,
-       #        LSTM_avg_RMSE + 1.96*LSTM_std_error,
                MCPanel_avg_RMSE + 1.96*MCPanel_std_error, 
                RVAE_avg_RMSE + 1.96*RVAE_std_error, 
                ADH_avg_RMSE + 1.96*ADH_std_error,
@@ -205,8 +174,6 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
       "x" = c(T0/T, T0/T ,T0/T, T0/T, T0/T, T0/T),
       "Method" = c(replicate(length(T0),"DID"), 
                    replicate(length(T0),"ED"),
-              #     replicate(length(T0),"HR-EN"),
-            #       replicate(length(T0),"LSTM"), 
                    replicate(length(T0),"MC-NNM"), 
                    replicate(length(T0),"RVAE"), 
                    replicate(length(T0),"SC-ADH"),
@@ -237,8 +204,6 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
     df2<-data.frame(N,T,N_t,is_simul, DID_RMSE_test,ED_RMSE_test,MCPanel_RMSE_test,RVAE_RMSE_test,ADH_RMSE_test,ENT_RMSE_test)
     colnames(df2)<-c(replicate(length(T0),"DID"), 
                      replicate(length(T0),"ED"),
-               #      replicate(length(T0),"HR-EN"),
-                  #   replicate(length(T0),"LSTM"), 
                      replicate(length(T0),"MC-NNM"), 
                      replicate(length(T0),"RVAE"), 
                      replicate(length(T0),"SC-ADH"),
