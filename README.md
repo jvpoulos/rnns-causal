@@ -30,10 +30,7 @@ Prerequsites
 * Tensorflow 1.2
 
 * **R** version 3.5.2 (2018-12-20). 
-To install this **R** version on Ubuntu, use the command 
-```
-$ sudo apt-get install r-base-core=3.5.2-1xenial
-```
+
 Set up
 ------
 * Clone a copy of the repository to your working directory with the command
@@ -47,7 +44,7 @@ library(devtools)
 install_github("jvpoulos/MCPanel")
 ```
 * Open `package-list.R` in a script editor
-  * Verify that all required packages in `package-list.R`are installed in your **R** library
+  * Verify that all required packages in `package-list.R` are installed in your **R** library
 
 * Make shell file `main.sh` executable from the Linux/Unix command line:
 ```
