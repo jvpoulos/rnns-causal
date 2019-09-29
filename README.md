@@ -25,11 +25,12 @@ archivePrefix = {arXiv},
 Prerequsites
 ------
 
-## Python 2 (tested on Python 2.7.16)
+* Python 2 (tested on Python 2.7.16)
 
-## Tensorflow 1.2
+* Tensorflow 1.2
 
-## **R** version 3.5.2 (2018-12-20). To install this **R** version on Ubuntu, use the command 
+* **R** version 3.5.2 (2018-12-20). 
+To install this **R** version on Ubuntu, use the command 
 ```
 $ sudo apt-get install r-base-core=3.5.2-1xenial
 ```
@@ -57,19 +58,24 @@ $ chmod +x main.sh
 $ ./main.sh > main.txt
 ```
 
-Simulations
+Experiments
 ------
-* Repeat the last two steps for `synth-placebo.sh`, `stock-placebo.sh`, and `funds-placebo.sh` to run experiments on synthetic control, stock market, and state government finance datasets, respectively
+
+To run placebo experiments, repeat the last two steps for 
+
+* `synth-placebo.sh`: synthetic control datasets
+* `stock-placebo.sh`: stock market prices
+* `funds-placebo.sh`: state government finances
 
 Counterfactual predictions
 ------
 
-To get encoder-decoder estimates run `train_encoder_decoder.py <GPU ID> <epochs> <batches> <data name> <t_0> <T> <imputation method>`; e.g., 
+To get encoder-decoder estimates run `train_encoder_decoder.py <GPU_ID> <epochs> <batches> <data name> <t_0> <T> <imputation_method>`; e.g., 
 ```
 python train_encoder_decoder.py 0 1000 8 'educ' 87 156 'locf'
 ```
 
-Similarly, for RVAE estimates run `train_rvae.py <GPU ID> <epochs> <batches> <data name> <t_0> <T> <imputation method>`; e.g., 
+Similarly, for RVAE estimates run `train_rvae.py <GPU ID> <epochs> <batches> <data name> <t_0> <T> <imputation_method>`; e.g., 
 ```
 python train_rvae.py 0 1000 8 'educ' 87 156 'locf'
 ```

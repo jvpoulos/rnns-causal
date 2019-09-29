@@ -15,14 +15,12 @@ TsPlot <- function(df, main = "",y.title,limits,breaks) {
     geom_line(data = subset(df, variable == "observed.pls"), aes(y = value, colour = "observed.pls", linetype="observed.pls"), show.legend = TRUE, size=1) +
     geom_line(data = subset(df, variable == "predicted.pls"), aes(y = value, colour = "predicted.pls", linetype="predicted.pls"), show.legend = FALSE, size=1) +
     geom_line(data = subset(df, variable == "pointwise.pls"), aes(y = value, colour = "pointwise.pls", linetype="pointwise.pls"), show.legend = FALSE, size=1) +
-    # geom_line(data = subset(df, variable == "cumulative.pls"), aes(y = value ,colour = "observed.pls", linetype="observed.pls"), show.legend = FALSE, size=1) +
-    
+
     geom_line(data = subset(df, variable == "observed.sls"), aes(y = value, colour = "observed.sls", linetype="observed.sls"), show.legend = TRUE, size=1) +
     
     # intervals
     geom_ribbon(data = subset(df, variable == "pointwise.pls"), aes(ymin = lower, ymax=upper, colour="pointwise.pls"), alpha=.1, size=0.5, show.legend = FALSE) +
-    #geom_ribbon(data = subset(df, variable == "cumulative.pls"), aes(ymin = lower, ymax=upper, colour="predicted.pls"), alpha=.1, size=0.5, show.legend = FALSE) +   
-    
+
     # horizontal line to indicate zero values
     geom_hline(yintercept = 0, size = 0.5, colour = "black") +
     
@@ -43,7 +41,6 @@ TsPlot <- function(df, main = "",y.title,limits,breaks) {
   
   ticks <- scale_x_datetime(breaks=breaks,
                             labels=date_format("%Y"), 
-               #             time_trans(tz="UTC"),
                             limits=limits) 
   
   # annotation text
@@ -59,21 +56,17 @@ TsPlot <- function(df, main = "",y.title,limits,breaks) {
     ticks + 
     theme( legend.title = element_blank()
            , plot.title = element_text(hjust = 0.5)
-     #      , legend.position = c(0.2,0.85)
            , legend.justification = c(1,0)
             , legend.position = "none"
            , legend.background = element_rect()
            , axis.text=element_text(size=14)
            , axis.title.x=element_text(size = 16)
            , axis.title.y=element_text(size = 16)
-      #     , axis.ticks.x=element_blank()
-     #      , axis.ticks.y=element_blank()
            , legend.text=element_text(size=14, family = "serif")
            , legend.box = "horizontal" # not working?)
     ) + geom_text(data = ann_text,aes(y = value, label =lab), family="serif", fontface="italic",  size=6) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black")) + # rm background
-  #  scale_y_continuous(name=y.title) +
     scale_colour_manual(name="", values = c(  "observed.pls" = wes_palette("Darjeeling1")[5], 
                                               "observed.sls" = wes_palette("Darjeeling1")[1], 
                                               "predicted.pls" = wes_palette("Darjeeling1")[5],
