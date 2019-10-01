@@ -13,9 +13,9 @@ registerDoParallel(cores) # register cores
 RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
 # Set directories
-data.directory <- "/media/jason/Dropbox/github/rnns-causal/data/"
-code.directory <-"/media/jason/Dropbox/github/rnns-causal/code/"
-results.directory <-"/media/jason/Dropbox/github/rnns-causal/results/"
+data.directory <- "data/"
+code.directory <-"code/"
+results.directory <-"results/"
 
 ## Placebo tests
 
