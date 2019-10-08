@@ -13,7 +13,7 @@ keras.backend.tensorflow_backend.set_session(sess)
 
 from keras import backend as K
 from keras.models import Model
-from keras.layers import LSTM, Input, GRU, TimeDistributed, Dense, RepeatVector
+from keras.layers import LSTM, Input, GRU, TimeDistributed, Dense, RepeatVector, GaussianNoise, GaussianDropout
 from keras.callbacks import CSVLogger
 from keras import regularizers
 from keras.optimizers import Adam
@@ -27,7 +27,7 @@ from tensorflow.python.client import device_lib
 print(device_lib.list_local_devices())
 
 
-def create_model(n_pre, n_post, nb_features, output_dim, dropout):
+def create_model(n_pre, n_post, nb_features, output_dim, dropout, GS, GD):
     """ 
         creates, compiles and returns a RNN model 
         @param nb_features: the number of features in the model
@@ -44,7 +44,16 @@ def create_model(n_pre, n_post, nb_features, output_dim, dropout):
     decoder_hidden = 128
 
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
-    lstm_1 = LSTM(encoder_hidden, kernel_initializer=initialization, dropout=dr, return_sequences=True, name='LSTM_1')(inputs) # Encoder
+    if GS>0:
+    	noise_layer= GaussianNoise(GS)(inputs)
+    	lstm_1 = LSTM(encoder_hidden, kernel_initializer=initialization, dropout=dr, return_sequences=True, name='LSTM_1')(noise_layer) # Encoder
+    else:	
+    	lstm_1 = LSTM(encoder_hidden, kernel_initializer=initialization, dropout=dr, return_sequences=True, name='LSTM_1')(inputs) # Encoder
+    if GD>0:
+    	noise_layer= GaussianDropout(GD)(inputs)
+    	lstm_1 = LSTM(encoder_hidden, kernel_initializer=initialization, dropout=dr, return_sequences=True, name='LSTM_1')(noise_layer) # Encoder
+    else:	
+    	lstm_1 = LSTM(encoder_hidden, kernel_initializer=initialization, dropout=dr, return_sequences=True, name='LSTM_1')(inputs) # Encoder
     lstm_2 = LSTM(encoder_hidden, kernel_initializer=initialization, dropout=dr, return_sequences=False, name='LSTM_2')(lstm_1) # Encoder
     repeat = RepeatVector(n_post, name='Repeat')(lstm_2) # get the last output of the LSTM and repeats it
     gru_1 = GRU(decoder_hidden, kernel_initializer=initialization, return_sequences=True, name='Decoder')(repeat)  # Decoder
@@ -98,7 +107,7 @@ def test_model():
 
     # create and fit the LSTM network
     print('creating model...')
-    model = create_model(n_pre, n_post, nb_features, output_dim, dropout)
+    model = create_model(n_pre, n_post, nb_features, output_dim, dropout, GS, GD)
 
     train_model(model, dataXC, dataYC, int(epochs), int(nb_batches))
 

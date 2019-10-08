@@ -7,7 +7,7 @@ library(reticulate)
 library(readr)
 use_python("/usr/local/bin/python")
 
-edAug <- function(Y,treat_indices,d, t0, T, dropout){
+edAug <- function(Y,treat_indices,d, t0, T, dropout, GS, GD){
   # Converting the data to a floating point matrix
   data <- data.matrix(t(Y)) # T x N
   
@@ -21,12 +21,14 @@ edAug <- function(Y,treat_indices,d, t0, T, dropout){
   
   py <- import_main()
   py$dataname <- d
-  py$epochs <- 100
+  py$epochs <- 1000
   py$gpu <- 1
   py$t0 <- t0
   py$T <- T
-  py$nb_batches <- 4
+  py$nb_batches <- 8
   py$dropout <- dropout
+  py$GS <- GS
+  py$GD <- GD
   
   source_python("train_encoder_decoder_aug_sim.py")
   
