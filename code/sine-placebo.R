@@ -11,7 +11,7 @@ library(MCPanel)
 library(parallel)
 library(doParallel)
 
-cores <- detectCores()
+cores <- detectCores()/2
 
 cl <- parallel::makeForkCluster(cores)
 
