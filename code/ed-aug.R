@@ -5,9 +5,10 @@
 library(keras)
 library(reticulate)
 library(readr)
-use_python("/usr/local/bin/python")
+#use_python("/usr/local/bin/python")
+use_python("/usr/bin/python")
 
-edAug <- function(Y,treat_indices,d, t0, T, dropout, GS, GD){
+edAug <- function(Y,treat_indices,d, t0, T, dropout, GS, GD, multiple, Y2=NULL){
   # Converting the data to a floating point matrix
   data <- data.matrix(t(Y)) # T x N
   
@@ -19,16 +20,29 @@ edAug <- function(Y,treat_indices,d, t0, T, dropout, GS, GD){
   write.csv(train_data,paste0("../data/",d,"-x.csv"),row.names = FALSE)
   write.csv(test_data,paste0("../data/",d,"-y.csv"),row.names = FALSE)
   
+  if(!is.null(Y2)){
+    # Converting the data to a floating point matrix
+    data2 <- data.matrix(t(Y2)) # T x N
+    
+    # Splits
+    train_data2 <- data2[,(-treat_indices)] # train on control units
+    test_data2 <- data2[,(treat_indices)] # treated units
+    
+    write.csv(train_data2,paste0("../data/",d,"-x2.csv"),row.names = FALSE)
+    write.csv(test_data2,paste0("../data/",d,"-y2.csv"),row.names = FALSE)
+  }
+  
   py <- import_main()
   py$dataname <- d
   py$epochs <- 1000
   py$gpu <- 1
   py$t0 <- t0
   py$T <- T
-  py$nb_batches <- 8
+  py$nb_batches <- 4
   py$dropout <- dropout
   py$GS <- GS
   py$GD <- GD
+  py$multiple <- multiple
   
   source_python("train_encoder_decoder_aug_sim.py")
   
