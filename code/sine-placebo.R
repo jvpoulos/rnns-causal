@@ -49,6 +49,7 @@ SineSim <- function(Y,Y.noisy,N){
     ## Fix the treated units in the whole run for a better comparison
     all_indices <- sample(1:Nbig, N)
     treat_indices <- sample(1:N, N_t)
+    print(treat_indices)
     Y_sub <- Y[all_indices,1:T]
     Y_noisy_sub <- Y.noisy[all_indices,1:T]
     for (j in c(1:length(T0))){
@@ -72,11 +73,7 @@ SineSim <- function(Y,Y.noisy,N){
       ## ------
       
       print("BASELINE: ED (no dropout) Started")
-      print(dim(Y_sum))
-      print(treated_indices)
-      print(t0)
       est_model_ED <- edAug(Y=Y_obs, treat_indices, d, t0, T, dropout=0, GS=0, GD=0, multiple=0)
-      print(est_model_ED)
       est_model_ED_msk_err <- (est_model_ED - Y_sub[treat_indices,][,(t0+1):T])
       est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
       ED_RMSE_test[i,j] <- est_model_ED_test_RMSE
@@ -189,11 +186,13 @@ Y.val <- read.csv('../../RGAN/experiments/data/sine_val_real.csv',header=F) # re
 Y.test <- read.csv('../../RGAN/experiments/data/sine_test_real.csv',header=F)
 
 Y <- rbind(Y.val,Y.test)
+print(dim(Y))
 
 Y.val.noisy <- read.csv('../../RGAN/experiments/data/sine_val_sample.csv', header=F) # noisy validation and test sine waves
 Y.test.noisy <- read.csv('../../RGAN/experiments/data/sine_test_sample.csv', header=F)
 
 Y.noisy <- rbind(Y.val.noisy,Y.test.noisy)
+print(dim(Y.noisy))
 
 results <- foreach(N = c(10,20,50,70,100,140), .combine='rbind') %do% {
   SineSim(Y,Y.noisy,N)
