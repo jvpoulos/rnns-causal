@@ -185,13 +185,13 @@ SineSim <- function(Y,Y.noisy,N){
 Y.val <- read.csv('../../RGAN/experiments/data/sine_val_real.csv',header=F) # real validation and test sine waves
 Y.test <- read.csv('../../RGAN/experiments/data/sine_test_real.csv',header=F)
 
-Y <- rbind(Y.val,Y.test)
+Y <- t(rbind(Y.val,Y.test)) # N X T
 print(dim(Y))
 
 Y.val.noisy <- read.csv('../../RGAN/experiments/data/sine_val_sample.csv', header=F) # noisy validation and test sine waves
 Y.test.noisy <- read.csv('../../RGAN/experiments/data/sine_test_sample.csv', header=F)
 
-Y.noisy <- rbind(Y.val.noisy,Y.test.noisy)
+Y.noisy <- t(rbind(Y.val.noisy,Y.test.noisy)) # N X T
 print(dim(Y.noisy))
 
 results <- foreach(N = c(10,20,50,70,100,140), .combine='rbind') %do% {
