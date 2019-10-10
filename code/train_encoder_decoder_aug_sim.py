@@ -142,15 +142,15 @@ def test_model():
 
     # now test
 
-	print('Generate predictions on test set')
+    print('Generate predictions on test set')
 
-	y = np.array(pd.read_csv("../data/{}-y.csv".format(dataname)))
+    y = np.array(pd.read_csv("../data/{}-y.csv".format(dataname)))
 
-	print('raw y shape', y.shape)   
+    print('raw y shape', y.shape)   
 
-	dXT = []
-	for i in range(seq_len-n_pre-n_post):
-		dXT.append(y[i:i+n_pre]) # treated is input
+    dXT = []
+    for i in range(seq_len-n_pre-n_post):
+        dXT.append(y[i:i+n_pre]) # treated is input
 
     dataXT = np.array(dXT)
 

@@ -49,7 +49,6 @@ SineSim <- function(Y,Y.noisy,N){
     ## Fix the treated units in the whole run for a better comparison
     all_indices <- sample(1:Nbig, N)
     treat_indices <- sample(1:N, N_t)
-    print(treat_indices)
     Y_sub <- Y[all_indices,1:T]
     Y_noisy_sub <- Y.noisy[all_indices,1:T]
     for (j in c(1:length(T0))){
