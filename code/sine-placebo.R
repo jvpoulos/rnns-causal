@@ -64,6 +64,7 @@ SineSim <- function(Y,Y.noisy,N){
       Y_obs <- Y_sub * treat_mat
       Y_noisy_obs <- Y_noisy_sub * treat_mat
       
+      print(dim(Y_obs))
       source("ed-aug.R")
       
       ## ------
@@ -190,7 +191,7 @@ Y.test.noisy <- read.csv('../../RGAN/experiments/data/sine_test_sample.csv', hea
 
 Y.noisy <- rbind(Y.val.noisy,Y.test.noisy)
 
-results <- foreach(N = c(10,20,50,70,100), .combine='rbind') %do% {
+results <- foreach(N = c(10,20,50,70,100,140), .combine='rbind') %do% {
   SineSim(Y,Y.noisy,N)
 }
 saveRDS(results, "../results/encoder-decoder/sine/sine-placebo-results-aug.rds")
