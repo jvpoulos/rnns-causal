@@ -25,7 +25,7 @@ SineSim <- function(Y,Y.noisy,N){
   Tbig <- ncol(Y)
   
   N <- N
-  T <- 4900/N
+  T <- 2800/N
 
   T0 <- ceiling(T/2)
   N_t <- ceiling(N/2)
