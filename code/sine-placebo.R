@@ -72,7 +72,11 @@ SineSim <- function(Y,Y.noisy,N){
       ## ------
       
       print("BASELINE: ED (no dropout) Started")
+      print(dim(Y_sum))
+      print(treated_indices)
+      print(t0)
       est_model_ED <- edAug(Y=Y_obs, treat_indices, d, t0, T, dropout=0, GS=0, GD=0, multiple=0)
+      print(est_model_ED)
       est_model_ED_msk_err <- (est_model_ED - Y_sub[treat_indices,][,(t0+1):T])
       est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
       ED_RMSE_test[i,j] <- est_model_ED_test_RMSE
