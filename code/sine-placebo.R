@@ -25,7 +25,7 @@ SineSim <- function(Y,Y.noisy,N){
   Tbig <- ncol(Y)
   
   N <- N
-  T <- 2100/N
+  T <- 4900/N
 
   T0 <- ceiling(T/2)
   N_t <- ceiling(N/2)
@@ -190,7 +190,7 @@ Y.test.noisy <- read.csv('../../RGAN/experiments/data/sine_test_sample.csv', hea
 
 Y.noisy <- rbind(Y.val.noisy,Y.test.noisy)
 
-results <- foreach(N = c(10,20,50,70,100,140), .combine='rbind') %do% {
+results <- foreach(N = c(10,20,50,70,100), .combine='rbind') %do% {
   SineSim(Y,Y.noisy,N)
 }
 saveRDS(results, "../results/encoder-decoder/sine/sine-placebo-results-aug.rds")
