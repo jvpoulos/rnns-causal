@@ -177,19 +177,19 @@ def test_model():
     	for i in range(seq_len-n_pre-n_post):
         	dXT2.append(y2[i:i+n_pre]) # treated is input
 
-        dataXT2 = np.array(dXT2)
+    	dataXT2 = np.array(dXT2)
 
-        print('dataXT2 shape:', dataXT2.shape)
+    	print('dataXT2 shape:', dataXT2.shape)
+    	
+    	preds_test = model.predict([dataXT,dataXT2], batch_size=int(nb_batches), verbose=1)
 
-        preds_test = model.predict([dataXT,dataXT2], batch_size=int(nb_batches), verbose=1)
+    	preds_test = np.squeeze(preds_test)
 
-        preds_test = np.squeeze(preds_test)
+    	print('predictions shape =', preds_test.shape)
 
-        print('predictions shape =', preds_test.shape)
+    	print('Saving to results/encoder-decoder/{}/encoder-decoder-{}-test.csv'.format(dataname,dataname))
 
-        print('Saving to results/encoder-decoder/{}/encoder-decoder-{}-test.csv'.format(dataname,dataname))
-
-        np.savetxt("../results/encoder-decoder/{}/encoder-decoder-{}-test.csv".format(dataname,dataname), preds_test, delimiter=",")
+    	np.savetxt("../results/encoder-decoder/{}/encoder-decoder-{}-test.csv".format(dataname,dataname), preds_test, delimiter=",")
 
 def main():
     test_model()
