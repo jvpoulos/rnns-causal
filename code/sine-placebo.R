@@ -25,7 +25,7 @@ SineSim <- function(Y,Y.noisy,N){
   Tbig <- ncol(Y)
   
   N <- N
-  T <- 2800/N
+  T <- 2100/N
 
   T0 <- ceiling(T/2)
   N_t <- ceiling(N/2)
@@ -45,7 +45,7 @@ SineSim <- function(Y,Y.noisy,N){
   ## Run different methods
   
   for(i in c(1:num_runs)){
-    print(paste0(paste0("Run number ", i)," started"))
+    print(paste0("Run number ", i," started:",N," times ",T))
     ## Fix the treated units in the whole run for a better comparison
     all_indices <- sample(1:Nbig, N)
     treat_indices <- sample(1:N, N_t)
@@ -60,8 +60,6 @@ SineSim <- function(Y,Y.noisy,N){
       }else{
         treat_mat <- stag_adapt(Y_sub, N_t, t0, treat_indices)
       }
-      treat_mat_NA <- treat_mat
-      treat_mat_NA[treat_mat==0] <- NA
       
       Y_obs <- Y_sub * treat_mat
       Y_noisy_obs <- Y_noisy_sub * treat_mat
