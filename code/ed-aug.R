@@ -8,7 +8,7 @@ library(readr)
 #use_python("/usr/local/bin/python")
 use_python("/usr/bin/python", TRUE)
 
-edAug <- function(Y,treat_indices,d, t0, T, dropout, GS, GD, multiple, Y2=NULL){
+edAug <- function(Y,treat_indices,d, t0, T, dropout, penalty, GS, GD, multiple, Y2=NULL){
   # Converting the data to a floating point matrix
   data <- data.matrix(t(Y)) # T x N
   
