@@ -6,7 +6,7 @@ library(keras)
 library(reticulate)
 library(readr)
 #use_python("/usr/local/bin/python")
-use_python("/usr/bin/python")
+use_python("/usr/bin/python", TRUE)
 
 edAug <- function(Y,treat_indices,d, t0, T, dropout, GS, GD, multiple, Y2=NULL){
   # Converting the data to a floating point matrix
@@ -34,11 +34,12 @@ edAug <- function(Y,treat_indices,d, t0, T, dropout, GS, GD, multiple, Y2=NULL){
   
   py <- import_main()
   py$dataname <- d
-  py$epochs <- 1000
-  py$gpu <- 1
+  py$epochs <- 200
+  py$gpu <- 5
   py$t0 <- t0
   py$T <- T
   py$nb_batches <- 4
+  py$penalty <- penalty
   py$dropout <- dropout
   py$GS <- GS
   py$GD <- GD

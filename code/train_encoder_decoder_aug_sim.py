@@ -20,14 +20,15 @@ from keras.optimizers import Adam
 
 # Select gpu
 import os
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
-os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
+if gpu < 3:
+    os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
+    os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
 
-from tensorflow.python.client import device_lib
-print(device_lib.list_local_devices())
+    from tensorflow.python.client import device_lib
+    print(device_lib.list_local_devices())
 
 
-def create_model(n_pre, n_post, nb_features, output_dim, dropout, GS, GD, multiple):
+def create_model(n_pre, n_post, nb_features, output_dim, penalty, dropout, GS, GD, multiple):
     """ 
         creates, compiles and returns a RNN model 
         @param nb_features: the number of features in the model
@@ -37,7 +38,7 @@ def create_model(n_pre, n_post, nb_features, output_dim, dropout, GS, GD, multip
     initialization = 'glorot_normal'
     activation = 'linear'
     lr = 0.001
-    penalty=0
+    penalty=penalty
     dr=dropout
 
     encoder_hidden = 128
@@ -81,7 +82,7 @@ def train_model(model, dataX, dataY, epoch_count, batches):
     	history = model.fit([dataX1,dataX2], 
         dataY, 
         batch_size=batches, 
-        verbose=0,
+        verbose=1,
         epochs=epoch_count, 
         callbacks=[csv_logger],
         validation_split=0.2)
@@ -90,7 +91,7 @@ def train_model(model, dataX, dataY, epoch_count, batches):
     	history = model.fit(dataX, 
         dataY, 
         batch_size=batches, 
-        verbose=0,
+        verbose=1,
         epochs=epoch_count, 
         callbacks=[csv_logger],
         validation_split=0.2)
@@ -133,7 +134,7 @@ def test_model():
 
     # create and fit the LSTM network
     print('creating model...')
-    model = create_model(n_pre, n_post, nb_features, output_dim, dropout, GS, GD, multiple)
+    model = create_model(n_pre, n_post, nb_features, output_dim, penalty, dropout, GS, GD, multiple)
 
     if multiple>0:
     	train_model(model, [dataXC,dataXC2], dataYC, int(epochs), int(nb_batches))
