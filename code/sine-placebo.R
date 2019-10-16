@@ -25,7 +25,7 @@ SineSim <- function(Y,Y.noisy,N){
   Tbig <- ncol(Y)
   
   N <- N
-  T <- 4900/N
+  T <- N*10
 
   T0 <- ceiling(T/2)
   N_t <- ceiling(N/2)
@@ -40,8 +40,6 @@ SineSim <- function(Y,Y.noisy,N){
   ED2_RMSE_test <- matrix(0L,num_runs,length(T0))
   ED3_RMSE_test <- matrix(0L,num_runs,length(T0))
   ED4_RMSE_test <- matrix(0L,num_runs,length(T0))
-  ED5_RMSE_test <- matrix(0L,num_runs,length(T0))
-  ED6_RMSE_test <- matrix(0L,num_runs,length(T0))
 
   ## Run different methods
   
@@ -117,26 +115,6 @@ SineSim <- function(Y,Y.noisy,N){
       est_model_ED4_msk_err <- (est_model_ED4 - Y_sub[treat_indices,][,(t0+1):T])
       est_model_ED4_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED4_msk_err^2, na.rm = TRUE))
       ED4_RMSE_test[i,j] <- est_model_ED4_test_RMSE
-      
-      ## ------
-      ## ED + dropout, p=0.5
-      ## ------
-      
-      print("ED + dropout Started")
-      est_model_ED5 <- edAug(Y=Y_obs, treat_indices, d, t0, T, penalty=0, dropout=0.5, GS=0, GD=0, multiple=0)
-      est_model_ED5_msk_err <- (est_model_ED5 - Y_sub[treat_indices,][,(t0+1):T])
-      est_model_ED5_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED5_msk_err^2, na.rm = TRUE))
-      ED5_RMSE_test[i,j] <- est_model_ED5_test_RMSE
-      
-      ## ------
-      ## ED + regularization, lambda=0.1
-      ## ------
-      
-      print("ED + dropout Started")
-      est_model_ED6 <- edAug(Y=Y_obs, treat_indices, d, t0, T, penalty=0.1, dropout=0, GS=0, GD=0, multiple=0)
-      est_model_ED6_msk_err <- (est_model_ED6 - Y_sub[treat_indices,][,(t0+1):T])
-      est_model_ED6_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED6_msk_err^2, na.rm = TRUE))
-      ED6_RMSE_test[i,j] <- est_model_ED6_test_RMSE
     }
   }
   
@@ -157,40 +135,28 @@ SineSim <- function(Y,Y.noisy,N){
   ED4_avg_RMSE <- apply(ED4_RMSE_test,2,mean)
   ED4_std_error <- apply(ED4_RMSE_test,2,sd)/sqrt(num_runs)
   
-  ED5_avg_RMSE <- apply(ED5_RMSE_test,2,mean)
-  ED5_std_error <- apply(ED5_RMSE_test,2,sd)/sqrt(num_runs)
-  
-  ED6_avg_RMSE <- apply(ED6_RMSE_test,2,mean)
-  ED6_std_error <- apply(ED6_RMSE_test,2,sd)/sqrt(num_runs)
-  
   ## Creating plots
   
   df1 <-
     data.frame(
-      "y" =  c(ED_avg_RMSE,ED1_avg_RMSE,ED2_avg_RMSE,ED3_avg_RMSE,ED4_avg_RMSE,ED5_avg_RMSE,ED6_avg_RMSE),
+      "y" =  c(ED_avg_RMSE,ED1_avg_RMSE,ED2_avg_RMSE,ED3_avg_RMSE,ED4_avg_RMSE),
       "lb" = c(ED_avg_RMSE - 1.96*ED_std_error,
                ED1_avg_RMSE - 1.96*ED1_std_error,
                ED2_avg_RMSE - 1.96*ED2_std_error,
                ED3_avg_RMSE - 1.96*ED3_std_error,
-               ED4_avg_RMSE - 1.96*ED4_std_error,
-               ED5_avg_RMSE - 1.96*ED5_std_error,
-               ED6_avg_RMSE - 1.96*ED6_std_error),
+               ED4_avg_RMSE - 1.96*ED4_std_error),
       "ub" = c(ED_avg_RMSE + 1.96*ED_std_error,
                ED1_avg_RMSE + 1.96*ED1_std_error,
                ED2_avg_RMSE + 1.96*ED2_std_error,
                ED3_avg_RMSE + 1.96*ED3_std_error,
-               ED4_avg_RMSE + 1.96*ED4_std_error,
-               ED5_avg_RMSE + 1.96*ED5_std_error,
-               ED6_avg_RMSE + 1.96*ED6_std_error),
-      "N" = rep(N,7),
-      "T" = rep(T,7),
+               ED4_avg_RMSE + 1.96*ED4_std_error),
+      "N" = rep(N,5),
+      "T" = rep(T,5),
       "Method" = c(replicate(length(T0),"Real inputs"),
                    replicate(length(T0),"Noisy inputs + real inputs"),
                    replicate(length(T0),"Noisy inputs"),
                    replicate(length(T0),"Gaussian Noise, sd=0.1"),
-                   replicate(length(T0),"Gaussian Dropout, p=0.5"),
-                   replicate(length(T0),"Dropout, p=0.5"),
-                   replicate(length(T0),"L2 Loss, l=0.1")))
+                   replicate(length(T0),"Gaussian Dropout, p=0.5")))
   filename<-paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".rds")
   saveRDS(df1, file = filename)
   return(df1)
@@ -210,7 +176,7 @@ Y.test.noisy <- read.csv('../../RGAN/experiments/data/sine_test_sample.csv', hea
 Y.noisy <- t(rbind(Y.val.noisy,Y.test.noisy)) # N X T
 print(dim(Y.noisy))
 
-results <- foreach(N = c(10,20,50,70,100,140), .combine='rbind') %do% {
+results <- foreach(N = c(10,50,70,100,140), .combine='rbind') %do% {
   SineSim(Y,Y.noisy,N)
 }
 saveRDS(results, "../results/encoder-decoder/sine/sine-placebo-results-aug.rds")

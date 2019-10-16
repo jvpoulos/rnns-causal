@@ -11,7 +11,7 @@ sine.plot <- ggplot(data = df1, aes(log(N), y, color = Method, shape = Method)) 
     width = 0.1,
     linetype = "solid",
     position=position_dodge(width=0.3)) +
-  scale_shape_manual(values=c(1:4)) +
+  scale_shape_manual(values=c(1:7)) +
   theme_bw() +
   xlab(TeX('log(N)')) +
   ylab("Average RMSE") +
@@ -25,4 +25,4 @@ sine.plot <- ggplot(data = df1, aes(log(N), y, color = Method, shape = Method)) 
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"))  # rm background
 
-ggsave("results/plots/sine-sim.png", sine.plot, width=8.5, height=11)
+ggsave("results/plots/sine-sim-aug.png", sine.plot, width=8.5, height=11)
