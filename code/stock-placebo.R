@@ -185,7 +185,7 @@ StockSim <- function(Y,N,fix_d){
 }
 
 # Load data
-Y <- t(read.csv('returns_no_missing.csv',header=F)) # N X T
+Y <- t(read.csv('data/returns_no_missing.csv',header=F)) # N X T
 
 fixed.dimensions <- FALSE
 if(fixed.dimensions){
