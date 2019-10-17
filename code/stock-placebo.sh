@@ -1,4 +1,4 @@
 #!/bin/bash
 #----------------------------------------------------
 
-R --no-save < stock-placebo.R
+R --no-save < code/stock-placebo.R
