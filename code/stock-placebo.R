@@ -12,7 +12,7 @@ library(latex2exp)
 library(parallel)
 library(doParallel)
 
-cores <- detectCores()
+cores <- detectCores()/2
 
 cl <- parallel::makeForkCluster(cores)
 
@@ -20,14 +20,18 @@ doParallel::registerDoParallel(cores) # register cores (<p)
 
 RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
-StockSim <- function(Y,N){
+StockSim <- function(Y,N,fix_d){
   ## Setting up the configuration
   Nbig <- nrow(Y)
   Tbig <- ncol(Y)
   
   N <- N
-  T <- 4900/N
-
+  if(fix_d){
+    T <- 4900/N
+  }else{
+    T <- (Tbig/Nbig) * N
+  }
+  
   T0 <- ceiling(T/2)
   N_t <- ceiling(N/2)
   num_runs <- 5
@@ -183,7 +187,18 @@ StockSim <- function(Y,N){
 # Load data
 Y <- t(read.csv('returns_no_missing.csv',header=F)) # N X T
 
-results <- foreach(N = c(10,20,50,70,100,140), .combine='rbind') %do% {
-  StockSim(Y,N)
+fixed.dimensions <- FALSE
+if(fixed.dimensions){
+  # fixed dimensions
+  results <- foreach(N = c(10,20,50,70,100,140), .combine='rbind') %do% {
+    StockSim(Y,N, fix_d=TRUE)
+  }
+  saveRDS(results, "stock-placebo-results.rds")
+} else{
+  # increase dimensions
+  results <- foreach(N = c(50,100,200,300,400,800), .combine='rbind') %do% {
+    StockSim(Y,N, fix_d=FALSE)
+  }
+  saveRDS(results, "stock-placebo-results-inc.rds")
 }
-saveRDS(results, "stock-placebo-results.rds")
+
