@@ -85,7 +85,7 @@ StockSim <- function(Y,N,fix_d){
       ## ------
       
       print("RVAE Started")
-      source("rvae.R")
+      source("code/rvae.R")
       est_model_RVAE <- rvae(Y_obs, treat_indices, d, t0, T)
       est_model_RVAE_msk_err <- (est_model_RVAE - Y_sub[treat_indices,][,(t0+1):T])
       est_model_RVAE_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_RVAE_msk_err^2, na.rm = TRUE))
@@ -96,7 +96,7 @@ StockSim <- function(Y,N,fix_d){
       ## ------
       
       print("ED Started")
-      source("ed.R")
+      source("code/ed.R")
       est_model_ED <- ed(Y_obs, treat_indices, d, t0, T)
       est_model_ED_msk_err <- (est_model_ED - Y_sub[treat_indices,][,(t0+1):T])
       est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
@@ -193,12 +193,12 @@ if(fixed.dimensions){
   results <- foreach(N = c(10,20,50,70,100,140), .combine='rbind') %do% {
     StockSim(Y,N, fix_d=TRUE)
   }
-  saveRDS(results, "stock-placebo-results.rds")
+  saveRDS(results, "results/stock-placebo-results.rds")
 } else{
   # increase dimensions
-  results <- foreach(N = c(50,100,200,300,400,800), .combine='rbind') %do% {
+  results <- foreach(N = c(25,50,100,200,500,1000), .combine='rbind') %do% {
     StockSim(Y,N, fix_d=FALSE)
   }
-  saveRDS(results, "stock-placebo-results-inc.rds")
+  saveRDS(results, "results/stock-placebo-results-inc.rds")
 }
 

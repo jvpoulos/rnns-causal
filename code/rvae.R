@@ -16,8 +16,8 @@ rvae <- function(Y_obs,treat_indices,d, t0, T){
   
   test_data <- data[,(treat_indices)] # treated units
   
-  write.csv(train_data,paste0("../data/",d,"-x.csv"),row.names = FALSE)
-  write.csv(test_data,paste0("../data/",d,"-y.csv"),row.names = FALSE)
+  write.csv(train_data,paste0("data/",d,"-x.csv"),row.names = FALSE)
+  write.csv(test_data,paste0("data/",d,"-y.csv"),row.names = FALSE)
   
   py <- import_main()
   py$dataname <- d
@@ -26,9 +26,9 @@ rvae <- function(Y_obs,treat_indices,d, t0, T){
   py$t0 <- t0
   py$T <- T
   
-  source_python("train_rvae_sim.py")
+  source_python("code/train_rvae_sim.py")
   
-  rvae.pred.control <- as.matrix(read_csv(paste0("../results/rvae/",d,"/rvae-",d,"-test.csv"), col_names = FALSE))
+  rvae.pred.control <- as.matrix(read_csv(paste0("results/rvae/",d,"/rvae-",d,"-test.csv"), col_names = FALSE))
   
   return(t(rvae.pred.control))
 }

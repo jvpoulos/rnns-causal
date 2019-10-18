@@ -58,10 +58,19 @@ $ ./main.sh > main.txt
 Experiments
 ------
 
-To run placebo experiments, repeat the last two steps for 
+To run placebo experiments, for each DATANAME={synth,stock,funds}:
+
+```
+$ mkdir data/$$DATANAME$$
+$ mkdir results/rvae/$$DATANAME$$
+$ mkdir results/encoder-decoder/$$DATANAME$$
+```
+
+and then execute
 
 * `synth-placebo.sh`: synthetic control datasets
 * `stock-placebo.sh`: stock market prices
+  * For simulations with fixed data dimensions, open `stock-placebo.R` and set `fixed.dimensions <- TRUE`
 * `funds-placebo.sh`: state government finances
 
 Counterfactual predictions
