@@ -1,4 +1,4 @@
 #!/bin/bash
 #----------------------------------------------------
 
-R --no-save < funds-placebo.R
+R --no-save < code/educ-placebo.R

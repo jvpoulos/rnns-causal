@@ -58,7 +58,7 @@ $ ./main.sh > main.txt
 Experiments
 ------
 
-To run placebo experiments, for each DATANAME={basque,california,germany,stock,funds} and each MODEL={encoder-decoder,lstm,rvae}:
+To run placebo experiments, for each DATANAME={basque,california,germany,stock,educ.pc} and each MODEL={encoder-decoder,lstm,rvae}:
 
 ```
 $ mkdir data/$$DATANAME$$
@@ -70,7 +70,7 @@ and then execute
 * `synth-placebo.sh`: synthetic control datasets
 * `stock-placebo.sh`: stock market prices
   * For simulations with fixed data dimensions, open `stock-placebo.R` and set `fixed.dimensions <- TRUE`
-* `funds-placebo.sh`: state government finances
+* `educ-placebo.sh`: state government education spending
 
 Counterfactual predictions
 ------
