@@ -9,7 +9,7 @@ import keras
 from keras import backend as K
 from keras.models import Sequential, Model
 from keras.layers import Input, LSTM, RepeatVector
-from keras.layers.core import Flatten, Dense, Dropout, Lambda
+from keras.layers.core import Flatten, Dense, Lambda
 from keras.optimizers import SGD, RMSprop, Adam
 from keras import regularizers
 from keras import objectives
@@ -48,7 +48,6 @@ def create_lstm_vae(nb_features,
     activation,
     lr,
     penalty,
-    dropout,
     epsilon_std=1.):
 
     """
@@ -164,7 +163,6 @@ if __name__ == "__main__":
     batch_size = 1
     penalty=0.001
     lr=0.0005
-    dr=0.5
 
     print('x samples shape', x.shape)     
     print('wx samples shape', wx.shape)  
@@ -179,7 +177,6 @@ if __name__ == "__main__":
         activation = 'linear',
         lr = lr,
         penalty=penalty,
-        dropout=dr,
         epsilon_std=1.)
 
     filepath="../results/rvae/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"

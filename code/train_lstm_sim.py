@@ -5,15 +5,14 @@ import math
 import numpy as np
 import pandas as pd
 
-import keras
 import tensorflow as tf
-gpu_options = tf.GPUOptions(allow_growth=True)
-sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
-keras.backend.tensorflow_backend.set_session(sess)
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+session = tf.Session(config=config....)
 
 from keras import backend as K
 from keras.models import Model
-from keras.layers import LSTM, Input, GRU, TimeDistributed, Dense, RepeatVector, Dropout
+from keras.layers import LSTM, Input, Dropout, Dense
 from keras.callbacks import CSVLogger, EarlyStopping
 from keras import regularizers
 from keras.optimizers import Adam
@@ -27,6 +26,7 @@ if gpu < 3:
     from tensorflow.python.client import device_lib
     print(device_lib.list_local_devices())
 
+
 def create_model(n_pre, n_post, nb_features, output_dim):
     """ 
         creates, compiles and returns a RNN model 
@@ -38,22 +38,18 @@ def create_model(n_pre, n_post, nb_features, output_dim):
     activation = 'linear'
     lr = 0.0005
     penalty=0
-    dr=0.5
+    dr=0.5  
 
-    encoder_hidden = 128
-    decoder_hidden = 128
+    n_hidden = 128
 
-    inputs = Input(shape=(n_pre, nb_features), name="Inputs")
+    inputs = Input(shape=(n_pre, nb_features,), name="Inputs")  
     dropout_1 = Dropout(dr)(inputs)
-    lstm_1 = LSTM(encoder_hidden, kernel_initializer=initialization, return_sequences=True, name='LSTM_1')(dropout_1) # Encoder
-    lstm_2 = LSTM(encoder_hidden, kernel_initializer=initialization, return_sequences=False, name='LSTM_2')(lstm_1) # Encoder
-    repeat = RepeatVector(n_post, name='Repeat')(lstm_2) # get the last output of the LSTM and repeats it
-    gru_1 = GRU(decoder_hidden, kernel_initializer=initialization, return_sequences=True, name='Decoder')(repeat)  # Decoder
-    output= TimeDistributed(Dense(output_dim, activation=activation, kernel_regularizer=regularizers.l2(penalty), name='Dense'), name='Outputs')(gru_1)
+    lstm_1 = LSTM(n_hidden, kernel_initializer=initialization)(dropout_1) 
+    output= Dense(output_dim, activation=activation, kernel_regularizer=regularizers.l2(penalty), name='Dense')(lstm_1)
 
     model = Model(inputs=inputs, output=output)
 
-    model.compile(optimizer=Adam(lr=lr), loss="mean_squared_error")  
+    model.compile(loss="mean_squared_error", optimizer=Adam(lr=lr)) 
 
     print(model.summary()) 
 
@@ -65,7 +61,7 @@ def train_model(model, dataX, dataY, epoch_count, batches):
 
     stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
 
-    csv_logger = CSVLogger('results/encoder-decoder/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
+    csv_logger = CSVLogger('results/lstm/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
 
     history = model.fit(dataX, 
         dataY, 
@@ -88,7 +84,7 @@ def test_model():
     dXC, dYC = [], []
     for i in range(seq_len-n_pre-n_post):
         dXC.append(x[i:i+n_pre]) # controls are inputs
-        dYC.append(x[i+n_pre:i+n_pre+n_post]) # controls are outputs
+        dYC.append(x[i+n_pre]) # controls are outputs
     
     dataXC = np.array(dXC)
     dataYC = np.array(dYC)
@@ -97,7 +93,7 @@ def test_model():
     print('dataYC shape:', dataYC.shape)
 
     nb_features = dataXC.shape[2]
-    output_dim = dataYC.shape[2]
+    output_dim = dataYC.shape[1]
 
     # create and fit the LSTM network
     print('creating model...')
@@ -126,13 +122,13 @@ def test_model():
 
     print('predictions shape =', preds_test.shape)
 
-    print('Saving to results/encoder-decoder/{}/encoder-decoder-{}-test.csv'.format(dataname,dataname))
+    print('Saving to results/lstm/{}/lstm-{}-test.csv'.format(dataname,dataname))
 
-    np.savetxt("results/encoder-decoder/{}/encoder-decoder-{}-test.csv".format(dataname,dataname), preds_test, delimiter=",")
+    np.savetxt("results/lstm/{}/lstm-{}-test.csv".format(dataname,dataname), preds_test, delimiter=",")
 
 def main():
     test_model()
     return 1
 
 if __name__ == "__main__":
-    main()
+	main()

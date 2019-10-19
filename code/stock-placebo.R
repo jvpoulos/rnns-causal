@@ -41,6 +41,7 @@ StockSim <- function(Y,N,fix_d){
   ## Matrices for saving RMSE values
   
   MCPanel_RMSE_test <- matrix(0L,num_runs,length(T0))
+  LSTM_RMSE_test <- matrix(0L,num_runs,length(T0))
   RVAE_RMSE_test <- matrix(0L,num_runs,length(T0))
   ED_RMSE_test <- matrix(0L,num_runs,length(T0))
   ENT_RMSE_test <- matrix(0L,num_runs,length(T0))
@@ -70,15 +71,15 @@ StockSim <- function(Y,N,fix_d){
       Y_obs <- Y_sub * treat_mat
       
       ## ------
-      ## MC-NNM
+      ## LSTM
       ## ------
       
-      print("MC-NNM Started")
-      est_model_MCPanel <- mcnnm_cv(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, num_folds = 2)
-      est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
-      est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y_sub)*(1-treat_mat)
-      est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
-      MCPanel_RMSE_test[i,j] <- est_model_MCPanel$test_RMSE
+      print("LSTM Started")
+      source("code/lstm.R")
+      est_model_LSTM <- lstm(Y_obs, treat_indices, d, t0, T)
+      est_model_LSTM_msk_err <- (est_model_LSTM - Y_sub[treat_indices,][,(t0+1):T])
+      est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
+      LSTM_RMSE_test[i,j] <- est_model_LSTM_test_RMSE
       
       ## ------
       ## RVAE
@@ -101,6 +102,17 @@ StockSim <- function(Y,N,fix_d){
       est_model_ED_msk_err <- (est_model_ED - Y_sub[treat_indices,][,(t0+1):T])
       est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
       ED_RMSE_test[i,j] <- est_model_ED_test_RMSE
+      
+      ## ------
+      ## MC-NNM
+      ## ------
+      
+      print("MC-NNM Started")
+      est_model_MCPanel <- mcnnm_cv(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, num_folds = 2)
+      est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
+      est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y_sub)*(1-treat_mat)
+      est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
+      MCPanel_RMSE_test[i,j] <- est_model_MCPanel$test_RMSE
       
       ## -----
       ## VT-EN 
@@ -139,6 +151,10 @@ StockSim <- function(Y,N,fix_d){
   MCPanel_avg_RMSE <- apply(MCPanel_RMSE_test,2,mean)
   MCPanel_std_error <- apply(MCPanel_RMSE_test,2,sd)/sqrt(num_runs)
   
+  
+  LSTM_avg_RMSE <- apply(LSTM_RMSE_test,2,mean)
+  LSTM_std_error <- apply(LSTM_RMSE_test,2,sd)/sqrt(num_runs)
+  
   RVAE_avg_RMSE <- apply(RVAE_RMSE_test,2,mean)
   RVAE_std_error <- apply(RVAE_RMSE_test,2,sd)/sqrt(num_runs)
   
@@ -158,23 +174,26 @@ StockSim <- function(Y,N,fix_d){
   
   df1 <-
     data.frame(
-      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,MCPanel_avg_RMSE,RVAE_avg_RMSE,ADH_avg_RMSE,ENT_avg_RMSE),
+      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,RVAE_avg_RMSE,ADH_avg_RMSE,ENT_avg_RMSE),
       "lb" = c(DID_avg_RMSE - 1.96*DID_std_error,
                ED_avg_RMSE - 1.96*ED_std_error,
+               LSTM_avg_RMSE - 1.96*LSTM_std_error,
                MCPanel_avg_RMSE - 1.96*MCPanel_std_error, 
                RVAE_avg_RMSE - 1.96*RVAE_std_error, 
                ADH_avg_RMSE - 1.96*ADH_std_error,
                ENT_avg_RMSE - 1.96*ENT_std_error),
       "ub" = c(DID_avg_RMSE + 1.96*DID_std_error, 
                ED_avg_RMSE + 1.96*ED_std_error,
+               LSTM_avg_RMSE + 1.96*LSTM_std_error,
                MCPanel_avg_RMSE + 1.96*MCPanel_std_error, 
                RVAE_avg_RMSE + 1.96*RVAE_std_error, 
                ADH_avg_RMSE + 1.96*ADH_std_error,
                ENT_avg_RMSE + 1.96*ENT_std_error),
-      "N" = rep(N,6),
-      "T" = rep(T,6),
+      "N" = rep(N,7),
+      "T" = rep(T,7),
       "Method" = c(replicate(length(T0),"DID"), 
                    replicate(length(T0),"ED"),
+                   replicate(length(T0),"LSTM"), 
                    replicate(length(T0),"MC-NNM"), 
                    replicate(length(T0),"RVAE"), 
                    replicate(length(T0),"SC-ADH"),

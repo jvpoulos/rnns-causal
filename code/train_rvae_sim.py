@@ -12,19 +12,20 @@ keras.backend.tensorflow_backend.set_session(sess)
 from keras import backend as K
 from keras.models import Sequential, Model
 from keras.layers import Input, LSTM, RepeatVector
-from keras.layers.core import Flatten, Dense, Dropout, Lambda
+from keras.layers.core import Flatten, Dense, Lambda
 from keras.optimizers import SGD, RMSprop, Adam
 from keras import regularizers
 from keras import objectives
-from keras.callbacks import CSVLogger
+from keras.callbacks import CSVLogger, EarlyStopping
 
 # Select gpu
 import os
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
-os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
+if gpu < 3:
+    os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
+    os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
 
-from tensorflow.python.client import device_lib
-print(device_lib.list_local_devices())
+    from tensorflow.python.client import device_lib
+    print(device_lib.list_local_devices())
 
 def create_lstm_vae(nb_features, 
     n_pre, 
@@ -36,7 +37,6 @@ def create_lstm_vae(nb_features,
     activation,
     lr,
     penalty,
-    dropout,
     epsilon_std=1.):
 
     """
@@ -119,11 +119,11 @@ def get_data():
     n_pre =int(t0)-1
     seq_len = int(T)
                 
-    x = np.array(pd.read_csv("../data/{}-x.csv".format(dataname)))
+    x = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))
 
     print('raw x shape', x.shape)   
 
-    y = np.array(pd.read_csv("../data/{}-y.csv".format(dataname)))
+    y = np.array(pd.read_csv("data/{}-y.csv".format(dataname)))
 
     print('raw y shape', y.shape) 
 
@@ -137,9 +137,8 @@ if __name__ == "__main__":
     x, y, n_pre, n_post = get_data() 
     nb_features = x.shape[2]
     batch_size = 1
-    penalty=0.001
+    penalty=0
     lr=0.0005
-    dr=0.5
 
     vae, enc, gen = create_lstm_vae(nb_features, 
         n_pre=n_pre, 
@@ -151,15 +150,16 @@ if __name__ == "__main__":
         activation = 'linear',
         lr = lr,
         penalty=penalty,
-        dropout=dr,
         epsilon_std=1.)
 
-    csv_logger = CSVLogger('../results/rvae/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
+
+    csv_logger = CSVLogger('results/rvae/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
 
     vae.fit(x, x, 
         epochs=int(epochs),
-        verbose=0,
-        callbacks=[csv_logger],
+        verbose=1,
+        callbacks=[stopping,csv_logger],
         validation_split=0.2)
 
 	# now test
@@ -176,4 +176,4 @@ if __name__ == "__main__":
 
     print('Saving to results/rvae/{}/rvae-{}-test.csv'.format(dataname,dataname))
 
-    np.savetxt("../results/rvae/{}/rvae-{}-test.csv".format(dataname,dataname), preds_test, delimiter=",")
+    np.savetxt("results/rvae/{}/rvae-{}-test.csv".format(dataname,dataname), preds_test, delimiter=",")

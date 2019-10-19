@@ -1,5 +1,5 @@
 ###################################
-# RVAE for Synth Simulations #
+# LSTM for Synth Simulations #
 ###################################
 
 library(keras)
@@ -7,7 +7,7 @@ library(reticulate)
 library(readr)
 use_python("/usr/local/bin/python")
 
-rvae <- function(Y_obs,treat_indices,d, t0, T){
+lstm <- function(Y_obs,treat_indices,d, t0, T){
   # Converting the data to a floating point matrix
   data <- data.matrix(t(Y_obs)) # T x N
   
@@ -21,14 +21,15 @@ rvae <- function(Y_obs,treat_indices,d, t0, T){
   
   py <- import_main()
   py$dataname <- d
-  py$epochs <- 5000
+  py$epochs <- 1000
   py$gpu <- 5
   py$t0 <- t0
   py$T <- T
+  py$nb_batches <- 4
   
-  source_python("code/train_rvae_sim.py")
+  source_python("code/train_lstm_sim.py")
   
-  rvae.pred.control <- as.matrix(read_csv(paste0("results/rvae/",d,"/rvae-",d,"-test.csv"), col_names = FALSE))
+  lstm.pred.control <- as.matrix(read_csv(paste0("results/lstm/",d,"/lstm-",d,"-test.csv"), col_names = FALSE))
   
-  return(t(rvae.pred.control))
+  return(t(lstm.pred.control))
 }
