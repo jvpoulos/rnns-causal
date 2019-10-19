@@ -34,7 +34,7 @@ StockSim <- function(Y,N,fix_d){
   
   T0 <- ceiling(T/2)
   N_t <- ceiling(N/2)
-  num_runs <- 5
+  num_runs <- 10
   is_simul <- 1 ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   d <- 'stock'
   

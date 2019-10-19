@@ -152,7 +152,7 @@ if __name__ == "__main__":
         penalty=penalty,
         epsilon_std=1.)
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=199, verbose=1, mode='auto')
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=99, verbose=1, mode='auto')
 
     csv_logger = CSVLogger('results/rvae/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
 
