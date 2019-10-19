@@ -27,7 +27,7 @@ StockSim <- function(Y,N,fix_d){
   
   N <- N
   if(fix_d){
-    T <- 4900/N
+    T <- 49000/N
   }else{
     T <- (Tbig/Nbig) * N
   }
@@ -151,7 +151,6 @@ StockSim <- function(Y,N,fix_d){
   MCPanel_avg_RMSE <- apply(MCPanel_RMSE_test,2,mean)
   MCPanel_std_error <- apply(MCPanel_RMSE_test,2,sd)/sqrt(num_runs)
   
-  
   LSTM_avg_RMSE <- apply(LSTM_RMSE_test,2,mean)
   LSTM_std_error <- apply(LSTM_RMSE_test,2,sd)/sqrt(num_runs)
   
@@ -199,7 +198,7 @@ StockSim <- function(Y,N,fix_d){
                    replicate(length(T0),"SC-ADH"),
                    replicate(length(T0),"VT-EN")))
   filename<-paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".rds")
-  saveRDS(df1, file = filename)
+  saveRDS(df1, file = paste0("results/",filename))
   return(df1)
 }
 
@@ -209,15 +208,14 @@ Y <- t(read.csv('data/returns_no_missing.csv',header=F)) # N X T
 fixed.dimensions <- FALSE
 if(fixed.dimensions){
   # fixed dimensions
-  results <- foreach(N = c(10,20,50,70,100,140), .combine='rbind') %do% {
+  results <- foreach(N = c(100,200,500,700,1000,1400), .combine='rbind') %do% {
     StockSim(Y,N, fix_d=TRUE)
   }
   saveRDS(results, "results/stock-placebo-results.rds")
 } else{
   # increase dimensions
-  results <- foreach(N = c(50,100,200,500,1000,1500), .combine='rbind') %do% {
+  results <- foreach(N = c(100,200,500,700,1000,1400), .combine='rbind') %do% {
     StockSim(Y,N, fix_d=FALSE)
   }
   saveRDS(results, "results/stock-placebo-results-inc.rds")
 }
-

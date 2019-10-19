@@ -22,10 +22,17 @@ lstm <- function(Y_obs,treat_indices,d, t0, T){
   py <- import_main()
   py$dataname <- d
   py$epochs <- 1000
-  py$gpu <- 5
   py$t0 <- t0
   py$T <- T
-  py$nb_batches <- 4
+  if(d=='stock'){
+    py$nb_batches <- 16
+    py$gpu <- 0
+    py$dr <- 0.5
+  } else{
+    py$nb_batches <- 4
+    py$gpu <- 1
+    py$dr<- 0.2
+  }
   
   source_python("code/train_lstm_sim.py")
   

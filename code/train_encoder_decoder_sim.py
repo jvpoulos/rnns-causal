@@ -37,8 +37,7 @@ def create_model(n_pre, n_post, nb_features, output_dim):
     initialization = 'glorot_normal'
     activation = 'linear'
     lr = 0.0005
-    penalty=0
-    dr=0.5
+    penalty=0.001
 
     encoder_hidden = 128
     decoder_hidden = 128
@@ -63,7 +62,7 @@ def train_model(model, dataX, dataY, epoch_count, batches):
 
     # Prepare model checkpoints and callbacks
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=0, mode='auto')
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=199, verbose=1, mode='auto')
 
     csv_logger = CSVLogger('results/encoder-decoder/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
 
