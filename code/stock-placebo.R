@@ -215,7 +215,7 @@ if(fixed.dimensions){
   saveRDS(results, "results/stock-placebo-results.rds")
 } else{
   # increase dimensions
-  results <- foreach(N = c(25,50,100,200,500,1000), .combine='rbind') %do% {
+  results <- foreach(N = c(50,100,200,500,1000,1500), .combine='rbind') %do% {
     StockSim(Y,N, fix_d=FALSE)
   }
   saveRDS(results, "results/stock-placebo-results-inc.rds")
