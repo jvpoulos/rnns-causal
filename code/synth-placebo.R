@@ -69,22 +69,12 @@ SynthSim <- function(outcomes,d){
       Y_obs <- Y * treat_mat
     
       ## ------
-      ## MC-NNM
-      ## ------
-
-      est_model_MCPanel <- mcnnm_cv(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, num_folds = 5)
-      est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
-      est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y)*(1-treat_mat)
-      est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
-      MCPanel_RMSE_test[i,j] <- est_model_MCPanel$test_RMSE
-      
-      ## ------
       ## LSTM
       ## ------
       
       source("code/lstm.R")
       est_model_LSTM <- lstm(Y_obs, treat_indices, d, t0, T)
-      est_model_LSTM_msk_err <- (est_model_LSTM - Y_sub[treat_indices,][,(t0+1):T])
+      est_model_LSTM_msk_err <- (est_model_LSTM - Y[treat_indices,][,(t0+1):T])
       est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
       LSTM_RMSE_test[i,j] <- est_model_LSTM_test_RMSE
       
@@ -107,6 +97,16 @@ SynthSim <- function(outcomes,d){
       est_model_ED_msk_err <- (est_model_ED - Y[treat_indices,][,(t0+1):T])
       est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
       ED_RMSE_test[i,j] <- est_model_ED_test_RMSE
+      
+      ## ------
+      ## MC-NNM
+      ## ------
+
+      est_model_MCPanel <- mcnnm_cv(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, num_folds = 5)
+      est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
+      est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y)*(1-treat_mat)
+      est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
+      MCPanel_RMSE_test[i,j] <- est_model_MCPanel$test_RMSE
       
       ## -----
       ## VT-EN 
