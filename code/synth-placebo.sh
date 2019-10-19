@@ -1,4 +1,4 @@
 #!/bin/bash
 #----------------------------------------------------
 
-R --no-save < synth-placebo.R
+R --no-save < code/synth-placebo.R
