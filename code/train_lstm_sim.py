@@ -5,10 +5,11 @@ import math
 import numpy as np
 import pandas as pd
 
+import keras
 import tensorflow as tf
-config = tf.ConfigProto()
-config.gpu_options.allow_growth = True
-session = tf.Session(config=config....)
+gpu_options = tf.GPUOptions(allow_growth=True)
+sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+keras.backend.tensorflow_backend.set_session(sess)
 
 from keras import backend as K
 from keras.models import Model
