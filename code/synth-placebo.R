@@ -12,7 +12,7 @@ library(latex2exp)
 library(parallel)
 library(doParallel)
 
-cores <- detectCores()
+cores <- detectCores()/2
 
 cl <- parallel::makeForkCluster(cores)
 
@@ -178,8 +178,7 @@ SynthSim <- function(outcomes,d){
                RVAE_avg_RMSE + 1.96*RVAE_std_error, 
                ADH_avg_RMSE + 1.96*ADH_std_error,
                ENT_avg_RMSE + 1.96*ENT_std_error),
-      "N" = rep(N,7),
-      "T" = rep(T,7),
+      "x" = c(T0/T, T0/T ,T0/T, T0/T, T0/T, T0/T, T0/T),
       "Method" = c(replicate(length(T0),"DID"), 
                    replicate(length(T0),"ED"),
                    replicate(length(T0),"LSTM"), 
@@ -195,7 +194,7 @@ SynthSim <- function(outcomes,d){
       width = 0.1,
       linetype = "solid",
       position=position_dodge(width=0.1)) +
-    scale_shape_manual("Method",values=c(1:8)) +
+    scale_shape_manual("Method",values=c(1:7)) +
     scale_color_discrete("Method")+
     theme_bw() +
     xlab(TeX('$T_0/T$')) +
