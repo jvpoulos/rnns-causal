@@ -12,34 +12,32 @@ registerDoParallel(cores) # register cores
 
 RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
-# Set directories
-data.directory <- "data/"
-code.directory <-"code/"
-results.directory <-"results/"
-
 ## Placebo tests
 
-source(paste0(code.directory, "prepare-synth.R")) # ---> data/synth-control-outcomes.rds
+source("prepare-synth.R") # ---> data/synth-control-outcomes.rds
+source("elections.R") # --> data/elections/votediff.csv
 
-# synth-placebo.sh ---> synth-placebo.R 
+# elections-placebo.sh  --> elections-placebo.R
 # stock-placebo.sh ---> stock-placebo.R 
-# funds-placebo.sh ---> funds-placebo.R 
+# educ-placebo.sh ---> educ-placebo.R 
+# synth-placebo.sh ---> synth-placebo.R 
+
 figures <- FALSE
 if(figures){
-  source(paste0(code.directory, "synth-placebo-plot.R"))
-  source(paste0(code.directory, "stock-placebo-plot.R"))
-  source(paste0(code.directory, "funds-placebo-plot.R"))
+  source("synth-placebo-plot.R")
+  source("stock-placebo-plot.R")
+  source("funds-placebo-plot.R")
 }
 
 # Causal impact estimates: public education spending
 
-source(paste0(code.directory, "prepare-funds-locf.R"))
-source(paste0(code.directory, "prepare-funds-linear.R")) #imputation sensitivity
-source(paste0(code.directory, "prepare-funds-random.R"))
-source(paste0(code.directory, "prepare-funds-median.R"))
+source("prepare-funds-locf.R")
+source("prepare-funds-linear.R") #imputation sensitivity
+source("prepare-funds-random.R")
+source("prepare-funds-median.R")
 
 # train_encoder_decoder.py 
 # train_rvae.py 
 if(figures){
-  source(paste0(code.directory, "educ-plot.R"))
+  source( "educ-plot.R")
 }

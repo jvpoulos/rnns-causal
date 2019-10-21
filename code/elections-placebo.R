@@ -1,5 +1,5 @@
 ###################################
-# MC Simulations #
+# Elections Simulations #
 ###################################
 
 ## Loading Source files
@@ -20,23 +20,12 @@ doParallel::registerDoParallel(cores) # register cores (<p)
 
 RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
-# Load data
-capacity.outcomes <- readRDS("data/capacity-outcomes.rds")
-
 ## Reading data
-CapacitySim <- function(outcomes,d,sim,treated.indices){
-  Y <- outcomes[[d]]$M # NxT 
-  Y.missing <- outcomes[[d]]$M.missing # NxT 
+ElectionsSim <- function(outcomes,d){
+  Y <- outcomes[[d]]$M # NxToutcomes
+  Y.missing <- outcomes[[d]]$M.missing # NxT
   treat <- outcomes[[d]]$mask # NxT masked matrix 
-  
-  ## Treated 
-  treat_y <- Y[rownames(Y)%in%treated.indices,] 
-  
-  ## Working with the rest of matrix
-  treat <- treat[!rownames(treat)%in%rownames(treat_y),]
-  Y <- Y[!rownames(Y)%in%rownames(treat_y),] 
-  Y.missing <- Y.missing[!rownames(Y.missing)%in%rownames(treat_y),] 
-  
+
   ## Setting up the configuration
   N <- nrow(treat)
   T <- ncol(treat)
@@ -44,7 +33,7 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
   T0 <- ceiling(T*((1:number_T0)*2-1)/(2*number_T0))
   N_t <- ceiling(N*0.5) # no. treated units desired <=N
   num_runs <- 10
-  is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
+  is_simul <- 1 ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   to_save <- 1 ## Whether to save the plot or not
   
   ## Matrices for saving RMSE values
@@ -72,10 +61,10 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
       }else{
         treat_mat <- stag_adapt(Y, N_t, t0, treat_indices)
       }
-
+      
       Y_obs <- Y * treat_mat
       Y_imp <- Y * Y.missing
-      
+    
       ## ------
       ## LSTM
       ## ------
@@ -109,7 +98,7 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
       ## ------
       ## MC-NNM
       ## ------
-      
+
       est_model_MCPanel <- mcnnm_cv(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, num_folds = 5)
       est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
       est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y_imp)*(1-treat_mat)
@@ -128,12 +117,12 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
       ## -----
       ## DID
       ## -----
-      
+
       est_model_DID <- t(DID(t(Y_obs), t(treat_mat)))
       est_model_DID_msk_err <- (est_model_DID - Y_imp)*(1-treat_mat)
       est_model_DID_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_DID_msk_err^2, na.rm = TRUE))
       DID_RMSE_test[i,j] <- est_model_DID_test_RMSE
-      
+
       ## -----
       ## ADH
       ## -----
@@ -231,6 +220,7 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
   }
 }
 
-treat_indices_order <- c("CA", "IA", "KS", "MI", "MN", "MO", "OH", "OR", "WI", "IL", "NV", "AL", "MS", "FL", "LA", "IN")
+# Load data
+elections.control.outcomes <- readRDS("data/elections-outcomes-locf.rds")
 
-CapacitySim(capacity.outcomes,d="educ.pc",sim=1,treated.indices = treat_indices_order)
+ElectionsSim(elections.control.outcomes,d="votediff")
