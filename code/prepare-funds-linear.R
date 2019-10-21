@@ -71,7 +71,7 @@ colnames(test_w) <- colnames(test_data)
 # propensity score increases as t increase (penalize earlier weights)
 test_w <- test_w*(log(1:nrow(test_data))-min(log(1:nrow(test_data))))/(max(log(1:nrow(test_data)))-min(log(1:nrow(test_data)))) # norm log values
   
-write.csv(train_data,paste0(data.directory,"educ-x-linear.csv"),row.names = FALSE)
-write.csv(test_data,paste0(data.directory,"educ-y-linear.csv"),row.names = FALSE)
-write.csv(train_w,paste0(data.directory,"educ-wx-linear.csv"),row.names = FALSE)
-write.csv(test_w,paste0(data.directory,"educ-wy-linear.csv"),row.names = FALSE)
+write.csv(train_data,"data/educ-x-linear.csv",row.names = FALSE)
+write.csv(test_data,"data/educ-y-linear.csv",row.names = FALSE)
+write.csv(train_w,"data/educ-wx-linear.csv",row.names = FALSE)
+write.csv(test_w,"data/educ-wy-linear.csv",row.names = FALSE)

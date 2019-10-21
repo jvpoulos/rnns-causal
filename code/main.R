@@ -24,9 +24,10 @@ source("elections.R") # --> data/elections/votediff.csv
 
 figures <- FALSE
 if(figures){
-  source("synth-placebo-plot.R")
+  source("elections-placebo-plot.R")
   source("stock-placebo-plot.R")
-  source("funds-placebo-plot.R")
+  source("educ-placebo-plot.R")
+  source("synth-placebo-plot.R")
 }
 
 # Causal impact estimates: public education spending

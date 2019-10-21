@@ -8,8 +8,8 @@ require(tseries)
 require(ggplot2)
 require(readr)
 
-source(paste0(code.directory,"TsPlot.R"))
-source(paste0(code.directory, "utils.R"))
+source("code/TsPlot.R")
+source("code/utils.R")
 
 PlotEduc<- function(estimator,treated.indices,x,y.title,limits,breaks,t0,run.CI,imp){
   ## Create time series data
@@ -18,8 +18,8 @@ PlotEduc<- function(estimator,treated.indices,x,y.title,limits,breaks,t0,run.CI,
   observed.treated <- as.matrix(observed[,colnames(observed) %in% treated.indices][(t0+1):nrow(observed),])
   observed.control <- as.matrix(observed[,!colnames(observed) %in% treated.indices][(t0+1):nrow(observed),])
   
-  pred.treated <- read_csv(paste0(results.directory, estimator,"/educ/",estimator,"-educ-test-",imp,".csv"), col_names = FALSE)
-  pred.control <- read_csv(paste0(results.directory, estimator,"/educ/",estimator,"-educ-train-",imp,".csv"), col_names = FALSE)
+  pred.treated <- read_csv(paste0("results/", estimator,"/educ/",estimator,"-educ-test-",imp,".csv"), col_names = FALSE)
+  pred.control <- read_csv(paste0("results/", estimator,"/educ/",estimator,"-educ-train-",imp,".csv"), col_names = FALSE)
   
   t.stat <- rowMeans(observed.treated - pred.treated) 
   
@@ -32,9 +32,9 @@ PlotEduc<- function(estimator,treated.indices,x,y.title,limits,breaks,t0,run.CI,
                               l=500, 
                               prec=1e-03)
   
-    saveRDS(CI.treated, paste0(results.directory, estimator,"/educ/",estimator,"-CI-treated-",imp,".rds"))
+    saveRDS(CI.treated, paste0("results/", estimator,"/educ/",estimator,"-CI-treated-",imp,".rds"))
   } else{
-    CI.treated <- readRDS(paste0(results.directory, estimator,"/educ/",estimator,"-CI-treated-",imp,".rds"))
+    CI.treated <- readRDS(paste0("results/", estimator,"/educ/",estimator,"-CI-treated-",imp,".rds"))
   }
   
   ## Plot time series 
@@ -88,46 +88,46 @@ capacity.outcomes <- readRDS("data/capacity-outcomes.rds")
 educ.ed.locf <- PlotEduc(estimator="encoder-decoder",treated.indices,x='educ.pc',y.title="Log per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")), breaks=seq(as.POSIXct("1809-1-31 00:00:00",tz="UTC"),
                                                                                                                                                                                                                                                      as.POSIXct("1942-1-31 00:00:00",tz="UTC"), "20 years"), t0=which(colnames(capacity.outcomes[["educ.pc"]]$M)=="1869"), run.CI=FALSE,imp="locf")
 
-ggsave(paste0(results.directory,"plots/educ-ed.png"), educ.ed.locf, width=8.5, height=11)
+ggsave("results/plots/educ-ed.png", educ.ed.locf, width=8.5, height=11)
 
 capacity.outcomes <- readRDS("data/capacity-outcomes-linear.rds")
 educ.ed.linear <- PlotEduc(estimator="encoder-decoder",treated.indices,x='educ.pc',y.title="Log per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")), breaks=seq(as.POSIXct("1809-1-31 00:00:00",tz="UTC"),
                                                                                                                                              as.POSIXct("1942-1-31 00:00:00",tz="UTC"), "20 years"), t0=which(colnames(capacity.outcomes[["educ.pc"]]$M)=="1869"), run.CI=FALSE,imp="linear")
 
-ggsave(paste0(results.directory,"plots/educ-ed-linear.png"), educ.ed.linear, width=8.5, height=11)
+ggsave("results/plots/educ-ed-linear.png", educ.ed.linear, width=8.5, height=11)
 
 capacity.outcomes <- readRDS("data/capacity-outcomes-median.rds")
 educ.ed.median <- PlotEduc(estimator="encoder-decoder",treated.indices,x='educ.pc',y.title="Log per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")), breaks=seq(as.POSIXct("1809-1-31 00:00:00",tz="UTC"),
                                                                                                                                                                                                                                                      as.POSIXct("1942-1-31 00:00:00",tz="UTC"), "20 years"), t0=which(colnames(capacity.outcomes[["educ.pc"]]$M)=="1869"), run.CI=FALSE,imp="median")
-ggsave(paste0(results.directory,"plots/educ-ed-median.png"), educ.ed.median, width=8.5, height=11)
+ggsave("results/plots/educ-ed-median.png", educ.ed.median, width=8.5, height=11)
 
 capacity.outcomes <- readRDS("data/capacity-outcomes-random.rds")
 educ.ed.random <- PlotEduc(estimator="encoder-decoder",treated.indices,x='educ.pc',y.title="Log per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")), breaks=seq(as.POSIXct("1809-1-31 00:00:00",tz="UTC"),
                                                                                                                                                                                                                                                      as.POSIXct("1942-1-31 00:00:00",tz="UTC"), "20 years"), t0=which(colnames(capacity.outcomes[["educ.pc"]]$M)=="1869"), run.CI=FALSE,imp="random")
 
-ggsave(paste0(results.directory,"plots/educ-ed-random.png"), educ.ed.random, width=8.5, height=11)
+ggsave("results/plots/educ-ed-random.png", educ.ed.random, width=8.5, height=11)
 
 # RVAE
 capacity.outcomes <- readRDS("data/capacity-outcomes.rds")
 educ.rvae <- PlotEduc(estimator="rvae",treated.indices,x='educ.pc',y.title="Log per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")), breaks=seq(as.POSIXct("1809-1-31 00:00:00",tz="UTC"),
                                                                                                                                                                                                             as.POSIXct("1942-1-31 00:00:00",tz="UTC"), "20 years"), t0=which(colnames(capacity.outcomes[["educ.pc"]]$M)=="1869"), run.CI=FALSE, imp="locf") 
 
-ggsave(paste0(results.directory,"plots/educ-rvae.png"), educ.rvae, width=8.5, height=11)
+ggsave("results/plots/educ-rvae.png", educ.rvae, width=8.5, height=11)
 
 capacity.outcomes <- readRDS("data/capacity-outcomes-linear.rds")
 educ.rvae <- PlotEduc(estimator="rvae",treated.indices,x='educ.pc',y.title="Log per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")), breaks=seq(as.POSIXct("1809-1-31 00:00:00",tz="UTC"),
                                                                                                                                                                                                                                      as.POSIXct("1942-1-31 00:00:00",tz="UTC"), "20 years"), t0=which(colnames(capacity.outcomes[["educ.pc"]]$M)=="1869"), run.CI=FALSE, imp="linear") 
 
-ggsave(paste0(results.directory,"plots/educ-rvae-linear.png"), educ.rvae, width=8.5, height=11)
+ggsave("results/plots/educ-rvae-linear.png", educ.rvae, width=8.5, height=11)
 
 capacity.outcomes <- readRDS("data/capacity-outcomes-median.rds")
 educ.rvae <- PlotEduc(estimator="rvae",treated.indices,x='educ.pc',y.title="Log per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")), breaks=seq(as.POSIXct("1809-1-31 00:00:00",tz="UTC"),
                                                                                                                                                                                                                                      as.POSIXct("1942-1-31 00:00:00",tz="UTC"), "20 years"), t0=which(colnames(capacity.outcomes[["educ.pc"]]$M)=="1869"), run.CI=FALSE, imp="median") 
 
-ggsave(paste0(results.directory,"plots/educ-rvae-median.png"), educ.rvae, width=8.5, height=11)
+ggsave("results/plots/educ-rvae-median.png", educ.rvae, width=8.5, height=11)
 
 capacity.outcomes <- readRDS("data/capacity-outcomes-random.rds")
 educ.rvae <- PlotEduc(estimator="rvae",treated.indices,x='educ.pc',y.title="Log per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")), breaks=seq(as.POSIXct("1809-1-31 00:00:00",tz="UTC"),
                                                                                                                                                                                                                                      as.POSIXct("1942-1-31 00:00:00",tz="UTC"), "20 years"), t0=which(colnames(capacity.outcomes[["educ.pc"]]$M)=="1869"), run.CI=FALSE, imp="random") 
 
-ggsave(paste0(results.directory,"plots/educ-rvae-random.png"), educ.rvae, width=8.5, height=11)
+ggsave("results/plots/educ-rvae-random.png", educ.rvae, width=8.5, height=11)

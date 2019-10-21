@@ -71,10 +71,10 @@ colnames(test_w) <- colnames(test_data)
 # propensity score increases as t increase (penalize earlier weights)
 test_w <- test_w*(log(1:nrow(test_data))-min(log(1:nrow(test_data))))/(max(log(1:nrow(test_data)))-min(log(1:nrow(test_data)))) # norm log values
   
-write.csv(train_data,paste0(data.directory,"educ-x-locf.csv"),row.names = FALSE)
-write.csv(test_data,paste0(data.directory,"educ-y-locf.csv"),row.names = FALSE)
-write.csv(train_w,paste0(data.directory,"educ-wx-locf.csv"),row.names = FALSE)
-write.csv(test_w,paste0(data.directory,"educ-wy-locf.csv"),row.names = FALSE)
+write.csv(train_data,"data/educ-x-locf.csv",row.names = FALSE)
+write.csv(test_data,"data/educ-y-locf.csv",row.names = FALSE)
+write.csv(train_w,"data/educ-wx-locf.csv",row.names = FALSE)
+write.csv(test_w,"data/educ-wy-locf.csv",row.names = FALSE)
 
 ## Plot public education spending (pre) by treatment status
 
@@ -106,7 +106,7 @@ p <- ggplot(data = df.m, aes(x=value)) + geom_density(aes(fill=status), alpha = 
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black")) 
 
-ggsave(paste0(results.directory,"plots/educ-dens.png"), p, width=8.5, height=11)
+ggsave("results/plots/educ-dens.png", p, width=8.5, height=11)
 
 pw <- ggplot(data = df.m, aes(x=value)) + geom_density(aes(fill=status, weights=weights), alpha = 0.4) +
   scale_fill_brewer(palette = "Set1") +
@@ -120,7 +120,7 @@ pw <- ggplot(data = df.m, aes(x=value)) + geom_density(aes(fill=status, weights=
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black")) 
 
-ggsave(paste0(results.directory,"plots/educ-dens-w.png"), pw, width=8.5, height=11)
+ggsave("results/plots/educ-dens-w.png", pw, width=8.5, height=11)
 
 # two-sample t-test
 X.c <- train_data[as.numeric(rownames(train_data))<1869,]

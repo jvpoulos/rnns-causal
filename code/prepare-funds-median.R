@@ -2,7 +2,7 @@
 # Prepare education spending data for RNNs #
 ###################################
 
-funds <- readRDS("/media/jason/Dropbox/github/land-reform/data/capacity-outcomes-median.rds")[['educ.pc']]
+funds <- readRDS("data/capacity-outcomes-median.rds")[['educ.pc']]
 
 Y <- funds$M # NxT 
 
@@ -33,7 +33,7 @@ train_data <- train_data[, sample(1:ncol(train_data), ncol(test_data))] # dimens
 
 # importance weight matrix
 
-funds.covars <- readRDS("/media/jason/Dropbox/github/land-reform/data/capacity-covariates.rds")
+funds.covars <- readRDS("data/capacity-covariates.rds")
 
 X <- data.frame(funds.covars) 
 X$treat <- ifelse(rownames(X) %in% treated.indices, 1, 0)
@@ -71,7 +71,7 @@ colnames(test_w) <- colnames(test_data)
 # propensity score increases as t increase (penalize earlier weights)
 test_w <- test_w*(log(1:nrow(test_data))-min(log(1:nrow(test_data))))/(max(log(1:nrow(test_data)))-min(log(1:nrow(test_data)))) # norm log values
   
-write.csv(train_data,paste0(data.directory,"educ-x-median.csv"),row.names = FALSE)
-write.csv(test_data,paste0(data.directory,"educ-y-median.csv"),row.names = FALSE)
-write.csv(train_w,paste0(data.directory,"educ-wx-median.csv"),row.names = FALSE)
-write.csv(test_w,paste0(data.directory,"educ-wy-median.csv"),row.names = FALSE)
+write.csv(train_data,"data/educ-x-median.csv",row.names = FALSE)
+write.csv(test_data,"data/educ-y-median.csv",row.names = FALSE)
+write.csv(train_w,"data/educ-wx-median.csv",row.names = FALSE)
+write.csv(test_w,"data/educ-wy-median.csv",row.names = FALSE)
