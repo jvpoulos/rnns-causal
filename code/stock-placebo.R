@@ -36,7 +36,11 @@ StockSim <- function(Y,N,fix_d){
   N_t <- ceiling(N/2)
   num_runs <- 10
   is_simul <- 1 ## Whether to simulate Simultaneus Adoption or Staggered Adoption
-  d <- 'stock'
+  if(fix_d){
+    d <- 'stock_fixed'
+  }else{
+    d <- 'stock'
+  }
   
   ## Matrices for saving RMSE values
   
@@ -205,13 +209,13 @@ StockSim <- function(Y,N,fix_d){
 # Load data
 Y <- t(read.csv('data/returns_no_missing.csv',header=F)) # N X T
 
-fixed.dimensions <- FALSE
+fixed.dimensions <- TRUE
 if(fixed.dimensions){
   # fixed dimensions
   results <- foreach(N = c(100,200,500,700,1000,1400), .combine='rbind') %do% {
     StockSim(Y,N, fix_d=TRUE)
   }
-  saveRDS(results, "results/stock-placebo-results.rds")
+  saveRDS(results, "results/stock-placebo-results-fixed.rds")
 } else{
   # increase dimensions
   results <- foreach(N = c(100,200,500,700,1000,1400), .combine='rbind') %do% {

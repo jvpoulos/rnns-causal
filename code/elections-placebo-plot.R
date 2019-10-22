@@ -2,7 +2,7 @@ library(ggplot2)
 library(latex2exp)
 library(dplyr)
 
-load("results/plots/votediff_N_910_T_66_numruns_10_num_treated_455_simultaneuous_1.rds")
+load("results/votediff_N_910_T_66_numruns_10_num_treated_455_simultaneuous_1.rds")
 
 df1 <- df1 %>% group_by(x) %>% mutate(y = y,
                                       lb= lb,
