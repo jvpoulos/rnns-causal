@@ -13,7 +13,7 @@ from keras.layers.core import Flatten, Dense, Lambda
 from keras.optimizers import SGD, RMSprop, Adam
 from keras import regularizers
 from keras import objectives
-from keras.callbacks import ModelCheckpoint, CSVLogger
+from keras.callbacks import ModelCheckpoint, CSVLogger, EarlyStopping
 
 from functools import partial, update_wrapper
 
@@ -180,14 +180,16 @@ if __name__ == "__main__":
         epsilon_std=1.)
 
     filepath="../results/rvae/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
-    checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=25, save_best_only=True)
+    checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=5, save_best_only=True)
+
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=99, verbose=1, mode='auto')
 
     csv_logger = CSVLogger('../results/rvae/{}/training_log_{}_{}.csv'.format(dataname,dataname,imp), separator=',', append=False)
 
     vae.fit([x,wx], x, 
         epochs=int(nb_epochs),
         verbose=1,
-        callbacks=[checkpointer,csv_logger],
+        callbacks=[checkpointer,csv_logger,stopping],
         validation_split=0.2)
 
     # now test

@@ -8,7 +8,7 @@ import pandas as pd
 from keras import backend as K
 from keras.models import Model
 from keras.layers import LSTM, Input, GRU, TimeDistributed, Dense, RepeatVector, Dropout
-from keras.callbacks import ModelCheckpoint, CSVLogger
+from keras.callbacks import ModelCheckpoint, CSVLogger, EarlyStopping
 from keras import regularizers
 from keras.optimizers import Adam
 
@@ -47,8 +47,8 @@ def create_model(n_pre, n_post, nb_features, output_dim):
 
     initialization = 'glorot_normal'
     activation = 'linear'
-    penalty=0.1
-    dr=0.5
+    penalty=0.001
+    dr=0.2
     lr = 0.0005
 
     encoder_hidden = 128
@@ -78,7 +78,9 @@ def train_model(model, dataX, dataY, weights, nb_epoches, nb_batches):
     # Prepare model checkpoints and callbacks
 
     filepath="../results/encoder-decoder/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
-    checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=25, save_best_only=True)
+    checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=5, save_best_only=True)
+
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=99, verbose=1, mode='auto')
 
     csv_logger = CSVLogger('../results/encoder-decoder/{}/training_log_{}_{}.csv'.format(dataname,dataname,imp), separator=',', append=False)
 
@@ -87,7 +89,7 @@ def train_model(model, dataX, dataY, weights, nb_epoches, nb_batches):
         batch_size=nb_batches, 
         verbose=1,
         epochs=nb_epoches, 
-        callbacks=[checkpointer,csv_logger],
+        callbacks=[checkpointer,csv_logger,stopping],
         validation_split=0.2)
 
 def test_model():
