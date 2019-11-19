@@ -50,15 +50,13 @@ def create_model(n_pre, n_post, nb_features, output_dim):
 
     model.compile(loss=root_mean_squared_error, optimizer=Adam(lr=lr)) 
 
-    print(model.summary()) 
-
     return model
 
 def train_model(model, dataX, dataY, epoch_count, batches):
 
     # Prepare model checkpoints and callbacks
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=50, verbose=1, mode='auto')
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=50, verbose=0, mode='auto')
 
     csv_logger = CSVLogger('results/lstm/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
 

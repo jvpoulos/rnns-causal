@@ -21,13 +21,14 @@ rvae <- function(Y_obs,treat_indices,d, t0, T){
   
   py <- import_main()
   py$dataname <- d
-  py$epochs <- 1000
   py$t0 <- t0
   py$T <- T
   if(d=='stock'){
     py$gpu <- 0
+    py$epochs <- 1000
   } else{
     py$gpu <- 1
+    py$epochs <- 10000
   }
   
   source_python("code/train_rvae_sim.py")
