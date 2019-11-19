@@ -7,7 +7,7 @@ import pandas as pd
 
 from keras import backend as K
 from keras.models import Model
-from keras.layers import LSTM, Input, Dropout, Dense
+from keras.layers import LSTM, Input, Dense
 from keras.callbacks import ModelCheckpoint, CSVLogger, EarlyStopping
 from keras import regularizers
 from keras.optimizers import Adam
@@ -18,6 +18,9 @@ def wrapped_partial(func, *args, **kwargs):
     partial_func = partial(func, *args, **kwargs)
     update_wrapper(partial_func, func)
     return partial_func
+
+def weighted_rmse(y_true, y_pred, weights):
+    return K.sqrt(K.mean(K.square(y_true - y_pred) * weights, axis=-1))
 
 # Select gpu
 import os
@@ -35,9 +38,6 @@ dataname = sys.argv[-4]
 nb_batches = int(sys.argv[-5])
 nb_epochs = int(sys.argv[-6])
 
-def weighted_mse(y_true, y_pred, weights):
-    return K.mean(K.square(y_true - y_pred) * weights, axis=-1)
-
 def create_model(n_pre, n_post, nb_features, output_dim):
     """ 
         creates, compiles and returns a RNN model 
@@ -45,21 +45,17 @@ def create_model(n_pre, n_post, nb_features, output_dim):
     """
     # Define model parameters
 
-    initialization = 'glorot_normal'
-    activation = 'linear'
     penalty=0.001
-    dr=0.2
     lr = 0.0005
 
     n_hidden = 128
 
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
     weights_tensor = Input(shape=(n_pre, nb_features), name="Weights")
-    dropout_1 = Dropout(dr)(inputs)
-    lstm_1 = LSTM(n_hidden, kernel_initializer=initialization)(dropout_1) 
-    output= Dense(output_dim, activation=activation, kernel_regularizer=regularizers.l2(penalty), name='Dense')(lstm_1)
+    lstm_1 = LSTM(n_hidden)(inputs) 
+    output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(lstm_1)
 
-    cl = wrapped_partial(weighted_mse, weights=weights_tensor)
+    cl = wrapped_partial(weighted_rmse, weights=weights_tensor)
 
     model = Model([inputs, weights_tensor], output)
 
@@ -76,7 +72,7 @@ def train_model(model, dataX, dataY, weights, nb_epoches, nb_batches):
     filepath="../results/encoder-decoder/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
     checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=5, save_best_only=True)
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=99, verbose=1, mode='auto')
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=50, verbose=1, mode='auto')
 
     csv_logger = CSVLogger('../results/encoder-decoder/{}/training_log_{}_{}.csv'.format(dataname,dataname,imp), separator=',', append=False)
 

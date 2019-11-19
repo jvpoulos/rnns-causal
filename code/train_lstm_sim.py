@@ -13,7 +13,7 @@ keras.backend.tensorflow_backend.set_session(sess)
 
 from keras import backend as K
 from keras.models import Model
-from keras.layers import LSTM, Input, Dropout, Dense
+from keras.layers import LSTM, Input, Dense
 from keras.callbacks import CSVLogger, EarlyStopping
 from keras import regularizers
 from keras.optimizers import Adam
@@ -27,6 +27,8 @@ if gpu < 3:
     from tensorflow.python.client import device_lib
     print(device_lib.list_local_devices())
 
+def root_mean_squared_error(y_true, y_pred):
+        return K.sqrt(K.mean(K.square(y_pred - y_true)))
 
 def create_model(n_pre, n_post, nb_features, output_dim):
     """ 
@@ -35,21 +37,18 @@ def create_model(n_pre, n_post, nb_features, output_dim):
     """
     # Define model parameters
 
-    initialization = 'glorot_normal'
-    activation = 'linear'
     lr = 0.0005
     penalty=0.001
 
     n_hidden = 128
 
     inputs = Input(shape=(n_pre, nb_features,), name="Inputs")  
-    dropout_1 = Dropout(dr)(inputs)
-    lstm_1 = LSTM(n_hidden, kernel_initializer=initialization)(dropout_1) 
-    output= Dense(output_dim, activation=activation, kernel_regularizer=regularizers.l2(penalty), name='Dense')(lstm_1)
+    lstm_1 = LSTM(n_hidden)(inputs) 
+    output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(lstm_1)
 
     model = Model(inputs=inputs, output=output)
 
-    model.compile(loss="mean_squared_error", optimizer=Adam(lr=lr)) 
+    model.compile(loss="root_mean_squared_error", optimizer=Adam(lr=lr)) 
 
     print(model.summary()) 
 
@@ -59,7 +58,7 @@ def train_model(model, dataX, dataY, epoch_count, batches):
 
     # Prepare model checkpoints and callbacks
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=99, verbose=1, mode='auto')
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=50, verbose=1, mode='auto')
 
     csv_logger = CSVLogger('results/lstm/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
 

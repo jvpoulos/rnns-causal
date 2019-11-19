@@ -13,7 +13,7 @@ keras.backend.tensorflow_backend.set_session(sess)
 
 from keras import backend as K
 from keras.models import Model
-from keras.layers import LSTM, Input, GRU, TimeDistributed, Dense, RepeatVector, Dropout
+from keras.layers import LSTM, Input, TimeDistributed, Dense, RepeatVector
 from keras.callbacks import CSVLogger, EarlyStopping
 from keras import regularizers
 from keras.optimizers import Adam
@@ -27,6 +27,9 @@ if gpu < 3:
     from tensorflow.python.client import device_lib
     print(device_lib.list_local_devices())
 
+def root_mean_squared_error(y_true, y_pred):
+        return K.sqrt(K.mean(K.square(y_pred - y_true)))
+
 def create_model(n_pre, n_post, nb_features, output_dim):
     """ 
         creates, compiles and returns a RNN model 
@@ -34,8 +37,6 @@ def create_model(n_pre, n_post, nb_features, output_dim):
     """
     # Define model parameters
 
-    initialization = 'glorot_normal'
-    activation = 'linear'
     lr = 0.0005
     penalty=0.001
 
@@ -43,16 +44,15 @@ def create_model(n_pre, n_post, nb_features, output_dim):
     decoder_hidden = 128
 
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
-    dropout_1 = Dropout(dr)(inputs)
-    lstm_1 = LSTM(encoder_hidden, kernel_initializer=initialization, return_sequences=True, name='LSTM_1')(dropout_1) # Encoder
-    lstm_2 = LSTM(encoder_hidden, kernel_initializer=initialization, return_sequences=False, name='LSTM_2')(lstm_1) # Encoder
+    lstm_1 = LSTM(encoder_hidden, return_sequences=True, name='LSTM_1')(inputs) # Encoder
+    lstm_2 = LSTM(encoder_hidden, return_sequences=False, name='LSTM_2')(lstm_1) # Encoder
     repeat = RepeatVector(n_post, name='Repeat')(lstm_2) # get the last output of the LSTM and repeats it
-    gru_1 = GRU(decoder_hidden, kernel_initializer=initialization, return_sequences=True, name='Decoder')(repeat)  # Decoder
-    output= TimeDistributed(Dense(output_dim, activation=activation, kernel_regularizer=regularizers.l2(penalty), name='Dense'), name='Outputs')(gru_1)
+    lstm_3 = LSTM(decoder_hidden, return_sequences=True, name='Decoder')(repeat)  # Decoder
+    output= TimeDistributed(Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense'), name='Outputs')(lstm_3)
 
     model = Model(inputs=inputs, output=output)
 
-    model.compile(optimizer=Adam(lr=lr), loss="mean_squared_error")  
+    model.compile(optimizer=Adam(lr=lr), loss="root_mean_squared_error")  
 
     print(model.summary()) 
 
@@ -62,7 +62,7 @@ def train_model(model, dataX, dataY, epoch_count, batches):
 
     # Prepare model checkpoints and callbacks
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=99, verbose=1, mode='auto')
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=50, verbose=1, mode='auto')
 
     csv_logger = CSVLogger('results/encoder-decoder/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
 

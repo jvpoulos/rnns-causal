@@ -12,7 +12,6 @@ from keras.layers import Input, LSTM, RepeatVector
 from keras.layers.core import Flatten, Dense, Lambda
 from keras.optimizers import SGD, RMSprop, Adam
 from keras import regularizers
-from keras import objectives
 from keras.callbacks import ModelCheckpoint, CSVLogger, EarlyStopping
 
 from functools import partial, update_wrapper
@@ -21,6 +20,9 @@ def wrapped_partial(func, *args, **kwargs):
     partial_func = partial(func, *args, **kwargs)
     update_wrapper(partial_func, func)
     return partial_func
+
+def weighted_rmse(y_true, y_pred, weights):
+    return K.sqrt(K.mean(K.square(y_true - y_pred) * weights, axis=-1))
 
 # Select gpu
 import os
@@ -44,8 +46,6 @@ def create_lstm_vae(nb_features,
     batch_size, 
     intermediate_dim, 
     latent_dim,
-    initialization,
-    activation,
     lr,
     penalty,
     epsilon_std=1.):
@@ -71,7 +71,7 @@ def create_lstm_vae(nb_features,
     weights_tensor = Input(shape=(n_pre, nb_features), name="Weights")
 
     # LSTM encoding
-    h = LSTM(intermediate_dim, kernel_initializer=initialization, name='Encoder')(x)
+    h = LSTM(intermediate_dim, name='Encoder')(x)
 
     # VAE Z layer
     z_mean = Dense(latent_dim, name='z_mean')(h)
@@ -81,8 +81,6 @@ def create_lstm_vae(nb_features,
         z_mean, z_log_sigma = args
         epsilon = K.random_normal(shape=(batch_size, latent_dim),
                                   mean=0., stddev=epsilon_std)
-        epsilon = K.exp(epsilon) # log-normal sampling
-        # return z_mean + K.exp(z_log_sigma) * epsilon
         return z_mean + z_log_sigma * epsilon
 
     # note that "output_shape" isn't necessary with the TensorFlow backend
@@ -90,8 +88,8 @@ def create_lstm_vae(nb_features,
     z = Lambda(sampling, output_shape=(latent_dim,), name='Sampling')([z_mean, z_log_sigma])
     
     # decoded LSTM layer
-    decoder_h = LSTM(intermediate_dim, kernel_initializer=initialization, return_sequences=True, name='Decoder_1')
-    decoder_mean = LSTM(nb_features, kernel_initializer=initialization, activation=activation, kernel_regularizer=regularizers.l2(penalty), return_sequences=True, name='Decoder_2')
+    decoder_h = LSTM(intermediate_dim, return_sequences=True, name='Decoder_1')
+    decoder_mean = LSTM(nb_features, kernel_regularizer=regularizers.l2(penalty), return_sequences=True, name='Decoder_2')
 
     h_decoded = RepeatVector(n_post, name='Repeat')(z)
     h_decoded = decoder_h(h_decoded)
@@ -115,10 +113,10 @@ def create_lstm_vae(nb_features,
     generator = Model(decoder_input, _x_decoded_mean)
     
     def vae_loss(x, x_decoded_mean, weights):
-        xent_loss = objectives.mse(x, x_decoded_mean)
+        xent_loss = weighted_rmse(x, x_decoded_mean, weights)
         kl_loss = - 0.5 * K.mean(1 + z_log_sigma - K.square(z_mean) - K.exp(z_log_sigma))
         loss = xent_loss + kl_loss
-        return loss*K.mean(weights,2) # mean across  nb_features
+        return loss
 
     cl = wrapped_partial(vae_loss, weights=weights_tensor)
 
@@ -153,7 +151,7 @@ def get_data():
     for i in range(seq_len-n_pre-n_post):
         dXC.append(x[i:i+n_pre]) # controls are inputs
         wXC.append(wx[i:i+n_pre]) 
-        dXT.append(y[i:i+n_pre]) # controls are inputs
+        dXT.append(y[i:i+n_pre]) # pre-period treated 
         wXT.append(wy[i:i+n_pre]) 
     return np.array(dXC),np.array(wXC),np.array(dXT),np.array(wXT),n_pre,n_post     
 
@@ -173,8 +171,6 @@ if __name__ == "__main__":
         batch_size=batch_size, 
         intermediate_dim=32,
         latent_dim=200,
-        initialization = 'glorot_normal',
-        activation = 'linear',
         lr = lr,
         penalty=penalty,
         epsilon_std=1.)
@@ -182,7 +178,7 @@ if __name__ == "__main__":
     filepath="../results/rvae/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
     checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=5, save_best_only=True)
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=99, verbose=1, mode='auto')
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=50, verbose=1, mode='auto')
 
     csv_logger = CSVLogger('../results/rvae/{}/training_log_{}_{}.csv'.format(dataname,dataname,imp), separator=',', append=False)
 
