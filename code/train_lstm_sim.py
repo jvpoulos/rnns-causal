@@ -48,7 +48,7 @@ def create_model(n_pre, n_post, nb_features, output_dim):
 
     model = Model(inputs=inputs, output=output)
 
-    model.compile(loss="root_mean_squared_error", optimizer=Adam(lr=lr)) 
+    model.compile(loss=root_mean_squared_error, optimizer=Adam(lr=lr)) 
 
     print(model.summary()) 
 
