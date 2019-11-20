@@ -25,7 +25,7 @@ rvae <- function(Y_obs,treat_indices,d, t0, T){
   py$T <- T
   if(d=='stock'){
     py$gpu <- 0
-    py$epochs <- 10000
+    py$epochs <- 1000
   } else{
     py$gpu <- 1
     py$epochs <- 10000
