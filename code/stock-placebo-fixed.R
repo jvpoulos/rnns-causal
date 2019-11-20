@@ -209,8 +209,8 @@ StockSim <- function(Y,N,fix_d){
 # Load data
 Y <- t(read.csv('data/returns_no_missing.csv',header=F)) # N X T
 
-# increase dimensions
+# fixed dimensions
 results <- foreach(N = c(50,100,200,500,700), .combine='rbind') %do% {
-  StockSim(Y,N, fix_d=FALSE)
+  StockSim(Y,N, fix_d=TRUE)
 }
-saveRDS(results, "results/stock-placebo-results-inc.rds")
+saveRDS(results, "results/stock-placebo-results-fixed.rds")

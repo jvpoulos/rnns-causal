@@ -24,9 +24,9 @@ ed <- function(Y_obs,treat_indices,d, t0, T){
   py$t0 <- t0
   py$T <- T
   if(d=='stock'){
-    py$nb_batches <- 16
+    py$nb_batches <- 32
     py$gpu <- 0
-    py$epochs <- 1000
+    py$epochs <- 10000
   } else{
     py$nb_batches <- 8
     py$gpu <- 1

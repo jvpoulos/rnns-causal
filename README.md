@@ -68,8 +68,8 @@ $ mkdir results/$$MODEL$$/$$DATANAME$$
 and then execute
 
 * `synth-placebo.sh`: synthetic control datasets
-* `stock-placebo.sh`: stock market prices
-  * For simulations with fixed data dimensions, open `stock-placebo.R` and set `fixed.dimensions <- TRUE`
+* `stock-placebo.sh`: stock market prices with increasing dimensions
+* `stock-placebo-fixed.sh`: stock market prices with fixed dimensions
 * `educ-placebo.sh`: state government education spending
 
 Counterfactual predictions
