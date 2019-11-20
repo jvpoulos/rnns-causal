@@ -26,6 +26,10 @@ rvae <- function(Y_obs,treat_indices,d, t0, T){
   if(d=='stock'){
     py$gpu <- 0
     py$epochs <- 1000
+  } 
+  if(d=='stock_fixed'){
+    py$gpu <- 1
+    py$epochs <- 1000
   } else{
     py$gpu <- 1
     py$epochs <- 10000
