@@ -7,6 +7,7 @@ library(dplyr)
 library(weights)
 library(stringr)
 library(foreign)
+library(readstata13)
 library(imputeTS)
 library(caret)
 
@@ -29,7 +30,7 @@ colnames(hopkins) <- c("state","city","year","votediff")
 
 ## Load F&G (2009) data
 
-fg <- readstata13::read.dta13("data/ferreira/mayoral_data_4.17.09.dta")
+fg <- read.dta13("data/ferreira/mayoral_data_4.17.09.dta")
 
 fg$city <- trimws(fg$city)
 
@@ -137,10 +138,7 @@ ElectionsMatrices <- function(d, outcomes=TRUE, imp=c("locf","linear","random","
       d.imp <- predict(preProcValues, d)
     }
   } 
-  
-  d.imp <- log(d.imp+.Machine
-               $double.eps) # take log
-  
+
   # Matrix of observed entries (N x T)
   d.M <- t(as.matrix(d.imp))
   d.M[is.nan(d.M )] <- NA
