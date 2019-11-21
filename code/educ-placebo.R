@@ -12,7 +12,7 @@ library(latex2exp)
 library(parallel)
 library(doParallel)
 
-cores <- detectCores()/2
+cores <- detectCores()/4
 
 cl <- parallel::makeForkCluster(cores)
 
@@ -21,7 +21,7 @@ doParallel::registerDoParallel(cores) # register cores (<p)
 RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
 # Load data
-capacity.outcomes <- readRDS("data/capacity-outcomes.rds")
+capacity.outcomes <- readRDS("data/capacity-outcomes-locf.rds")
 
 ## Reading data
 CapacitySim <- function(outcomes,d,sim,treated.indices){
@@ -43,7 +43,7 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
   number_T0 <- 5
   T0 <- ceiling(T*((1:number_T0)*2-1)/(2*number_T0))
   N_t <- ceiling(N*0.5) # no. treated units desired <=N
-  num_runs <- 10
+  num_runs <- 100
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   to_save <- 1 ## Whether to save the plot or not
   
@@ -110,7 +110,7 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
       ## MC-NNM
       ## ------
       
-      est_model_MCPanel <- mcnnm_cv(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, num_folds = 5)
+      est_model_MCPanel <- mcnnm_cv(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, num_folds = 3)
       est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
       est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y_imp)*(1-treat_mat)
       est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
