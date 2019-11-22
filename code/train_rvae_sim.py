@@ -135,8 +135,7 @@ if __name__ == "__main__":
     x, y, n_pre, n_post = get_data() 
     nb_features = x.shape[2]
     batch_size = 1
-    penalty=0.001
-    lr=0.0005
+    lr = 0.001
 
     vae, enc, gen = create_lstm_vae(nb_features, 
         n_pre=n_pre, 
@@ -148,7 +147,7 @@ if __name__ == "__main__":
         penalty=penalty,
         epsilon_std=1.)
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=50, verbose=0, mode='auto')
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=25, verbose=0, mode='auto')
 
     csv_logger = CSVLogger('results/rvae/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
 

@@ -12,7 +12,7 @@ library(latex2exp)
 library(parallel)
 library(doParallel)
 
-cores <- detectCores()/4
+cores <- ceiling(detectCores())/6
 
 cl <- parallel::makeForkCluster(cores)
 
@@ -29,12 +29,12 @@ StockSim <- function(Y,N,fix_d){
   if(fix_d){
     T <- 49000/N
   }else{
-    T <- (Tbig/Nbig) * N
+    T <- N*3
   }
   
   T0 <- ceiling(T/2)
   N_t <- ceiling(N/2)
-  num_runs <- 100
+  num_runs <- 20
   is_simul <- 1 ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   if(fix_d){
     d <- 'stock_fixed'
@@ -210,7 +210,7 @@ StockSim <- function(Y,N,fix_d){
 Y <- t(read.csv('data/returns_no_missing.csv',header=F)) # N X T
 
 # increase dimensions
-results <- foreach(N = c(50,100,200,500,700), .combine='rbind') %do% {
+results <- foreach(N = c(50,100,200,500), .combine='rbind') %do% {
   StockSim(Y,N, fix_d=FALSE)
 }
 saveRDS(results, "results/stock-placebo-results-inc.rds")

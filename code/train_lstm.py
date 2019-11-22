@@ -45,8 +45,8 @@ def create_model(n_pre, n_post, nb_features, output_dim):
     """
     # Define model parameters
 
-    penalty=0.001
-    lr = 0.0005
+    penalty=0.005
+    lr = 0.001
 
     n_hidden = 128
 
@@ -72,7 +72,7 @@ def train_model(model, dataX, dataY, weights, nb_epoches, nb_batches):
     filepath="../results/encoder-decoder/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
     checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=5, save_best_only=True)
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=50, verbose=1, mode='auto')
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=25, verbose=0, mode='auto')
 
     csv_logger = CSVLogger('../results/encoder-decoder/{}/training_log_{}_{}.csv'.format(dataname,dataname,imp), separator=',', append=False)
 

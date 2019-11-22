@@ -159,8 +159,8 @@ if __name__ == "__main__":
     x, wx, y, wy, n_pre, n_post = get_data() 
     nb_features = x.shape[2]
     batch_size = 1
-    penalty=0.001
-    lr=0.0005
+    penalty=0.005
+    lr = 0.001
 
     print('x samples shape', x.shape)     
     print('wx samples shape', wx.shape)  
@@ -178,7 +178,7 @@ if __name__ == "__main__":
     filepath="../results/rvae/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
     checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=5, save_best_only=True)
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=50, verbose=1, mode='auto')
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=25, verbose=0, mode='auto')
 
     csv_logger = CSVLogger('../results/rvae/{}/training_log_{}_{}.csv'.format(dataname,dataname,imp), separator=',', append=False)
 
