@@ -12,7 +12,7 @@ library(latex2exp)
 library(parallel)
 library(doParallel)
 
-cores <- detectCores()/2
+cores <- ceiling(detectCores())/6
 
 cl <- parallel::makeForkCluster(cores)
 
@@ -29,10 +29,10 @@ ElectionsSim <- function(outcomes,d){
   ## Setting up the configuration
   N <- nrow(treat)
   T <- ncol(treat)
-  number_T0 <- 5
+  number_T0 <- 4
   T0 <- ceiling(T*((1:number_T0)*2-1)/(2*number_T0))
   N_t <- ceiling(N*0.5) # no. treated units desired <=N
-  num_runs <- 100
+  num_runs <- 20
   is_simul <- 1 ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   to_save <- 1 ## Whether to save the plot or not
   

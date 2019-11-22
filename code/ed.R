@@ -27,25 +27,21 @@ ed <- function(Y_obs,treat_indices,d, t0, T){
     py$nb_batches <- 32
     py$gpu <- 0
     py$epochs <- 5000
-    py$penalty <- 0.005
   } 
   if(d=='stock_fixed'){
     py$nb_batches <- 32
     py$gpu <- 1
     py$epochs <- 5000
-    py$penalty <- 0.005
   } 
   if(d=='educ.pc'){
     py$nb_batches <- 16
     py$gpu <- 0
     py$epochs <- 5000
-    py$penalty <- 0.005
   } 
   else{
     py$nb_batches <- 8
     py$gpu <- 1
     py$epochs <- 5000
-    py$penalty <- 0.001
   }
   
   
