@@ -159,7 +159,7 @@ if __name__ == "__main__":
     x, wx, y, wy, n_pre, n_post = get_data() 
     nb_features = x.shape[2]
     batch_size = 1
-    penalty=0.01
+    penalty=0.05
     lr = 0.001
 
     print('x samples shape', x.shape)     

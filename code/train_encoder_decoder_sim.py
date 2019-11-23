@@ -38,7 +38,7 @@ def create_model(n_pre, n_post, nb_features, output_dim):
     # Define model parameters
 
     lr = 0.001
-    penalty=0.005
+    penalty=0.05
 
     encoder_hidden = 128
     decoder_hidden = 128
