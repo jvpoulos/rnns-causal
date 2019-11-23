@@ -29,7 +29,7 @@ StockSim <- function(Y,N,fix_d){
   if(fix_d){
     T <- 49000/N
   }else{
-    T <- N*2
+    T <- N*3
   }
   
   T0 <- ceiling(T/2)
