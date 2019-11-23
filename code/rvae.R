@@ -32,7 +32,6 @@ rvae <- function(Y_obs,treat_indices,d, t0, T){
     py$epochs <- 5000
   }
   if(d=='educ.pc'){
-    py$nb_batches <- 16
     py$gpu <- 0
     py$epochs <- 5000
   } 
