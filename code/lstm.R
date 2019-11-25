@@ -41,21 +41,21 @@ lstm <- function(Y_obs,treat_indices,d, t0, T){
     py$nb_batches <- 16
     py$gpu <- 0
     py$epochs <- 10000
-    py$lr <- 0.0005
-    py$penalty <- 0.25
+    py$lr <- 0.001
+    py$penalty <- 0.2
   } 
   if(d=='votediff'){
     py$nb_batches <- 8
     py$gpu <- 1
     py$epochs <- 10000
-    py$lr <- 0.0005
-    py$penalty <- 0.25
+    py$lr <- 0.001
+    py$penalty <- 0.2
   } 
   else{
     py$nb_batches <- 4
     py$gpu <- 0
     py$epochs <- 10000
-    py$lr <- 0.0005
+    py$lr <- 0.001
     py$penalty <- 0.1
   }
   
