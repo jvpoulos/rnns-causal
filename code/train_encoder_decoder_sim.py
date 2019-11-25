@@ -30,15 +30,12 @@ if gpu < 3:
 def root_mean_squared_error(y_true, y_pred):
         return K.sqrt(K.mean(K.square(y_pred - y_true)))
 
-def create_model(n_pre, n_post, nb_features, output_dim):
+def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty):
     """ 
         creates, compiles and returns a RNN model 
         @param nb_features: the number of features in the model
     """
     # Define model parameters
-
-    lr = 0.001
-    penalty=0.1
 
     encoder_hidden = 128
     decoder_hidden = 128
@@ -98,7 +95,7 @@ def test_model():
 
     # create and fit the LSTM network
     print('creating model...')
-    model = create_model(n_pre, n_post, nb_features, output_dim)
+    model = create_model(n_pre, n_post, nb_features, output_dim, int(lr), int(penalty))
     train_model(model, dataXC, dataYC, int(epochs), int(nb_batches))
 
     # now test

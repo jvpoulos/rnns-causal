@@ -25,19 +25,32 @@ rvae <- function(Y_obs,treat_indices,d, t0, T){
   py$T <- T
   if(d=='stock'){
     py$gpu <- 0
-    py$epochs <- 5000
+    py$epochs <- 10000
+    py$lr <- 0.001
+    py$penalty <- 0.1
   } 
   if(d=='stock_fixed'){
     py$gpu <- 1
-    py$epochs <- 5000
-  }
+    py$epochs <- 10000
+    py$lr <- 0.001
+    py$penalty <- 0.1
+  } 
   if(d=='educ.pc'){
     py$gpu <- 0
-    py$epochs <- 5000
+    py$lr <- 0.0005
+    py$penalty <- 0.25
+  } 
+  if(d=='votediff'){
+    py$gpu <- 1
+    py$epochs <- 10000
+    py$lr <- 0.0005
+    py$penalty <- 0.25
   } 
   else{
-    py$gpu <- 1
-    py$epochs <- 5000
+    py$gpu <- 0
+    py$epochs <- 10000
+    py$lr <- 0.0005
+    py$penalty <- 0.1
   }
   
   source_python("code/train_rvae_sim.py")

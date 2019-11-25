@@ -12,7 +12,7 @@ library(latex2exp)
 library(parallel)
 library(doParallel)
 
-cores <- ceiling(detectCores())/6
+cores <- ceiling(detectCores())/3
 
 cl <- parallel::makeForkCluster(cores)
 
@@ -36,6 +36,8 @@ StockSim <- function(Y,N,fix_d){
   N_t <- ceiling(N/2)
   num_runs <- 20
   is_simul <- 1 ## Whether to simulate Simultaneus Adoption or Staggered Adoption
+  to_save <- 1 ## Whether to save the plot or not
+  
   if(fix_d){
     d <- 'stock_fixed'
   }else{
@@ -69,9 +71,7 @@ StockSim <- function(Y,N,fix_d){
       }else{
         treat_mat <- stag_adapt(Y_sub, N_t, t0, treat_indices)
       }
-      treat_mat_NA <- treat_mat
-      treat_mat_NA[treat_mat==0] <- NA
-      
+
       Y_obs <- Y_sub * treat_mat
       
       ## ------
@@ -195,14 +195,38 @@ StockSim <- function(Y,N,fix_d){
       "N" = rep(N,7),
       "T" = rep(T,7),
       "Method" = c(replicate(length(T0),"DID"), 
-                   replicate(length(T0),"ED"),
+                   replicate(length(T0),"Encoder-decoder"),
                    replicate(length(T0),"LSTM"), 
                    replicate(length(T0),"MC-NNM"), 
                    replicate(length(T0),"RVAE"), 
-                   replicate(length(T0),"SC-ADH"),
-                   replicate(length(T0),"VT-EN")))
+                   replicate(length(T0),"SCM"),
+                   replicate(length(T0),"SCM-EN")))
+  
+  p <- ggplot(data = df1, aes(x, y, color = Method, shape = Method)) +
+    geom_point(size = 2, position=position_dodge(width=0.1)) +
+    geom_errorbar(
+      aes(ymin = lb, ymax = ub),
+      width = 0.1,
+      linetype = "solid",
+      position=position_dodge(width=0.1)) +
+    scale_shape_manual("Method",values=c(1:7)) +
+    scale_color_discrete("Method")+
+    theme_bw() +
+    xlab(TeX('$T_0/T$')) +
+    ylab("Average RMSE") +
+    theme(axis.title=element_text(family="Times", size=14)) +
+    theme(axis.text=element_text(family="Times", size=12)) +
+    theme(legend.text=element_text(family="Times", size = 12)) +
+    theme(legend.title=element_text(family="Times", size = 12))
+  print(p)
+  ##
+  if(to_save == 1){
+    filename<-paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".png")
+    ggsave(filename, plot = last_plot(), device="png", dpi=600)
+  }
+  
   filename<-paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".rds")
-  saveRDS(df1, file = paste0("results/",filename))
+  saveRDS(df1, file = paste0("results/plots/",filename))
   return(df1)
 }
 
@@ -210,7 +234,7 @@ StockSim <- function(Y,N,fix_d){
 Y <- t(read.csv('data/returns_no_missing.csv',header=F)) # N X T
 
 # fixed dimensions
-results <- foreach(N = c(50,100,200,500), .combine='rbind') %do% {
+results <- foreach(N = c(100,200,500), .combine='rbind') %do% {
   StockSim(Y,N, fix_d=TRUE)
 }
 saveRDS(results, "results/stock-placebo-results-fixed.rds")

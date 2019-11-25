@@ -12,7 +12,7 @@ library(latex2exp)
 library(parallel)
 library(doParallel)
 
-cores <- ceiling(detectCores())/6
+cores <- ceiling(detectCores())/3
 
 cl <- parallel::makeForkCluster(cores)
 
@@ -188,12 +188,12 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
                ENT_avg_RMSE + 1.96*ENT_std_error),
       "x" = c(T0/T, T0/T ,T0/T, T0/T, T0/T, T0/T, T0/T),
       "Method" = c(replicate(length(T0),"DID"), 
-                   replicate(length(T0),"ED"),
+                   replicate(length(T0),"Encoder-decoder"),
                    replicate(length(T0),"LSTM"), 
                    replicate(length(T0),"MC-NNM"), 
                    replicate(length(T0),"RVAE"), 
-                   replicate(length(T0),"SC-ADH"),
-                   replicate(length(T0),"VT-EN")))
+                   replicate(length(T0),"SCM"),
+                   replicate(length(T0),"SCM-EN")))
   
   p <- ggplot(data = df1, aes(x, y, color = Method, shape = Method)) +
     geom_point(size = 2, position=position_dodge(width=0.1)) +
@@ -219,15 +219,15 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
     ggsave(filename, plot = last_plot(), device="png", dpi=600)
     df2<-data.frame(N,T,N_t,is_simul, DID_RMSE_test,ED_RMSE_test,LSTM_RMSE_test,MCPanel_RMSE_test,RVAE_RMSE_test,ADH_RMSE_test,ENT_RMSE_test)
     colnames(df2)<-c(replicate(length(T0),"DID"), 
-                     replicate(length(T0),"ED"),
-                     replicate(length(T0),"LSTM"),
+                     replicate(length(T0),"Encoder-decoder"),
+                     replicate(length(T0),"LSTM"), 
                      replicate(length(T0),"MC-NNM"), 
                      replicate(length(T0),"RVAE"), 
-                     replicate(length(T0),"SC-ADH"),
-                     replicate(length(T0),"VT-EN"))
+                     replicate(length(T0),"SCM"),
+                     replicate(length(T0),"SCM-EN"))
     
     filename<-paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".rds")
-    save(df1, df2, file = paste0("results/",filename))
+    save(df1, df2, file = paste0("results/plots/",filename))
   }
 }
 

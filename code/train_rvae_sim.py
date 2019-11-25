@@ -135,8 +135,6 @@ if __name__ == "__main__":
     x, y, n_pre, n_post = get_data() 
     nb_features = x.shape[2]
     batch_size = 1
-    lr = 0.001
-    penalty=0.1
 
     vae, enc, gen = create_lstm_vae(nb_features, 
         n_pre=n_pre, 
@@ -144,8 +142,8 @@ if __name__ == "__main__":
         batch_size=batch_size, 
         intermediate_dim=32,
         latent_dim=200,
-        lr = lr,
-        penalty=penalty,
+        lr = int(lr),
+        penalty=int(penalty),
         epsilon_std=1.)
 
     stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=25, verbose=0, mode='auto')

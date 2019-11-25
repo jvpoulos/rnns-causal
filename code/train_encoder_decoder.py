@@ -24,7 +24,7 @@ def weighted_rmse(y_true, y_pred, weights):
 
 # Select gpu
 import os
-gpu = sys.argv[-7]
+gpu = sys.argv[-9]
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
 os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
 
@@ -37,16 +37,15 @@ t0 = sys.argv[-3]
 dataname = sys.argv[-4] 
 nb_batches = int(sys.argv[-5])
 nb_epochs = int(sys.argv[-6])
+lr = int(sys.argv[-7])
+penalty = int(sys.argv[-8])
 
-def create_model(n_pre, n_post, nb_features, output_dim):
+def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty):
     """ 
         creates, compiles and returns a RNN model 
         @param nb_features: the number of features in the model
     """
     # Define model parameters
-
-    penalty=0.1
-    lr = 0.001
 
     encoder_hidden = 128
     decoder_hidden = 128
@@ -127,7 +126,7 @@ def test_model():
 
     # create and fit the encoder-decoder network
     print('creating model...')
-    model = create_model(n_pre, n_post, nb_features, output_dim)
+    model = create_model(n_pre, n_post, nb_features, output_dim, lr, penalty)
     train_model(model, dataXC, dataYC, wXC, int(nb_epochs), int(nb_batches))
 
     # now test

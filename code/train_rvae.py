@@ -26,7 +26,7 @@ def weighted_rmse(y_true, y_pred, weights):
 
 # Select gpu
 import os
-gpu = sys.argv[-7]
+gpu = sys.argv[-8]
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
 os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
 
@@ -37,8 +37,9 @@ imp = sys.argv[-1]
 T = sys.argv[-2] 
 t0 = sys.argv[-3] 
 dataname = sys.argv[-4] 
-nb_batches = int(sys.argv[-5])
-nb_epochs = int(sys.argv[-6])
+nb_epochs = int(sys.argv[-5])
+lr = int(sys.argv[-6])
+penalty = int(sys.argv[-7])
 
 def create_lstm_vae(nb_features, 
     n_pre, 
@@ -159,8 +160,6 @@ if __name__ == "__main__":
     x, wx, y, wy, n_pre, n_post = get_data() 
     nb_features = x.shape[2]
     batch_size = 1
-    penalty=0.1
-    lr = 0.001
 
     print('x samples shape', x.shape)     
     print('wx samples shape', wx.shape)  
