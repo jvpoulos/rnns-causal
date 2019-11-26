@@ -66,9 +66,9 @@ StockSim <- function(Y,N,fix_d){
       t0 <- T0[j]
       ## Simultaneuous (simul_adapt) or Staggered adoption (stag_adapt)
       if(is_simul == 1){
-        treat_mat <- simul_adapt(Y_sub, N_t, t0, treat_indices)
+        treat_mat <- simul_adapt(Y_sub, N_t, t0-1, treat_indices)
       }else{
-        treat_mat <- stag_adapt(Y_sub, N_t, t0, treat_indices)
+        treat_mat <- stag_adapt(Y_sub, N_t, t0-1, treat_indices)
       }
       
       Y_obs <- Y_sub * treat_mat
@@ -80,7 +80,7 @@ StockSim <- function(Y,N,fix_d){
       print("LSTM Started")
       source("code/lstm.R")
       est_model_LSTM <- lstm(Y_obs, treat_indices, d, t0, T)
-      est_model_LSTM_msk_err <- (est_model_LSTM - Y_sub[treat_indices,][,(t0+1):T])
+      est_model_LSTM_msk_err <- (est_model_LSTM - Y_sub[treat_indices,][,t0:T])
       est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
       LSTM_RMSE_test[i,j] <- est_model_LSTM_test_RMSE
       
@@ -91,7 +91,7 @@ StockSim <- function(Y,N,fix_d){
       print("RVAE Started")
       source("code/rvae.R")
       est_model_RVAE <- rvae(Y_obs, treat_indices, d, t0, T)
-      est_model_RVAE_msk_err <- (est_model_RVAE - Y_sub[treat_indices,][,(t0+1):T])
+      est_model_RVAE_msk_err <- (est_model_RVAE - Y_sub[treat_indices,][,t0:T])
       est_model_RVAE_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_RVAE_msk_err^2, na.rm = TRUE))
       RVAE_RMSE_test[i,j] <- est_model_RVAE_test_RMSE
       
@@ -102,7 +102,7 @@ StockSim <- function(Y,N,fix_d){
       print("ED Started")
       source("code/ed.R")
       est_model_ED <- ed(Y_obs, treat_indices, d, t0, T)
-      est_model_ED_msk_err <- (est_model_ED - Y_sub[treat_indices,][,(t0+1):T])
+      est_model_ED_msk_err <- (est_model_ED - Y_sub[treat_indices,][,t0:T])
       est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
       ED_RMSE_test[i,j] <- est_model_ED_test_RMSE
       

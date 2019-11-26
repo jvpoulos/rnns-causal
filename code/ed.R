@@ -28,7 +28,7 @@ ed <- function(Y_obs,treat_indices,d, t0, T){
     py$gpu <- 0
     py$epochs <- 10000
     py$lr <- 0.001
-    py$penalty <- 0.001
+    py$penalty <- 0.0005
     py$dr <- 0.5
   } 
   if(d=='stock_fixed'){
@@ -36,7 +36,7 @@ ed <- function(Y_obs,treat_indices,d, t0, T){
     py$gpu <- 1
     py$epochs <- 10000
     py$lr <- 0.001
-    py$penalty <- 0.001
+    py$penalty <- 0.0005
     py$dr <- 0.5
   } 
   if(d=='educ.pc'){
@@ -44,7 +44,7 @@ ed <- function(Y_obs,treat_indices,d, t0, T){
     py$gpu <- 0
     py$epochs <- 10000
     py$lr <- 0.001
-    py$penalty <- 0.001
+    py$penalty <- 0.0005
     py$dr <- 0.5
   } 
   if(d=='votediff'){
@@ -52,7 +52,7 @@ ed <- function(Y_obs,treat_indices,d, t0, T){
     py$gpu <- 1
     py$epochs <- 10000
     py$lr <- 0.001
-    py$penalty <- 0.001
+    py$penalty <- 0.0005
     py$dr <- 0.5
   } 
   else{
@@ -60,7 +60,7 @@ ed <- function(Y_obs,treat_indices,d, t0, T){
     py$gpu <- 0
     py$epochs <- 10000
     py$lr <- 0.001
-    py$penalty <- 0.001
+    py$penalty <- 0.0005
     py$dr <- 0.5
   }
   

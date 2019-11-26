@@ -32,7 +32,7 @@ SynthSim <- function(outcomes,d){
   N <- nrow(treat)
   T <- ncol(treat)
   number_T0 <- 4
-  T0 <- ceiling(T*((1:number_T0)*2-1)/(2*number_T0))
+  T0 <- ceiling(T*((1:number_T0)*3-1)/(3*number_T0))
   N_t <- ceiling(N*0.5) # no. treated units desired <=N
   num_runs <- 20
   is_simul <- 1 ## Whether to simulate Simultaneus Adoption or Staggered Adoption
@@ -59,9 +59,9 @@ SynthSim <- function(outcomes,d){
       t0 <- T0[j]
       ## Simultaneuous (simul_adapt) or Staggered adoption (stag_adapt)
       if(is_simul == 1){
-        treat_mat <- simul_adapt(Y, N_t, t0, treat_indices)
+        treat_mat <- simul_adapt(Y, N_t, t0-1, treat_indices) # t0 is initial treatment
       }else{
-        treat_mat <- stag_adapt(Y, N_t, t0, treat_indices)
+        treat_mat <- stag_adapt(Y, N_t, t0-1, treat_indices)
       }
 
       Y_obs <- Y * treat_mat
@@ -72,7 +72,7 @@ SynthSim <- function(outcomes,d){
       
       source("code/lstm.R")
       est_model_LSTM <- lstm(Y_obs, treat_indices, d, t0, T)
-      est_model_LSTM_msk_err <- (est_model_LSTM - Y[treat_indices,][,(t0+1):T])
+      est_model_LSTM_msk_err <- (est_model_LSTM - Y[treat_indices,][,t0:T])
       est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
       LSTM_RMSE_test[i,j] <- est_model_LSTM_test_RMSE
       
@@ -82,7 +82,7 @@ SynthSim <- function(outcomes,d){
       
       source("code/rvae.R")
       est_model_RVAE <- rvae(Y_obs, treat_indices, d, t0, T)
-      est_model_RVAE_msk_err <- (est_model_RVAE - Y[treat_indices,][,(t0+1):T])
+      est_model_RVAE_msk_err <- (est_model_RVAE - Y[treat_indices,][,t0:T])
       est_model_RVAE_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_RVAE_msk_err^2, na.rm = TRUE))
       RVAE_RMSE_test[i,j] <- est_model_RVAE_test_RMSE
       
@@ -92,7 +92,7 @@ SynthSim <- function(outcomes,d){
       
       source("code/ed.R")
       est_model_ED <- ed(Y_obs, treat_indices, d, t0, T)
-      est_model_ED_msk_err <- (est_model_ED - Y[treat_indices,][,(t0+1):T])
+      est_model_ED_msk_err <- (est_model_ED - Y[treat_indices,][,t0:T])
       est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
       ED_RMSE_test[i,j] <- est_model_ED_test_RMSE
       

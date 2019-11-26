@@ -69,7 +69,7 @@ def train_model(model, dataX, dataY, epoch_count, batches):
 def test_model():
 
     n_post = int(1)
-    n_pre =int(t0)-1
+    n_pre =int(t0)-1 
     seq_len = int(T)
 
     x = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))    
