@@ -67,7 +67,7 @@ ed <- function(Y_obs,Y,treat_indices,d, t0, T){
   
   source_python("code/train_encoder_decoder_sim.py")
   
-  ed.pred.control <- as.matrix(read_csv(paste0("results/encoder-decoder/",d,"/encoder-decoder-",d,"-test.csv"), col_names = FALSE))
+  ed.pred <- as.matrix(read_csv(paste0("results/encoder-decoder/",d,"/encoder-decoder-",d,"-test.csv"), col_names = FALSE))
   
-  return(t(ed.pred.control))
+  return(t(ed.pred))
 }
