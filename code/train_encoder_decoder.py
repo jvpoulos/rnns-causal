@@ -105,7 +105,7 @@ def test_model():
     print('raw wx shape', wx_scaled.shape)  
 
     wX = []
-    for i in range(seq_len-n_pre):
+    for i in range(seq_len-n_pre-n_post):
         wX.append(wx_scaled[i:i+n_pre]) # controls are inputs
     
     wXC = np.array(wX)
@@ -118,9 +118,9 @@ def test_model():
     print('raw x shape', x_scaled.shape)   
 
     dXC, dYC = [], []
-    for i in range(seq_len-n_pre):
+    for i in range(seq_len-n_pre-n_post):
         dXC.append(x_scaled[i:i+n_pre]) # controls are inputs
-        dYC.append(x_scaled[i+n_pre]) # controls are outputs
+        dYC.append(x_scaled[i+n_pre+n_post]) # controls are outputs
     
     dataXC = np.array(dXC)
     dataYC = np.array(dYC)
@@ -157,7 +157,7 @@ def test_model():
     print('raw wy shape', wy_scaled.shape)  
 
     wY = []
-    for i in range(seq_len-n_pre):
+    for i in range(seq_len-n_pre-n_post):
         wY.append(wy_scaled[i:i+n_pre]) # controls are inputs
     
     wXT = np.array(wY)
@@ -171,7 +171,7 @@ def test_model():
     print('raw y shape', y_scaled.shape)   
 
     dXT = []
-    for i in range(seq_len-n_pre):
+    for i in range(seq_len-n_pre-n_post):
         dXT.append(y_scaled[i:i+n_pre]) # treated is input
 
     dataXT = np.array(dXT)

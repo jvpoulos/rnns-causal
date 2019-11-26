@@ -133,7 +133,7 @@ def get_data():
     print('raw y shape', y_scaled.shape) 
 
     dXC, dXT = [], []
-    for i in range(seq_len-n_pre):
+    for i in range(seq_len-n_pre-n_post):
         dXC.append(x_scaled[i:i+n_pre]) # pre-period controls are inputs
         dXT.append(y_scaled[i:i+n_pre]) # pre-period treated 
     return np.array(dXC),np.array(dXT),n_pre,n_post     
