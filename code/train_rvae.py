@@ -14,6 +14,9 @@ from keras.optimizers import SGD, RMSprop, Adam
 from keras import regularizers
 from keras.callbacks import ModelCheckpoint, CSVLogger, EarlyStopping
 
+from sklearn.preprocessing import MinMaxScaler
+scaler = MinMaxScaler(feature_range = (0, 1))
+
 from functools import partial, update_wrapper
 
 def wrapped_partial(func, *args, **kwargs):
@@ -135,28 +138,32 @@ def get_data():
     n_pre =int(t0)-1
     seq_len = int(T)
 
-    wx = np.array(pd.read_csv("../data/{}-wx-{}.csv".format(dataname,imp)))    
+    wx = np.array(pd.read_csv("data/{}-wx-{}.csv".format(dataname,imp)))  
+    wx_scaled = scaler.fit_transform(wx)  
 
-    print('raw wx shape', wx.shape)   
+    print('raw wx shape', wx_scaled.shape)   
                 
-    x = np.array(pd.read_csv("../data/{}-x-{}.csv".format(dataname,imp)))
+    x_obs = np.array(pd.read_csv("data/{}-x-{}.csv".format(dataname,imp)))
+    x_scaled = scaler.fit_transform(x_obs)
 
-    print('raw x shape', x.shape)   
+    print('raw x shape', x_scaled.shape)   
 
-    wy = np.array(pd.read_csv("../data/{}-wy-{}.csv".format(dataname,imp)))    
+    wy = np.array(pd.read_csv("data/{}-wy-{}.csv".format(dataname,imp)))    
+    wy_scaled = scaler.fit_transform(wy)
 
-    print('raw wy shape', wy.shape)  
+    print('raw wy shape', wy_scaled.shape)  
 
-    y = np.array(pd.read_csv("../data/{}-y-{}.csv".format(dataname,imp)))
+    y = np.array(pd.read_csv("data/{}-y-{}.csv".format(dataname,imp)))
+    y_scaled = scaler.fit_transform(y)
 
     print('raw y shape', y.shape) 
 
     dXC,  wXC, dXT,  wXT  = [], [], [], []
-    for i in range(seq_len-n_pre-n_post):
-        dXC.append(x[i:i+n_pre]) # controls are inputs
-        wXC.append(wx[i:i+n_pre]) 
-        dXT.append(y[i:i+n_pre]) # pre-period treated 
-        wXT.append(wy[i:i+n_pre]) 
+    for i in range(seq_len-n_pre):
+        dXC.append(x_scaled[i:i+n_pre]) # controls are inputs
+        wXC.append(wx_scaled[i:i+n_pre]) 
+        dXT.append(y_scaled[i:i+n_pre]) # pre-period treated 
+        wXT.append(wy_scaled[i:i+n_pre]) 
     return np.array(dXC),np.array(wXC),np.array(dXT),np.array(wXT),n_pre,n_post     
 
 if __name__ == "__main__":
@@ -164,8 +171,8 @@ if __name__ == "__main__":
     nb_features = x.shape[2]
     batch_size = 1
 
-    print('x samples shape', x.shape)     
-    print('wx samples shape', wx.shape)  
+    print('x samples shape', x_scaled.shape)     
+    print('wx samples shape', wx_scaled.shape)  
 
     vae, enc, gen = create_lstm_vae(nb_features, 
         n_pre=n_pre, 
@@ -178,16 +185,17 @@ if __name__ == "__main__":
         dr=dr,
         epsilon_std=1.)
 
-    filepath="../results/rvae/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
+    filepath="results/rvae/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
     checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=5, save_best_only=True)
 
     stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=0, mode='auto')
 
-    csv_logger = CSVLogger('../results/rvae/{}/training_log_{}_{}.csv'.format(dataname,dataname,imp), separator=',', append=False)
+    csv_logger = CSVLogger('results/rvae/{}/training_log_{}_{}.csv'.format(dataname,dataname,imp), separator=',', append=False)
 
     vae.fit([x,wx], x, 
         epochs=int(nb_epochs),
         verbose=1,
+        shuffle=False,
         callbacks=[checkpointer,csv_logger,stopping],
         validation_split=0.1)
 
@@ -203,7 +211,7 @@ if __name__ == "__main__":
 
     print('Saving to results/rvae/{}/rvae-{}-train-{}.csv'.format(dataname,dataname,imp))
 
-    np.savetxt("../results/rvae/{}/rvae-{}-train-{}.csv".format(dataname,dataname,imp), preds_train, delimiter=",")
+    np.savetxt("results/rvae/{}/rvae-{}-train-{}.csv".format(dataname,dataname,imp), preds_train, delimiter=",")
 
     print('Generate predictions on test set')
 
@@ -211,11 +219,11 @@ if __name__ == "__main__":
     print('wy samples shape', wy.shape)  
 
     preds_test = vae.predict([wy,y], batch_size=batch_size, verbose=0)
-
+    preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
     preds_test = np.squeeze(preds_test)
 
     print('predictions shape =', preds_test.shape)
 
     print('Saving to results/rvae/{}/rvae-{}-test-{}.csv'.format(dataname,dataname,imp))
 
-    np.savetxt("../results/rvae/{}/rvae-{}-test-{}.csv".format(dataname,dataname,imp), preds_test, delimiter=",")
+    np.savetxt("results/rvae/{}/rvae-{}-test-{}.csv".format(dataname,dataname,imp), preds_test, delimiter=",")

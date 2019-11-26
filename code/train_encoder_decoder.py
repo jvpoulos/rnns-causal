@@ -12,6 +12,9 @@ from keras.callbacks import ModelCheckpoint, CSVLogger, EarlyStopping
 from keras import regularizers
 from keras.optimizers import Adam
 
+from sklearn.preprocessing import MinMaxScaler
+scaler = MinMaxScaler(feature_range = (0, 1))
+
 from functools import partial, update_wrapper
 
 def wrapped_partial(func, *args, **kwargs):
@@ -74,15 +77,16 @@ def train_model(model, dataX, dataY, weights, nb_epoches, nb_batches):
 
     # Prepare model checkpoints and callbacks
 
-    filepath="../results/encoder-decoder/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
+    filepath="results/encoder-decoder/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
     checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=5, save_best_only=True)
 
     stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=0, mode='auto')
 
-    csv_logger = CSVLogger('../results/encoder-decoder/{}/training_log_{}_{}.csv'.format(dataname,dataname,imp), separator=',', append=False)
+    csv_logger = CSVLogger('results/encoder-decoder/{}/training_log_{}_{}.csv'.format(dataname,dataname,imp), separator=',', append=False)
 
     history = model.fit(x=[dataX,weights], 
         y=dataY, 
+        shuffle=False,
         batch_size=nb_batches, 
         verbose=1,
         epochs=nb_epoches, 
@@ -95,27 +99,28 @@ def test_model():
     n_pre =int(t0)-1
     seq_len = int(T)
 
-    wx = np.array(pd.read_csv("../data/{}-wx-{}.csv".format(dataname,imp)))    
+    wx = np.array(pd.read_csv("data/{}-wx-{}.csv".format(dataname,imp)))
+    wx_scaled = scaler.fit_transform(wx)    
 
-    print('raw wx shape', wx.shape)  
+    print('raw wx shape', wx_scaled.shape)  
 
     wX = []
-    for i in range(seq_len-n_pre-n_post):
-        wX.append(wx[i:i+n_pre]) # controls are inputs
+    for i in range(seq_len-n_pre):
+        wX.append(wx_scaled[i:i+n_pre]) # controls are inputs
     
     wXC = np.array(wX)
 
     print('wXC shape:', wXC.shape)
     
-    x = np.array(pd.read_csv("../data/{}-x-{}.csv".format(dataname,imp)))    
+    x_obs = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))
+    x_scaled = scaler.fit_transform(x_obs)
 
-    print('raw x shape', x.shape)   
+    print('raw x shape', x_scaled.shape)   
 
     dXC, dYC = [], []
-    for i in range(seq_len-n_pre-n_post):
-        dXC.append(x[i:i+n_pre]) # controls are inputs
-        dYC.append(x[i+n_pre:i+n_pre+n_post]) # controls are outputs
-        # dY.append(data[i+n_pre])
+    for i in range(seq_len-n_pre):
+        dXC.append(x_scaled[i:i+n_pre]) # controls are inputs
+        dYC.append(x_scaled[i+n_pre]) # controls are outputs
     
     dataXC = np.array(dXC)
     dataYC = np.array(dYC)
@@ -143,43 +148,45 @@ def test_model():
 
     print('Saving to results/encoder-decoder/{}/encoder-decoder-{}-train-{}.csv'.format(dataname,dataname,imp))
 
-    np.savetxt("../results/encoder-decoder/{}/encoder-decoder-{}-train-{}.csv".format(dataname,dataname,imp), preds_train, delimiter=",")
+    np.savetxt("results/encoder-decoder/{}/encoder-decoder-{}-train-{}.csv".format(dataname,dataname,imp), preds_train, delimiter=",")
 
     print('Generate predictions on test set')
 
-    wy = np.array(pd.read_csv("../data/{}-wy-{}.csv".format(dataname,imp)))    
+    wy_scaled = scaler.fit_transform(wy)    
 
-    print('raw wy shape', wy.shape)  
+    print('raw wy shape', wy_scaled.shape)  
 
     wY = []
-    for i in range(seq_len-n_pre-n_post):
-        wY.append(wy[i:i+n_pre]) # controls are inputs
+    for i in range(seq_len-n_pre):
+        wY.append(wy_scaled[i:i+n_pre]) # controls are inputs
     
     wXT = np.array(wY)
 
     print('wXT shape:', wXT.shape)
 
-    y = np.array(pd.read_csv("../data/{}-y-{}.csv".format(dataname,imp)))
+    y = np.array(pd.read_csv("data/{}-y-{}.csv".format(dataname,imp)))
      
-    print('raw y shape', y.shape)   
+    y_scaled = scaler.fit_transform(y)
+     
+    print('raw y shape', y_scaled.shape)   
 
     dXT = []
-    for i in range(seq_len-n_pre-n_post):
-        dXT.append(y[i:i+n_pre]) # treated is input
+    for i in range(seq_len-n_pre):
+        dXT.append(y_scaled[i:i+n_pre]) # treated is input
 
     dataXT = np.array(dXT)
 
     print('dataXT shape:', dataXT.shape)
 
     preds_test = model.predict([dataXT, wXT], batch_size=int(nb_batches), verbose=1)
-
+    preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
     preds_test = np.squeeze(preds_test)
 
     print('predictions shape =', preds_test.shape)
 
     print('Saving to results/encoder-decoder/{}/encoder-decoder-{}-test-{}.csv'.format(dataname,dataname,imp))
 
-    np.savetxt("../results/encoder-decoder/{}/encoder-decoder-{}-test-{}.csv".format(dataname,dataname,imp), preds_test, delimiter=",")
+    np.savetxt("results/encoder-decoder/{}/encoder-decoder-{}-test-{}.csv".format(dataname,dataname,imp), preds_test, delimiter=",")
 
 def main():
     test_model()

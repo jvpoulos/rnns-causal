@@ -18,6 +18,9 @@ from keras.callbacks import CSVLogger, EarlyStopping
 from keras import regularizers
 from keras.optimizers import Adam
 
+from sklearn.preprocessing import MinMaxScaler
+scaler = MinMaxScaler(feature_range = (0, 1))
+
 # Select gpu
 import os
 if gpu < 3:
@@ -64,6 +67,7 @@ def train_model(model, dataX, dataY, epoch_count, batches):
 
     history = model.fit(dataX, 
         dataY, 
+        shuffle=False,
         batch_size=batches, 
         verbose=1,
         epochs=epoch_count, 
@@ -76,14 +80,15 @@ def test_model():
     n_pre =int(t0)-1
     seq_len = int(T)
 
-    x = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))    
+    x_obs = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))
+    x_scaled = scaler.fit_transform(x_obs)
 
-    print('raw x shape', x.shape)   
+    print('raw x shape', x_scaled.shape)   
 
     dXC, dYC = [], []
-    for i in range(seq_len-n_pre-n_post):
-        dXC.append(x[i:i+n_pre]) # controls are inputs
-        dYC.append(x[i+n_pre:i+n_pre+n_post]) # controls are outputs
+    for i in range(seq_len-n_pre):
+        dXC.append(x_scaled[i:i+n_pre]) # controls are inputs
+        dYC.append(x_scaled[i+n_pre]) # controls are outputs
     
     dataXC = np.array(dXC)
     dataYC = np.array(dYC)
@@ -105,17 +110,21 @@ def test_model():
 
     y = np.array(pd.read_csv("data/{}-y.csv".format(dataname)))
      
-    print('raw y shape', y.shape)   
+    y_scaled = scaler.fit_transform(y)
+     
+    print('raw y shape', y_scaled.shape)   
 
     dXT = []
-    for i in range(seq_len-n_pre-n_post):
-        dXT.append(y[i:i+n_pre]) # treated is input
+    for i in range(seq_len-n_pre):
+        dXT.append(y_scaled[i:i+n_pre]) # treated is input
 
     dataXT = np.array(dXT)
 
     print('dataXT shape:', dataXT.shape)
 
     preds_test = model.predict(dataXT, batch_size=int(nb_batches), verbose=1)
+
+    preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
 
     preds_test = np.squeeze(preds_test)
 

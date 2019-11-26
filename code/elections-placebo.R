@@ -30,7 +30,7 @@ ElectionsSim <- function(outcomes,d){
   N <- nrow(treat)
   T <- ncol(treat)
   number_T0 <- 4
-  T0 <- ceiling(T*((1:number_T0)*2-1)/(2*number_T0))
+  T0 <- ceiling(T*((1:number_T0)*5-1)/(5*number_T0))
   N_t <- ceiling(N*0.5) # no. treated units desired <=N
   num_runs <- 20
   is_simul <- 1 ## Whether to simulate Simultaneus Adoption or Staggered Adoption
@@ -70,7 +70,7 @@ ElectionsSim <- function(outcomes,d){
       ## ------
       
       source("code/lstm.R")
-      est_model_LSTM <- lstm(Y_obs, treat_indices, d, t0, T)
+      est_model_LSTM <- lstm(Y_obs, Y, treat_indices, d, t0, T)
       est_model_LSTM_msk_err <- (est_model_LSTM - Y_imp[treat_indices,][,t0:T])
       est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
       LSTM_RMSE_test[i,j] <- est_model_LSTM_test_RMSE
@@ -80,7 +80,7 @@ ElectionsSim <- function(outcomes,d){
       ## ------
       
       source("code/rvae.R")
-      est_model_RVAE <- rvae(Y_obs, treat_indices, d, t0, T)
+      est_model_RVAE <- rvae(Y_obs, Y, treat_indices, d, t0, T)
       est_model_RVAE_msk_err <- (est_model_RVAE - Y_imp[treat_indices,][,t0:T])
       est_model_RVAE_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_RVAE_msk_err^2, na.rm = TRUE))
       RVAE_RMSE_test[i,j] <- est_model_RVAE_test_RMSE
@@ -90,7 +90,7 @@ ElectionsSim <- function(outcomes,d){
       ## ------
       
       source("code/ed.R")
-      est_model_ED <- ed(Y_obs, treat_indices, d, t0, T)
+      est_model_ED <- ed(Y_obs, Y, treat_indices, d, t0, T)
       est_model_ED_msk_err <- (est_model_ED - Y_imp[treat_indices,][,t0:T])
       est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
       ED_RMSE_test[i,j] <- est_model_ED_test_RMSE

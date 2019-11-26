@@ -17,6 +17,9 @@ from keras.optimizers import SGD, RMSprop, Adam
 from keras import regularizers
 from keras.callbacks import CSVLogger, EarlyStopping
 
+from sklearn.preprocessing import MinMaxScaler
+scaler = MinMaxScaler(feature_range = (0, 1))
+
 # Select gpu
 import os
 if gpu < 3:
@@ -119,18 +122,20 @@ def get_data():
     n_pre =int(t0)-1
     seq_len = int(T)
                 
-    x = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))
+    x_obs = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))
+    x_scaled = scaler.fit_transform(x_obs)
 
-    print('raw x shape', x.shape)   
+    print('raw x shape', x_scaled.shape)   
 
     y = np.array(pd.read_csv("data/{}-y.csv".format(dataname)))
+    y_scaled = scaler.fit_transform(y)
 
-    print('raw y shape', y.shape) 
+    print('raw y shape', y_scaled.shape) 
 
     dXC, dXT = [], []
-    for i in range(seq_len-n_pre-n_post):
-        dXC.append(x[i:i+n_pre]) # pre-period controls are inputs
-        dXT.append(y[i:i+n_pre]) # pre-period treated 
+    for i in range(seq_len-n_pre):
+        dXC.append(x_scaled[i:i+n_pre]) # pre-period controls are inputs
+        dXT.append(y_scaled[i:i+n_pre]) # pre-period treated 
     return np.array(dXC),np.array(dXT),n_pre,n_post     
 
 if __name__ == "__main__":
@@ -155,6 +160,7 @@ if __name__ == "__main__":
 
     vae.fit(x, x, 
         epochs=int(epochs),
+        shuffle=False,
         verbose=1,
         callbacks=[stopping,csv_logger],
         validation_split=0.1)
@@ -166,7 +172,7 @@ if __name__ == "__main__":
     print('y samples shape', y.shape)     
 
     preds_test = vae.predict(y, batch_size=batch_size, verbose=0)
-
+    preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
     preds_test = np.squeeze(preds_test)
 
     print('predictions shape =', preds_test.shape)
