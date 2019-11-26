@@ -219,9 +219,9 @@ if __name__ == "__main__":
     print('wy samples shape', wy.shape)  
 
     preds_test = vae.predict([wy,y], batch_size=batch_size, verbose=0)
-    preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
     preds_test = np.squeeze(preds_test)
-
+    preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
+    
     print('predictions shape =', preds_test.shape)
 
     print('Saving to results/rvae/{}/rvae-{}-test-{}.csv'.format(dataname,dataname,imp))
