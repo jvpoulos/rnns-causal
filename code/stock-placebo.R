@@ -12,7 +12,7 @@ library(latex2exp)
 library(parallel)
 library(doParallel)
 
-cores <- ceiling(detectCores())/3
+cores <- ceiling(detectCores()/4)
 
 cl <- parallel::makeForkCluster(cores)
 
@@ -70,8 +70,6 @@ StockSim <- function(Y,N,fix_d){
       }else{
         treat_mat <- stag_adapt(Y_sub, N_t, t0, treat_indices)
       }
-      treat_mat_NA <- treat_mat
-      treat_mat_NA[treat_mat==0] <- NA
       
       Y_obs <- Y_sub * treat_mat
       

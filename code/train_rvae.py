@@ -8,7 +8,7 @@ import pandas as pd
 import keras
 from keras import backend as K
 from keras.models import Sequential, Model
-from keras.layers import Input, LSTM, RepeatVector
+from keras.layers import Input, LSTM, RepeatVector, Dropout
 from keras.layers.core import Flatten, Dense, Lambda
 from keras.optimizers import SGD, RMSprop, Adam
 from keras import regularizers
@@ -26,7 +26,7 @@ def weighted_rmse(y_true, y_pred, weights):
 
 # Select gpu
 import os
-gpu = sys.argv[-8]
+gpu = sys.argv[-9]
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
 os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
 
@@ -40,6 +40,7 @@ dataname = sys.argv[-4]
 nb_epochs = int(sys.argv[-5])
 lr = int(sys.argv[-6])
 penalty = int(sys.argv[-7])
+dropout = int(sys.argv[-8])
 
 def create_lstm_vae(nb_features, 
     n_pre, 
@@ -49,6 +50,7 @@ def create_lstm_vae(nb_features,
     latent_dim,
     lr,
     penalty,
+    dr,
     epsilon_std=1.):
 
     """
@@ -70,9 +72,10 @@ def create_lstm_vae(nb_features,
 
     x = Input(shape=(n_pre, nb_features), name='Encoder_inputs')
     weights_tensor = Input(shape=(n_pre, nb_features), name="Weights")
+    dropout = Dropout(dr)(x)
 
     # LSTM encoding
-    h = LSTM(intermediate_dim, name='Encoder')(x)
+    h = LSTM(intermediate_dim, name='Encoder')(dropout)
 
     # VAE Z layer
     z_mean = Dense(latent_dim, name='z_mean')(h)
@@ -172,12 +175,13 @@ if __name__ == "__main__":
         latent_dim=200,
         lr = lr,
         penalty=penalty,
+        dr=dr,
         epsilon_std=1.)
 
     filepath="../results/rvae/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
     checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=5, save_best_only=True)
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=50, verbose=0, mode='auto')
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=0, mode='auto')
 
     csv_logger = CSVLogger('../results/rvae/{}/training_log_{}_{}.csv'.format(dataname,dataname,imp), separator=',', append=False)
 
@@ -185,7 +189,7 @@ if __name__ == "__main__":
         epochs=int(nb_epochs),
         verbose=1,
         callbacks=[checkpointer,csv_logger,stopping],
-        validation_split=0.2)
+        validation_split=0.1)
 
     # now test
 

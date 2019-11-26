@@ -11,7 +11,7 @@ keras.backend.tensorflow_backend.set_session(sess)
 
 from keras import backend as K
 from keras.models import Sequential, Model
-from keras.layers import Input, LSTM, RepeatVector
+from keras.layers import Input, LSTM, RepeatVector, Dropout
 from keras.layers.core import Flatten, Dense, Lambda
 from keras.optimizers import SGD, RMSprop, Adam
 from keras import regularizers
@@ -37,6 +37,7 @@ def create_lstm_vae(nb_features,
     latent_dim,
     lr,
     penalty,
+    dr,
     epsilon_std=1.):
 
     """
@@ -57,9 +58,10 @@ def create_lstm_vae(nb_features,
     """
 
     x = Input(shape=(n_pre, nb_features), name='Encoder_inputs')
+    dropout = Dropout(dr)(x)
 
     # LSTM encoding
-    h = LSTM(intermediate_dim, name='Encoder')(x)
+    h = LSTM(intermediate_dim, name='Encoder')(dropout)
 
     # VAE Z layer
     z_mean = Dense(latent_dim, name='z_mean')(h)
@@ -144,9 +146,10 @@ if __name__ == "__main__":
         latent_dim=200,
         lr = int(lr),
         penalty=int(penalty),
+        dr=int(dr),
         epsilon_std=1.)
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=50, verbose=0, mode='auto')
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=0, mode='auto')
 
     csv_logger = CSVLogger('results/rvae/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
 
@@ -154,7 +157,7 @@ if __name__ == "__main__":
         epochs=int(epochs),
         verbose=1,
         callbacks=[stopping,csv_logger],
-        validation_split=0.2)
+        validation_split=0.1)
 
 	# now test
 

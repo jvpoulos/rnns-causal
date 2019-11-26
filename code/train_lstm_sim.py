@@ -13,7 +13,7 @@ keras.backend.tensorflow_backend.set_session(sess)
 
 from keras import backend as K
 from keras.models import Model
-from keras.layers import LSTM, Input, Dense
+from keras.layers import LSTM, Input, Dense, Dropout
 from keras.callbacks import CSVLogger, EarlyStopping
 from keras import regularizers
 from keras.optimizers import Adam
@@ -30,7 +30,7 @@ if gpu < 3:
 def root_mean_squared_error(y_true, y_pred):
         return K.sqrt(K.mean(K.square(y_pred - y_true)))
 
-def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty):
+def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr):
     """ 
         creates, compiles and returns a RNN model 
         @param nb_features: the number of features in the model
@@ -40,7 +40,8 @@ def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty):
     n_hidden = 128
 
     inputs = Input(shape=(n_pre, nb_features,), name="Inputs")  
-    lstm_1 = LSTM(n_hidden)(inputs) 
+    dropout = Dropout(dr)(inputs)
+    lstm_1 = LSTM(n_hidden)(dropout) 
     output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(lstm_1)
 
     model = Model(inputs=inputs, output=output)
@@ -53,7 +54,7 @@ def train_model(model, dataX, dataY, epoch_count, batches):
 
     # Prepare model checkpoints and callbacks
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=50, verbose=0, mode='auto')
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=0, mode='auto')
 
     csv_logger = CSVLogger('results/lstm/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
 
@@ -63,7 +64,7 @@ def train_model(model, dataX, dataY, epoch_count, batches):
         verbose=1,
         epochs=epoch_count, 
         callbacks=[stopping,csv_logger],
-        validation_split=0.2)
+        validation_split=0.1)
 
 def test_model():
 
@@ -91,7 +92,7 @@ def test_model():
 
     # create and fit the LSTM network
     print('creating model...')
-    model = create_model(n_pre, n_post, nb_features, output_dim, int(lr), int(penalty))
+    model = create_model(n_pre, n_post, nb_features, output_dim, int(lr), int(penalty), int(dr))
     train_model(model, dataXC, dataYC, int(epochs), int(nb_batches))
 
     # now test

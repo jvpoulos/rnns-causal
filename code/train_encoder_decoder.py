@@ -7,7 +7,7 @@ import pandas as pd
 
 from keras import backend as K
 from keras.models import Model
-from keras.layers import LSTM, Input, TimeDistributed, Dense, RepeatVector
+from keras.layers import LSTM, Input, TimeDistributed, Dense, RepeatVector, Dropout
 from keras.callbacks import ModelCheckpoint, CSVLogger, EarlyStopping
 from keras import regularizers
 from keras.optimizers import Adam
@@ -24,7 +24,7 @@ def weighted_rmse(y_true, y_pred, weights):
 
 # Select gpu
 import os
-gpu = sys.argv[-9]
+gpu = sys.argv[-10]
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
 os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
 
@@ -39,8 +39,9 @@ nb_batches = int(sys.argv[-5])
 nb_epochs = int(sys.argv[-6])
 lr = int(sys.argv[-7])
 penalty = int(sys.argv[-8])
+dr = int(sys.argv[-9])
 
-def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty):
+def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr):
     """ 
         creates, compiles and returns a RNN model 
         @param nb_features: the number of features in the model
@@ -52,7 +53,8 @@ def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty):
 
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
     weights_tensor = Input(shape=(n_pre, nb_features), name="Weights")
-    lstm_1 = LSTM(encoder_hidden, return_sequences=True, name='LSTM_1')(inputs) # Encoder
+    dropout = Dropout(dr)(inputs)
+    lstm_1 = LSTM(encoder_hidden, return_sequences=True, name='LSTM_1')(dropout) # Encoder
     lstm_2 = LSTM(encoder_hidden, return_sequences=False, name='LSTM_2')(lstm_1) # Encoder
     repeat = RepeatVector(n_post, name='Repeat')(lstm_2) # get the last output of the LSTM and repeats it
     lstm_3 = LSTM(decoder_hidden, return_sequences=True, name='Decoder')(repeat)  # Decoder
@@ -75,7 +77,7 @@ def train_model(model, dataX, dataY, weights, nb_epoches, nb_batches):
     filepath="../results/encoder-decoder/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
     checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=5, save_best_only=True)
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=50, verbose=0, mode='auto')
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=0, mode='auto')
 
     csv_logger = CSVLogger('../results/encoder-decoder/{}/training_log_{}_{}.csv'.format(dataname,dataname,imp), separator=',', append=False)
 
@@ -85,7 +87,7 @@ def train_model(model, dataX, dataY, weights, nb_epoches, nb_batches):
         verbose=1,
         epochs=nb_epoches, 
         callbacks=[checkpointer,csv_logger,stopping],
-        validation_split=0.2)
+        validation_split=0.1)
 
 def test_model():
 
@@ -126,7 +128,7 @@ def test_model():
 
     # create and fit the encoder-decoder network
     print('creating model...')
-    model = create_model(n_pre, n_post, nb_features, output_dim, lr, penalty)
+    model = create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr)
     train_model(model, dataXC, dataYC, wXC, int(nb_epochs), int(nb_batches))
 
     # now test
