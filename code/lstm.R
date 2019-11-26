@@ -29,7 +29,7 @@ lstm <- function(Y_obs,treat_indices,d, t0, T){
     py$epochs <- 10000
     py$lr <- 0.001
     py$penalty <- 0.001
-    py$dr <- 0.2
+    py$dr <- 0.5
   } 
   if(d=='stock_fixed'){
     py$nb_batches <- 32
@@ -37,7 +37,7 @@ lstm <- function(Y_obs,treat_indices,d, t0, T){
     py$epochs <- 10000
     py$lr <- 0.001
     py$penalty <- 0.001
-    py$dr <- 0.2
+    py$dr <- 0.5
   } 
   if(d=='educ.pc'){
     py$nb_batches <- 8
@@ -45,7 +45,7 @@ lstm <- function(Y_obs,treat_indices,d, t0, T){
     py$epochs <- 10000
     py$lr <- 0.0005
     py$penalty <- 0.001
-    py$dr <- 0.2
+    py$dr <- 0.5
   } 
   if(d=='votediff'){
     py$nb_batches <- 8
@@ -53,7 +53,7 @@ lstm <- function(Y_obs,treat_indices,d, t0, T){
     py$epochs <- 10000
     py$lr <- 0.0005
     py$penalty <- 0.001
-    py$dr <- 0.2
+    py$dr <- 0.5
   } 
   else{
     py$nb_batches <- 4
@@ -61,7 +61,7 @@ lstm <- function(Y_obs,treat_indices,d, t0, T){
     py$epochs <- 10000
     py$lr <- 0.0005
     py$penalty <- 0.001
-    py$dr <- 0.2
+    py$dr <- 0.5
   }
   
   source_python("code/train_lstm_sim.py")
