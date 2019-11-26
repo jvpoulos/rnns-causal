@@ -159,7 +159,7 @@ def get_data():
     print('raw y shape', y.shape) 
 
     dXC,  wXC, dXT,  wXT  = [], [], [], []
-    for i in range(seq_len-n_pre-n_post):
+    for i in range(seq_len-n_pre):
         dXC.append(x_scaled[i:i+n_pre]) # controls are inputs
         wXC.append(wx_scaled[i:i+n_pre]) 
         dXT.append(y_scaled[i:i+n_pre]) # pre-period treated 

@@ -62,7 +62,7 @@ rvae <- function(Y_obs,Y,treat_indices,d, t0, T){
   
   source_python("code/train_rvae_sim.py")
   
-  rvae.pred.control <- as.matrix(read_csv(paste0("results/rvae/",d,"/rvae-",d,"-test.csv"), col_names = FALSE))
+  rvae.pred <- as.matrix(read_csv(paste0("results/rvae/",d,"/rvae-",d,"-test.csv"), col_names = FALSE))
   
-  return(t(rvae.pred.control))
+  return(t(rvae.pred))
 }
