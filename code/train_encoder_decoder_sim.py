@@ -61,7 +61,7 @@ def train_model(model, dataX, dataY, epoch_count, batches):
 
     # Prepare model checkpoints and callbacks
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=0, mode='auto')
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=50, verbose=0, mode='auto')
 
     csv_logger = CSVLogger('results/encoder-decoder/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
 
@@ -101,7 +101,7 @@ def test_model():
 
     # create and fit the LSTM network
     print('creating model...')
-    model = create_model(n_pre, n_post, nb_features, output_dim, int(lr), int(penalty), int(dr))
+    model = create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr)
     train_model(model, dataXC, dataYC, int(epochs), int(nb_batches))
 
     # now test

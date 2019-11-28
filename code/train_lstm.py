@@ -40,9 +40,9 @@ t0 = sys.argv[-3]
 dataname = sys.argv[-4] 
 nb_batches = int(sys.argv[-5])
 nb_epochs = int(sys.argv[-6])
-lr = int(sys.argv[-7])
-penalty = int(sys.argv[-8])
-dr = int(sys.argv[-9])
+lr = sys.argv[-7]
+penalty = sys.argv[-8]
+dr = sys.argv[-9]
 
 def create_model(n_pre, nb_features, output_dim, lr, penalty, dr):
     """ 
@@ -76,7 +76,7 @@ def train_model(model, dataX, dataY, weights, nb_epoches, nb_batches):
     filepath="results/lstm/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
     checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=5, save_best_only=True)
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=0, mode='auto')
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=50, verbose=0, mode='auto')
 
     csv_logger = CSVLogger('results/lstm/{}/training_log_{}_{}.csv'.format(dataname,dataname,imp), separator=',', append=False)
 

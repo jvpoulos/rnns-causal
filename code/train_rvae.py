@@ -41,9 +41,9 @@ T = sys.argv[-2]
 t0 = sys.argv[-3] 
 dataname = sys.argv[-4] 
 nb_epochs = int(sys.argv[-5])
-lr = int(sys.argv[-6])
-penalty = int(sys.argv[-7])
-dropout = int(sys.argv[-8])
+lr = sys.argv[-6]
+penalty = sys.argv[-7]
+dropout = sys.argv[-8]
 
 def create_lstm_vae(nb_features, 
     n_pre, 
@@ -188,7 +188,7 @@ if __name__ == "__main__":
     filepath="results/rvae/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
     checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=5, save_best_only=True)
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=0, mode='auto')
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=50, verbose=0, mode='auto')
 
     csv_logger = CSVLogger('results/rvae/{}/training_log_{}_{}.csv'.format(dataname,dataname,imp), separator=',', append=False)
 
