@@ -26,24 +26,15 @@ StockSim <- function(Y,N,fix_d){
   Tbig <- ncol(Y)
   
   N <- N
-  if(fix_d){
-    T <- 49000/N
-  }else{
-    T <- N*3
-  }
+  T <- 9800/N
   
   T0 <- ceiling(T/2)
   N_t <- ceiling(N/2)
   num_runs <- 20
   is_simul <- 1 ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   to_save <- 1 ## Whether to save the plot or not
-  
-  if(fix_d){
-    d <- 'stock_fixed'
-  }else{
-    d <- 'stock'
-  }
-  
+  d <- 'stock_fixed'
+
   ## Matrices for saving RMSE values
   
   MCPanel_RMSE_test <- matrix(0L,num_runs,length(T0))
@@ -234,7 +225,7 @@ StockSim <- function(Y,N,fix_d){
 Y <- t(read.csv('data/returns_no_missing.csv',header=F)) # N X T
 
 # fixed dimensions
-results <- foreach(N = c(100,200,500), .combine='rbind') %do% {
-  StockSim(Y,N, fix_d=TRUE)
+results <- foreach(N = c(10,50,100,200), .combine='rbind') %do% {
+  StockSim(Y,N)
 }
 saveRDS(results, "results/stock-placebo-results-fixed.rds")

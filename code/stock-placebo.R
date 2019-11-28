@@ -20,28 +20,21 @@ doParallel::registerDoParallel(cores) # register cores (<p)
 
 RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
-StockSim <- function(Y,N,fix_d){
+StockSim <- function(Y,T){
   ## Setting up the configuration
   Nbig <- nrow(Y)
   Tbig <- ncol(Y)
   
-  N <- N
-  if(fix_d){
-    T <- 49000/N
-  }else{
-    T <- N*1.5
-  }
+  N <- 10
+  T <- T
   
   T0 <- ceiling(T/2)
   N_t <- ceiling(N/2)
   num_runs <- 20
   is_simul <- 1 ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   to_save <- 1 ## Whether to save the plot or not
-  if(fix_d){
-    d <- 'stock_fixed'
-  }else{
-    d <- 'stock'
-  }
+  d <- 'stock'
+
   
   ## Matrices for saving RMSE values
   
@@ -233,7 +226,7 @@ StockSim <- function(Y,N,fix_d){
 Y <- t(read.csv('data/returns_no_missing.csv',header=F)) # N X T
 
 # increase dimensions
-results <- foreach(N = c(100,200,500), .combine='rbind') %do% {
-  StockSim(Y,N, fix_d=FALSE)
+results <- foreach(T = c(200,400,800,1600), .combine='rbind') %do% {
+  StockSim(Y,T)
 }
 saveRDS(results, "results/stock-placebo-results-inc.rds")
