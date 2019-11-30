@@ -221,6 +221,6 @@ SynthSim <- function(outcomes,d){
   }
 }
 
-foreach(d = c('germany','california')) %dopar% {
+foreach(d = c('germany','california')) %do% {
     SynthSim(synth.control.outcomes,d)
 }

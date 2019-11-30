@@ -226,7 +226,7 @@ StockSim <- function(Y,T){
 Y <- t(read.csv('data/returns_no_missing.csv',header=F)) # N X T
 
 # increase dimensions
-results <- foreach(T = c(200,400,800,1600), .combine='rbind') %dopar% {
+results <- foreach(T = c(200,400,800,1600), .combine='rbind') %do% {
   StockSim(Y,T)
 }
 saveRDS(results, "results/stock-placebo-results-inc.rds")
