@@ -12,7 +12,7 @@ library(latex2exp)
 library(parallel)
 library(doParallel)
 
-cores <- ceiling(detectCores()/4)
+cores <- 2
 
 cl <- parallel::makeForkCluster(cores)
 
@@ -221,6 +221,6 @@ SynthSim <- function(outcomes,d){
   }
 }
 
-foreach(d = c('basque','germany','california')) %do% {
+foreach(d = c('germany','california')) %do% {
     SynthSim(synth.control.outcomes,d)
 }
