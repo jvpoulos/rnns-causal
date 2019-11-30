@@ -7,7 +7,18 @@ library(MCPanel)
 library(glmnet)
 library(ggplot2)
 library(latex2exp)
-library(foreach)
+
+# Setup parallel processing 
+library(parallel)
+library(doParallel)
+
+cores <- ceiling(detectCores()/2)
+
+cl <- parallel::makeCluster(cores)
+
+doParallel::registerDoParallel(cores) # register cores (<p)
+
+RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
 StockSim <- function(Y,N,fix_d){
   ## Setting up the configuration
@@ -214,7 +225,9 @@ StockSim <- function(Y,N,fix_d){
 Y <- t(read.csv('data/returns_no_missing.csv',header=F)) # N X T
 
 # fixed dimensions
-results <- foreach(N = c(10,50,100,200), .combine='rbind') %do% {
+results <- foreach(N = c(10,50,100,200), .combine='rbind') %dopar% {
   StockSim(Y,N)
 }
 saveRDS(results, "results/stock-placebo-results-fixed.rds")
+
+stopCluster(cl)

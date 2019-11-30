@@ -7,7 +7,18 @@ library(MCPanel)
 library(glmnet)
 library(ggplot2)
 library(latex2exp)
-library(foreach)
+
+# Setup parallel processing 
+library(parallel)
+library(doParallel)
+
+cores <- ceiling(detectCores()/2)
+
+cl <- parallel::makeCluster(cores)
+
+doParallel::registerDoParallel(cores) # register cores (<p)
+
+RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
 # Load data
 synth.control.outcomes <- readRDS("data/synth-control-outcomes.rds")
@@ -210,6 +221,6 @@ SynthSim <- function(outcomes,d){
   }
 }
 
-foreach(d = c('germany','california')) %do% {
+foreach(d = c('germany','california')) %dopar% {
     SynthSim(synth.control.outcomes,d)
 }
