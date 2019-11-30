@@ -8,18 +8,6 @@ library(glmnet)
 library(ggplot2)
 library(latex2exp)
 
-# Setup parallel processing 
-library(parallel)
-library(doParallel)
-
-cores <- 2
-
-cl <- parallel::makeForkCluster(cores)
-
-doParallel::registerDoParallel(cores) # register cores (<p)
-
-RNGkind("L'Ecuyer-CMRG") # ensure random number generation
-
 ## Reading data
 ElectionsSim <- function(outcomes,d){
   Y <- outcomes[[d]]$M # NxT outcomes
