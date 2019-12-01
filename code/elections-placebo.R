@@ -194,17 +194,9 @@ ElectionsSim <- function(outcomes,d){
   if(to_save == 1){
     filename<-paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".png")
     ggsave(filename, plot = last_plot(), device="png", dpi=600)
-    df2<-data.frame(N,T,N_t,is_simul, DID_RMSE_test,ED_RMSE_test,LSTM_RMSE_test,MCPanel_RMSE_test,RVAE_RMSE_test,ADH_RMSE_test,ENT_RMSE_test)
-    colnames(df2)<c("N", "T", "N_t", "is_simul", replicate(length(T0),"DID"), 
-                    replicate(length(T0),"Encoder-decoder"),
-                    replicate(length(T0),"LSTM"), 
-                    replicate(length(T0),"MC-NNM"), 
-                    replicate(length(T0),"RVAE"), 
-                    replicate(length(T0),"SCM"),
-                    replicate(length(T0),"SCM-EN"))
-    
+
     filename<-paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".rds")
-    save(df1, df2, file = paste0("results/plots",filename))
+    save(df1, file = paste0("results/plots/",filename))
   }
 }
 
