@@ -39,10 +39,10 @@ rvae <- function(Y_obs,Y,treat_indices,d, t0, T){
     py$dr <- 0.5
   } 
   if(d=='educ.pc'){
-    py$gpu <- 0
+    py$gpu <- 1
     py$epochs <- 10000
     py$lr <- 0.0005
-    py$penalty <- 0.001
+    py$penalty <- 0.1
     py$dr <- 0.5
   } 
   if(d=='votediff'){
