@@ -30,7 +30,7 @@ StockSim <- function(Y,N,fix_d){
   
   T0 <- ceiling(T/2)
   N_t <- ceiling(N/2)
-  num_runs <- 5
+  num_runs <- 20
   is_simul <- 1 ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   to_save <- 1 ## Whether to save the plot or not
   d <- 'stock_fixed'
@@ -39,7 +39,7 @@ StockSim <- function(Y,N,fix_d){
   
   MCPanel_RMSE_test <- matrix(0L,num_runs,length(T0))
   LSTM_RMSE_test <- matrix(0L,num_runs,length(T0))
-  # RVAE_RMSE_test <- matrix(0L,num_runs,length(T0))
+  RVAE_RMSE_test <- matrix(0L,num_runs,length(T0))
   ED_RMSE_test <- matrix(0L,num_runs,length(T0))
   ENT_RMSE_test <- matrix(0L,num_runs,length(T0))
   DID_RMSE_test <- matrix(0L,num_runs,length(T0))
@@ -76,16 +76,16 @@ StockSim <- function(Y,N,fix_d){
       est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
       LSTM_RMSE_test[i,j] <- est_model_LSTM_test_RMSE
       
-      # ## ------
-      # ## RVAE
-      # ## ------
-      # 
-      # print("RVAE Started")
-      # source("code/rvae.R")
-      # est_model_RVAE <- rvae(Y_obs, Y, treat_indices, d, t0, T)
-      # est_model_RVAE_msk_err <- (est_model_RVAE - Y_sub[treat_indices,][,t0:T])
-      # est_model_RVAE_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_RVAE_msk_err^2, na.rm = TRUE))
-      # RVAE_RMSE_test[i,j] <- est_model_RVAE_test_RMSE
+      ## ------
+      ## RVAE
+      ## ------
+
+      print("RVAE Started")
+      source("code/rvae.R")
+      est_model_RVAE <- rvae(Y_obs, Y, treat_indices, d, t0, T)
+      est_model_RVAE_msk_err <- (est_model_RVAE - Y_sub[treat_indices,][,t0:T])
+      est_model_RVAE_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_RVAE_msk_err^2, na.rm = TRUE))
+      RVAE_RMSE_test[i,j] <- est_model_RVAE_test_RMSE
       
       ## ------
       ## ED
@@ -149,8 +149,8 @@ StockSim <- function(Y,N,fix_d){
   LSTM_avg_RMSE <- apply(LSTM_RMSE_test,2,mean)
   LSTM_std_error <- apply(LSTM_RMSE_test,2,sd)/sqrt(num_runs)
   
-  # RVAE_avg_RMSE <- apply(RVAE_RMSE_test,2,mean)
-  # RVAE_std_error <- apply(RVAE_RMSE_test,2,sd)/sqrt(num_runs)
+  RVAE_avg_RMSE <- apply(RVAE_RMSE_test,2,mean)
+  RVAE_std_error <- apply(RVAE_RMSE_test,2,sd)/sqrt(num_runs)
   
   ED_avg_RMSE <- apply(ED_RMSE_test,2,mean)
   ED_std_error <- apply(ED_RMSE_test,2,sd)/sqrt(num_runs)
@@ -168,28 +168,28 @@ StockSim <- function(Y,N,fix_d){
   
   df1 <-
     data.frame(
-      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,ADH_avg_RMSE,ENT_avg_RMSE),
+      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,RVAE_avg_RMSE,ADH_avg_RMSE,ENT_avg_RMSE),
       "lb" = c(DID_avg_RMSE - 1.96*DID_std_error,
                ED_avg_RMSE - 1.96*ED_std_error,
                LSTM_avg_RMSE - 1.96*LSTM_std_error,
                MCPanel_avg_RMSE - 1.96*MCPanel_std_error, 
-#               RVAE_avg_RMSE - 1.96*RVAE_std_error, 
+               RVAE_avg_RMSE - 1.96*RVAE_std_error, 
                ADH_avg_RMSE - 1.96*ADH_std_error,
                ENT_avg_RMSE - 1.96*ENT_std_error),
       "ub" = c(DID_avg_RMSE + 1.96*DID_std_error, 
                ED_avg_RMSE + 1.96*ED_std_error,
                LSTM_avg_RMSE + 1.96*LSTM_std_error,
                MCPanel_avg_RMSE + 1.96*MCPanel_std_error, 
-  #             RVAE_avg_RMSE + 1.96*RVAE_std_error, 
+               RVAE_avg_RMSE + 1.96*RVAE_std_error, 
                ADH_avg_RMSE + 1.96*ADH_std_error,
                ENT_avg_RMSE + 1.96*ENT_std_error),
-      "N" = rep(N,6),
-      "T" = rep(T,6),
+      "N" = rep(N,7),
+      "T" = rep(T,7),
       "Method" = c(replicate(length(T0),"DID"), 
                    replicate(length(T0),"Encoder-decoder"),
                    replicate(length(T0),"LSTM"), 
                    replicate(length(T0),"MC-NNM"), 
-#                   replicate(length(T0),"RVAE"), 
+                   replicate(length(T0),"RVAE"), 
                    replicate(length(T0),"SCM"),
                    replicate(length(T0),"SCM-EN")))
   
@@ -200,7 +200,7 @@ StockSim <- function(Y,N,fix_d){
       width = 0.1,
       linetype = "solid",
       position=position_dodge(width=0.1)) +
-    scale_shape_manual("Method",values=c(1:4,6:7)) +
+    scale_shape_manual("Method",values=c(1:7)) +
     scale_color_discrete("Method")+
     theme_bw() +
     xlab(TeX('$T_0/T$')) +
