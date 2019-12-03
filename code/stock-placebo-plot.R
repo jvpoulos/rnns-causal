@@ -9,7 +9,7 @@ df1 <- df1 %>% group_by(N) %>% mutate(y = y,
                                       lb= lb,
                                       ub = ub)
 
-stock <- ggplot(data = df1, aes(log(N), y, color = Method, shape = Method)) +
+stock <- ggplot(data = df1[df1$Method!="RVAE",], aes(log(N), y, color = Method, shape = Method)) +
   geom_point(size = 5, position=position_dodge(width=0.3)) +
   geom_line(position=position_dodge(width=0.3)) +
   geom_errorbar(
@@ -27,11 +27,11 @@ stock <- ggplot(data = df1, aes(log(N), y, color = Method, shape = Method)) +
   theme(legend.title=element_text(family="serif", size = 12)) +
   theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l =0))) +
   theme(axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l =0))) +
-  theme( legend.position = "none") +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"))  # rm background
 
-ggsave("results/plots/stock-sim-fixed.png", stock, width=8.5, height=11)
+ggsave("results/plots/stock-sim-fixed.png", stock + theme( legend.position = "none"), width=8.5, height=11)
+ggsave("results/plots/stock-sim-fixed-slides.png", stock + ggtitle("Stock market, fixed size") + theme(plot.title = element_text(family="serif", size=16, hjust = 0.5)))
 
 # Increasing dimensions
 df1<- readRDS("results/plots/stock-placebo-results-inc.rds")
@@ -40,7 +40,7 @@ df1 <- df1 %>% group_by(N) %>% mutate(y = y,
                                       lb= lb,
                                       ub = ub)
 
-stock <- ggplot(data = df1, aes(log(N*T), y, color = Method, shape = Method)) +
+stock <- ggplot(data = df1[df1$Method!="RVAE",], aes(log(N*T), y, color = Method, shape = Method)) +
   geom_point(size = 5, position=position_dodge(width=0.3)) +
   geom_line(position=position_dodge(width=0.3)) +
   geom_errorbar(
@@ -58,8 +58,8 @@ stock <- ggplot(data = df1, aes(log(N*T), y, color = Method, shape = Method)) +
   theme(legend.title=element_text(family="serif", size = 12)) +
   theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l =0))) +
   theme(axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l =0))) +
-  theme( legend.position = "none") +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"))  # rm background
 
-ggsave("results/plots/stock-sim-inc.png", stock, width=8.5, height=11)
+ggsave("results/plots/stock-sim-inc.png", stock + theme( legend.position = "none"), width=8.5, height=11)
+ggsave("results/plots/stock-sim-inc-slides.png", stock + ggtitle("Stock market, T varies") + theme(plot.title = element_text(family="serif", size=16, hjust = 0.5)))
