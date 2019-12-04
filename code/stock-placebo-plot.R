@@ -62,4 +62,4 @@ stock <- ggplot(data = df1[df1$Method!="RVAE",], aes(log(N*T), y, color = Method
         panel.background = element_blank(), axis.line = element_line(colour = "black"))  # rm background
 
 ggsave("results/plots/stock-sim-inc.png", stock + theme( legend.position = "none"), width=8.5, height=11)
-ggsave("results/plots/stock-sim-inc-slides.png", stock + ggtitle("Stock market, T varies") + theme(plot.title = element_text(family="serif", size=16, hjust = 0.5)))
+ggsave("results/plots/stock-sim-inc-slides.png", stock + ggtitle("Stock market, NT varies") + theme(plot.title = element_text(family="serif", size=16, hjust = 0.5)))
