@@ -24,8 +24,8 @@ def wrapped_partial(func, *args, **kwargs):
     update_wrapper(partial_func, func)
     return partial_func
 
-def weighted_rmse(y_true, y_pred, weights):
-    return K.sqrt(K.mean(K.square(y_true - y_pred) * weights, axis=-1))
+def weighted_mse(y_true, y_pred, weights):
+    return K.mean(K.square(y_true - y_pred) * weights, axis=-1)
 
 # Select gpu
 import os
@@ -75,10 +75,9 @@ def create_lstm_vae(nb_features,
 
     x = Input(shape=(n_pre, nb_features), name='Encoder_inputs')
     weights_tensor = Input(shape=(n_pre, nb_features), name="Weights")
-    dropout = Dropout(dr)(x)
 
     # LSTM encoding
-    h = LSTM(intermediate_dim, name='Encoder')(dropout)
+    h = LSTM(intermediate_dim, dropout=dr, name='Encoder')(x)
 
     # VAE Z layer
     z_mean = Dense(latent_dim, name='z_mean')(h)
@@ -95,8 +94,8 @@ def create_lstm_vae(nb_features,
     z = Lambda(sampling, output_shape=(latent_dim,), name='Sampling')([z_mean, z_log_sigma])
     
     # decoded LSTM layer
-    decoder_h = LSTM(intermediate_dim, return_sequences=True, name='Decoder_1')
-    decoder_mean = LSTM(nb_features, kernel_regularizer=regularizers.l2(penalty), return_sequences=True, name='Decoder_2')
+    decoder_h = LSTM(intermediate_dim, dropout=dr, return_sequences=True, name='Decoder_1')
+    decoder_mean = LSTM(nb_features, dropout=dr, kernel_regularizer=regularizers.l2(penalty), return_sequences=True, name='Decoder_2')
 
     h_decoded = RepeatVector(n_post, name='Repeat')(z)
     h_decoded = decoder_h(h_decoded)
@@ -120,7 +119,7 @@ def create_lstm_vae(nb_features,
     generator = Model(decoder_input, _x_decoded_mean)
     
     def vae_loss(x, x_decoded_mean, weights):
-        xent_loss = weighted_rmse(x, x_decoded_mean, weights)
+        xent_loss = weighted_mse(x, x_decoded_mean, weights)
         kl_loss = - 0.5 * K.mean(1 + z_log_sigma - K.square(z_mean) - K.exp(z_log_sigma))
         loss = xent_loss + kl_loss
         return loss

@@ -30,9 +30,6 @@ if gpu < 3:
     from tensorflow.python.client import device_lib
     print(device_lib.list_local_devices())
 
-def root_mean_squared_error(y_true, y_pred):
-        return K.sqrt(K.mean(K.square(y_pred - y_true)))
-
 def create_model(n_pre, nb_features, output_dim, lr, penalty, dr):
     """ 
         creates, compiles and returns a RNN model 
@@ -43,13 +40,12 @@ def create_model(n_pre, nb_features, output_dim, lr, penalty, dr):
     n_hidden = 128
 
     inputs = Input(shape=(n_pre, nb_features,), name="Inputs") 
-    dropout = Dropout(dr)(inputs) 
-    lstm_1 = LSTM(n_hidden)(dropout) 
+    lstm_1 = LSTM(n_hidden, dropout=dr)(inputs) 
     output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(lstm_1)
 
     model = Model(inputs=inputs, output=output)
 
-    model.compile(loss=root_mean_squared_error, optimizer=Adam(lr=lr)) 
+    model.compile(loss='mean_squared_error', optimizer=Adam(lr=lr)) 
 
     return model
 

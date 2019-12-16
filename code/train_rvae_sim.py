@@ -20,6 +20,9 @@ from keras.callbacks import CSVLogger, EarlyStopping
 from sklearn.preprocessing import MinMaxScaler
 scaler = MinMaxScaler(feature_range = (0, 1))
 
+def mean_squared_error(y_true, y_pred):
+        return K.mean(K.square(y_pred - y_true))
+
 # Select gpu
 import os
 if gpu < 3:
@@ -28,9 +31,6 @@ if gpu < 3:
 
     from tensorflow.python.client import device_lib
     print(device_lib.list_local_devices())
-
-def root_mean_squared_error(y_true, y_pred):
-        return K.sqrt(K.mean(K.square(y_pred - y_true)))
 
 def create_lstm_vae(nb_features, 
     n_pre, 
@@ -61,10 +61,9 @@ def create_lstm_vae(nb_features,
     """
 
     x = Input(shape=(n_pre, nb_features), name='Encoder_inputs')
-    dropout = Dropout(dr)(x)
 
     # LSTM encoding
-    h = LSTM(intermediate_dim, name='Encoder')(dropout)
+    h = LSTM(intermediate_dim, dropout=dr, name='Encoder')(x)
 
     # VAE Z layer
     z_mean = Dense(latent_dim, name='z_mean')(h)
@@ -81,8 +80,8 @@ def create_lstm_vae(nb_features,
     z = Lambda(sampling, output_shape=(latent_dim,), name='Sampling')([z_mean, z_log_sigma])
     
     # decoded LSTM layer
-    decoder_h = LSTM(intermediate_dim, return_sequences=True, name='Decoder_1')
-    decoder_mean = LSTM(nb_features, kernel_regularizer=regularizers.l2(penalty), return_sequences=True, name='Decoder_2')
+    decoder_h = LSTM(intermediate_dim, dropout=dr, return_sequences=True, name='Decoder_1')
+    decoder_mean = LSTM(nb_features, dropout=dr, kernel_regularizer=regularizers.l2(penalty), return_sequences=True, name='Decoder_2')
 
     h_decoded = RepeatVector(n_post, name='Repeat')(z)
     h_decoded = decoder_h(h_decoded)
@@ -106,7 +105,7 @@ def create_lstm_vae(nb_features,
     generator = Model(decoder_input, _x_decoded_mean)
     
     def vae_loss(x, x_decoded_mean):
-        xent_loss = root_mean_squared_error(x, x_decoded_mean)
+        xent_loss = mean_squared_error(x, x_decoded_mean)
         kl_loss = - 0.5 * K.mean(1 + z_log_sigma - K.square(z_mean) - K.exp(z_log_sigma))
         loss = xent_loss + kl_loss
         return loss

@@ -22,8 +22,8 @@ def wrapped_partial(func, *args, **kwargs):
     update_wrapper(partial_func, func)
     return partial_func
 
-def weighted_rmse(y_true, y_pred, weights):
-    return K.sqrt(K.mean(K.square(y_true - y_pred) * weights, axis=-1))
+def weighted_mse(y_true, y_pred, weights):
+    return K.mean(K.square(y_true - y_pred) * weights, axis=-1)
 
 # Select gpu
 import os
@@ -55,11 +55,10 @@ def create_model(n_pre, nb_features, output_dim, lr, penalty, dr):
 
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
     weights_tensor = Input(shape=(n_pre, nb_features), name="Weights")
-    dropout =Dropout(dr)(inputs)
-    lstm_1 = LSTM(n_hidden)(dropout) 
+    lstm_1 = LSTM(n_hidden, dropout=dr)(inputs) 
     output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(lstm_1)
 
-    cl = wrapped_partial(weighted_rmse, weights=weights_tensor)
+    cl = wrapped_partial(weighted_mse, weights=weights_tensor)
 
     model = Model([inputs, weights_tensor], output)
 

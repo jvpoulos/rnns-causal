@@ -9,7 +9,7 @@ df1 <- df1 %>% group_by(N) %>% mutate(y = y,
                                       lb= lb,
                                       ub = ub)
 
-stock <- ggplot(data = df1[df1$Method!="RVAE",], aes(log(N), y, color = Method, shape = Method)) +
+stock <- ggplot(data = df1, aes(log(N), y, color = Method, shape = Method)) +
   geom_point(size = 5, position=position_dodge(width=0.3)) +
   geom_line(position=position_dodge(width=0.3)) +
   geom_errorbar(
@@ -40,7 +40,7 @@ df1 <- df1 %>% group_by(N) %>% mutate(y = y,
                                       lb= lb,
                                       ub = ub)
 
-stock <- ggplot(data = df1[df1$Method!="RVAE",], aes(log(N*T), y, color = Method, shape = Method)) +
+stock <- ggplot(data = df1, aes(log(N*T), y, color = Method, shape = Method)) +
   geom_point(size = 5, position=position_dodge(width=0.3)) +
   geom_line(position=position_dodge(width=0.3)) +
   geom_errorbar(
