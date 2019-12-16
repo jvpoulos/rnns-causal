@@ -94,8 +94,8 @@ def create_lstm_vae(nb_features,
     z = Lambda(sampling, output_shape=(latent_dim,), name='Sampling')([z_mean, z_log_sigma])
     
     # decoded LSTM layer
-    decoder_h = LSTM(intermediate_dim, dropout=dr, return_sequences=True, name='Decoder_1')
-    decoder_mean = LSTM(nb_features, dropout=dr, kernel_regularizer=regularizers.l2(penalty), return_sequences=True, name='Decoder_2')
+    decoder_h = LSTM(intermediate_dim, return_sequences=True, name='Decoder_1')
+    decoder_mean = LSTM(nb_features, kernel_regularizer=regularizers.l2(penalty), return_sequences=True, name='Decoder_2')
 
     h_decoded = RepeatVector(n_post, name='Repeat')(z)
     h_decoded = decoder_h(h_decoded)
