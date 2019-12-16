@@ -11,7 +11,7 @@ keras.backend.tensorflow_backend.set_session(sess)
 
 from keras import backend as K
 from keras.models import Sequential, Model
-from keras.layers import Input, LSTM, RepeatVector, Dropout
+from keras.layers import Input, LSTM, RepeatVector
 from keras.layers.core import Flatten, Dense, Lambda
 from keras.optimizers import SGD, RMSprop, Adam
 from keras import regularizers
@@ -73,7 +73,7 @@ def create_lstm_vae(nb_features,
         z_mean, z_log_sigma = args
         epsilon = K.random_normal(shape=(batch_size, latent_dim),
                                   mean=0., stddev=epsilon_std)
-        return z_mean + z_log_sigma * epsilon
+        return z_mean + K.exp(z_log_sigma) * epsilon
 
     # note that "output_shape" isn't necessary with the TensorFlow backend
     # so you could write `Lambda(sampling)([z_mean, z_log_sigma])`
@@ -159,7 +159,6 @@ if __name__ == "__main__":
 
     vae.fit(x, x, 
         epochs=int(epochs),
-        shuffle=False,
         verbose=1,
         callbacks=[stopping,csv_logger],
         validation_split=0.1)
