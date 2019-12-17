@@ -216,8 +216,8 @@ if __name__ == "__main__":
     print('x_e shape:', x_e.shape)
     print('y_e shape:', y_e.shape)
 
-    x_a = np.concatenate([x_scaled, x_e], axis=0) # augment actual x
-    y_a = np.concatenate([y_scaled, y_e], axis=0) # augment actual y
+    x_a = np.stack([x_scaled, x_e], axis=-1) # augment actual x
+    y_a = np.stack([y_scaled, y_e], axis=-1) # augment actual y
 
     print('x_a shape:', x_a.shape)
     print('y_a shape:', y_a.shape)
