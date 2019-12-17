@@ -20,9 +20,6 @@ from keras.callbacks import CSVLogger, EarlyStopping
 from sklearn.preprocessing import MinMaxScaler
 scaler = MinMaxScaler(feature_range = (0, 1))
 
-def mean_squared_error(y_true, y_pred):
-        return K.mean(K.square(y_pred - y_true))
-
 # Select gpu
 import os
 if gpu < 3:
@@ -64,7 +61,7 @@ def create_lstm_autoencoder(nb_features,
     sequence_autoencoder = Model(inputs, decoded)
     encoder = Model(inputs, encoded)
 
-    sequence_autoencoder.compile(optimizer=Adam(lr=lr), loss=vae_loss)
+    sequence_autoencoder.compile(optimizer=Adam(lr=lr), loss='mean_squared_error')
     return sequence_autoencoder, encoder
 
 def get_data():
