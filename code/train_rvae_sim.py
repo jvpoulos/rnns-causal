@@ -209,7 +209,7 @@ if __name__ == "__main__":
     # create and fit the LSTM network
     print('creating model...')
     model = create_model(n_pre, nb_features, output_dim, lr, penalty, dr)
-    train_model(model, x_e, xt, int(epochs), int(nb_batches))
+    train_model(model, x_e, xt, int(epochs), int(batch_size))
 
     # now test
 
