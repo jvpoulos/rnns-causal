@@ -56,7 +56,7 @@ def create_lstm_autoencoder(nb_features,
     """
 
     inputs = Input(shape=(n_pre, nb_features))
-    encoded = LSTM(latent_dim)(inputs, dropout=dr)
+    encoded = LSTM(latent_dim, dropout=dr)(inputs)
 
     decoded = RepeatVector(n_post)(encoded)
     decoded = LSTM(nb_features, dropout=dr, return_sequences=True)(decoded)

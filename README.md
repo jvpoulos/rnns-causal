@@ -58,7 +58,7 @@ $ ./main.sh > main.txt
 Experiments
 ------
 
-To run placebo experiments, for each DATANAME={basque,california,germany,stock,stock_fixed,educ.pc,votediff} and each MODEL={encoder-decoder,lstm,rvae}:
+To run placebo experiments, for each DATANAME={basque,california,germany,stock_fixed,educ.pc} and each MODEL={encoder-decoder,lstm,rae,rvae}:
 
 ```
 $ mkdir data/$$DATANAME$$
@@ -68,7 +68,6 @@ $ mkdir results/$$MODEL$$/$$DATANAME$$
 and then execute
 
 * `synth-placebo.sh`: synthetic control datasets
-* `stock-placebo.sh`: stock market prices with increasing dimensions
 * `stock-placebo-fixed.sh`: stock market prices with fixed dimensions
 * `educ-placebo.sh`: state government education spending
 
@@ -82,7 +81,7 @@ python train_encoder_decoder.py 0 1000 8 'educ' 87 156 'locf'
 
 Similarly, for RVAE estimates run `train_rvae.py <GPU ID> <epochs> <batches> <data name> <t_0> <T> <imputation_method>`; e.g., 
 ```
-python train_rvae.py 0 1000 8 'educ' 87 156 'locf'
+python train_rvae.py 0 1000 1 'educ' 87 156 'locf'
 ```
 
 To plot the training and validation error, run `plot_history.py <file location of training log>`; e.g., 
