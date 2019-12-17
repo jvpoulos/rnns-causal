@@ -62,7 +62,7 @@ def create_lstm_autoencoder(nb_features,
     encoder = Model(inputs, encoded)
 
     sequence_autoencoder.compile(optimizer=Adam(lr=lr), loss='mean_squared_error')
-    return sequence_autoencoder, encoder
+    return sequence_autoencoder
 
 def get_data():
     # read data from file
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     nb_features = x.shape[2]
     batch_size = int(nb_batches)
 
-    sequence_autoencoder, encoder = create_lstm_autoencoder(nb_features, 
+    sequence_autoencoder = create_lstm_autoencoder(nb_features, 
         n_pre=n_pre, 
         n_post=n_post,
         batch_size=batch_size, 
@@ -118,7 +118,9 @@ if __name__ == "__main__":
     print('Generate predictions on test set')
 
     preds_test = sequence_autoencoder.predict(y, batch_size=batch_size, verbose=0)
+    print('predictions shape =', preds_test.shape)
     preds_test = np.squeeze(preds_test)
+    print('predictions shape =', preds_test.shape)
 
     preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
     print('predictions shape =', preds_test.shape)
