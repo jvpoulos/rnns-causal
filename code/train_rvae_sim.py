@@ -207,7 +207,7 @@ if __name__ == "__main__":
 
     print('x_e_scaled_exp shape:', x_e_scaled_exp.shape)
 
-    x_a = np.concatenate([x, x_e_scaled], axis=0) # augment actual x
+    x_a = np.concatenate([x, x_e_scaled_exp], axis=0) # augment actual x
 
     print('x_a shape:', x_a.shape)
 
