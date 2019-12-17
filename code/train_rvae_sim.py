@@ -20,8 +20,6 @@ from keras.callbacks import CSVLogger, EarlyStopping
 from sklearn.preprocessing import MinMaxScaler
 scaler = MinMaxScaler(feature_range = (0, 1))
 
-from train_lstm_sim import create_model train_model
-
 def mean_squared_error(y_true, y_pred):
         return K.mean(K.square(y_pred - y_true))
 
@@ -33,6 +31,41 @@ if gpu < 3:
 
     from tensorflow.python.client import device_lib
     print(device_lib.list_local_devices())
+
+def create_model(n_pre, nb_features, output_dim, lr, penalty, dr):
+    """ 
+        creates, compiles and returns a RNN model 
+        @param nb_features: the number of features in the model
+    """
+    # Define model parameters
+
+    n_hidden = 128
+
+    inputs = Input(shape=(n_pre, nb_features,), name="Inputs") 
+    lstm_1 = LSTM(n_hidden, dropout=dr)(inputs) 
+    output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(lstm_1)
+
+    model = Model(inputs=inputs, output=output)
+
+    model.compile(loss='mean_squared_error', optimizer=Adam(lr=lr)) 
+
+    return model
+
+def train_model(model, dataX, dataY, epoch_count, batches):
+
+    # Prepare model checkpoints and callbacks
+
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=50, verbose=0, mode='auto')
+
+    csv_logger = CSVLogger('results/lstm/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
+
+    history = model.fit(dataX, 
+        dataY, 
+        batch_size=batches, 
+        verbose=1,
+        epochs=epoch_count, 
+        callbacks=[stopping,csv_logger],
+        validation_split=0.1)
 
 def create_lstm_vae(nb_features, 
     n_pre, 
