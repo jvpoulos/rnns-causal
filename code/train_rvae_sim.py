@@ -159,16 +159,15 @@ def get_data():
     x_obs = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))
     x_scaled = scaler.fit_transform(x_obs)
 
-    print('raw x shape', x_scaled.shape)   
+    print('raw x shape', x_scaled.shape)  
 
-    dXC, dXT = [], []
+    dXC = []
     for i in range(seq_len-n_pre):
         dXC.append(x_scaled[i:i+n_pre]) 
-        dXT.append(x_scaled[i+n_pre]) 
-    return np.array(dXC),np.array(dXT),n_pre,n_post     
+    return np.array(dXC),n_pre,n_post     
 
 if __name__ == "__main__":
-    x, xt, n_pre, n_post = get_data() 
+    x, n_pre, n_post = get_data() 
     nb_features = x.shape[2]
     batch_size = 1
 
@@ -196,20 +195,30 @@ if __name__ == "__main__":
 	# prediction model using encoder features
 
     print('x shape', x.shape) 
-    print('xt shape', xt.shape)
 
     x_e = enc.predict(x, batch_size=batch_size, verbose=0) # encoded x
-    x_e = scaler.fit_transform(x_e)
+    x_e_scaled = scaler.fit_transform(x_e)
 
-    print('x_e shape:', x_e.shape)
+    print('x_e_scaled shape:', x_e_scaled.shape)
 
-    nb_features = x_e.shape[1]
-    output_dim = xt.shape[1]
+    dXC, dYC = [], []
+    for i in range(x_e_scaled.shape[0]-n_pre):
+        dXC.append(x_e_scaled[i:i+n_pre]) # controls are inputs
+        dYC.append(x_e_scaled[i+n_pre]) # controls are outputs
+    
+    dataXC = np.array(dXC)
+    dataYC = np.array(dYC)
+
+    print('dataXC shape:', dataXC.shape)
+    print('dataYC shape:', dataYC.shape)
+
+    nb_features = dataXC.shape[2]
+    output_dim = dataYC.shape[1]
   
     # create and fit the LSTM network
     print('creating model...')
     model = create_model(n_pre, nb_features, output_dim, lr, penalty, dr)
-    train_model(model, x_e, xt, int(epochs), int(batch_size))
+    train_model(model, dataXC, dataYC, int(epochs), int(batch_size))
 
     # now test
 
@@ -218,22 +227,22 @@ if __name__ == "__main__":
     y = np.array(pd.read_csv("data/{}-y.csv".format(dataname)))
     y_scaled = scaler.fit_transform(y)
 
-    print('raw y shape', y_scaled.shape) 
-
-    dXT = []
-    for i in range(seq_len-n_pre):
-        dXT.append(y_scaled[i:i+n_pre]) # treated is input
-
-    dataXT = np.array(dXT)
-
-    print('dataXT shape:', dataXT.shape)
+    print('raw y shape', y_scaled.shape)  
 
     y_e = enc.predict(y, batch_size=batch_size, verbose=0) # encoded y
-    y_e = scaler.fit_transform(x_e)
+    y_e_scaled = scaler.fit_transform(y_e)
 
     print('y_e shape:', y_e.shape)
 
-    preds_test = model.predict(y_e, batch_size=batch_size, verbose=0)
+    dXT = []
+    for i in range(y_e_scaled.shape[0]-n_pre):
+        dXT.append(y_e_scaled[i:i+n_pre]) # treated are inputs
+    
+    dataXT = np.array(dXC)
+
+    print('dataXT shape:', dataXT.shape)
+
+    preds_test = model.predict(dataXT, batch_size=batch_size, verbose=0)
     preds_test = np.squeeze(preds_test)
 
     preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
