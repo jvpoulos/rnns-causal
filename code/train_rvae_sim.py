@@ -20,6 +20,8 @@ from keras.callbacks import CSVLogger, EarlyStopping
 from sklearn.preprocessing import MinMaxScaler
 scaler = MinMaxScaler(feature_range = (0, 1))
 
+from train_lstm_sim import create_model train_model
+
 def mean_squared_error(y_true, y_pred):
         return K.mean(K.square(y_pred - y_true))
 
@@ -80,8 +82,8 @@ def create_lstm_vae(nb_features,
     z = Lambda(sampling, output_shape=(latent_dim,), name='Sampling')([z_mean, z_log_sigma])
     
     # decoded LSTM layer
-    decoder_h = LSTM(intermediate_dim, return_sequences=True, name='Decoder_1')
-    decoder_mean = LSTM(nb_features, kernel_regularizer=regularizers.l2(penalty), return_sequences=True, name='Decoder_2')
+    decoder_h = LSTM(intermediate_dim, dropout=dr, return_sequences=True, name='Decoder_1')
+    decoder_mean = LSTM(nb_features, dropout=dr, return_sequences=True, name='Decoder_2')
 
     h_decoded = RepeatVector(n_post, name='Repeat')(z)
     h_decoded = decoder_h(h_decoded)
@@ -163,13 +165,51 @@ if __name__ == "__main__":
         callbacks=[stopping,csv_logger],
         validation_split=0.1)
 
-	# now test
+	# prediction model using encoder features
+
+    x_r = vae.predict(x, batch_size=batch_size, verbose=0) # reconstructed x
+    x_e = enc.predict(x, batch_size=batch_size, verbose=0) # encoder latent x
+
+    n_pre = int(t0)-1
+    seq_len = int(T)
+
+    x_obs = np.concatenate([x_r, x_e], axis=2)
+    x_scaled = scaler.fit_transform(x_obs)
+
+    print('raw x shape', x_scaled.shape)   
+
+    dXC, dYC = [], []
+    for i in range(seq_len-n_pre):
+        dXC.append(x_scaled[i:i+n_pre]) # controls are inputs
+        dYC.append(x_scaled[i+n_pre]) # controls are outputs
+    
+    dataXC = np.array(dXC)
+    dataYC = np.array(dYC)
+
+    print('dataXC shape:', dataXC.shape)
+    print('dataYC shape:', dataYC.shape)
+
+    nb_features = dataXC.shape[2]
+    output_dim = dataYC.shape[1]
+  
+    # create and fit the LSTM network
+    print('creating model...')
+    model = create_model(n_pre, nb_features, output_dim, lr, penalty, dr)
+    train_model(model, dataXC, dataYC, int(epochs), int(nb_batches))
+
+    # now test
 
     print('Generate predictions on test set')
 
-    print('y samples shape', y.shape)     
+    print('y samples shape', y.shape)   
 
-    preds_test = vae.predict(y, batch_size=batch_size, verbose=0)
+    y_r = vae.predict(y, batch_size=batch_size, verbose=0) # reconstructed y
+    y_e = enc.predict(y, batch_size=batch_size, verbose=0) # encoder latent y  
+
+    y_obs = np.concatenate([y_r, y_e], axis=2)
+    y_scaled = scaler.fit_transform(y_obs)
+
+    preds_test = model.predict(y_scaled, batch_size=batch_size, verbose=0)
     preds_test = np.squeeze(preds_test)
 
     preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values

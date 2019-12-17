@@ -59,8 +59,8 @@ def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr):
     lstm_1 = LSTM(encoder_hidden, dropout=dr, return_sequences=True, name='LSTM_1')(inputs) # Encoder
     lstm_2 = LSTM(encoder_hidden, dropout=dr, return_sequences=False, name='LSTM_2')(lstm_1) # Encoder
     repeat = RepeatVector(n_post, name='Repeat')(lstm_2) # get the last output of the LSTM and repeats it
-    lstm_3 = LSTM(decoder_hidden, return_sequences=True, name='Decoder')(repeat)  # Decoder
-    output=  Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(lstm_3)
+    lstm_3 = LSTM(decoder_hidden, dropout=dr, return_sequences=True, name='Decoder')(repeat)  # Decoder
+    output = Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(lstm_3)
 
     cl = wrapped_partial(weighted_mse, weights=weights_tensor)
 
@@ -155,7 +155,7 @@ def test_model():
     print('raw wy shape', wy_scaled.shape)  
 
     wY = []
-    for i in range(seq_len-n_pre-n+post):
+    for i in range(seq_len-n_pre):
         wY.append(wy_scaled[i:i+n_pre]) # controls are inputs
     
     wXT = np.array(wY)

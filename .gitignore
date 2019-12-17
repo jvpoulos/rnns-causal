@@ -6,6 +6,15 @@ __pycache__/
 # C extensions
 *.so
 
+# R extensions
+.Rbuildignore
+.Rproj.user
+.Rproj
+.Rhistory
+.RData
+.Ruserdata
+.Rhistory
+
 # Distribution / packaging
 .Python
 env/

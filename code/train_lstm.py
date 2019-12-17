@@ -7,7 +7,7 @@ import pandas as pd
 
 from keras import backend as K
 from keras.models import Model
-from keras.layers import LSTM, Input, Dense, Dropout
+from keras.layers import LSTM, Input, Dense
 from keras.callbacks import ModelCheckpoint, CSVLogger, EarlyStopping
 from keras import regularizers
 from keras.optimizers import Adam

@@ -13,7 +13,7 @@ keras.backend.tensorflow_backend.set_session(sess)
 
 from keras import backend as K
 from keras.models import Model
-from keras.layers import LSTM, Input, Dense, Dropout
+from keras.layers import LSTM, Input, Dense
 from keras.callbacks import CSVLogger, EarlyStopping
 from keras import regularizers
 from keras.optimizers import Adam
@@ -59,7 +59,6 @@ def train_model(model, dataX, dataY, epoch_count, batches):
 
     history = model.fit(dataX, 
         dataY, 
-        shuffle=False,
         batch_size=batches, 
         verbose=1,
         epochs=epoch_count, 
