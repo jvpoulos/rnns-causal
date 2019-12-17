@@ -203,11 +203,11 @@ if __name__ == "__main__":
 
     print('x_e_scaled shape:', x_e_scaled.shape)
 
-    x_e_scaled_exp = np.expand_dims(x_e_scaled, axis=1)
+    x_e_scaled_exp = np.repeat(np.expand_dims(x_e_scaled, axis=1), x.shape[1], axis=1)
 
     print('x_e_scaled_exp shape:', x_e_scaled_exp.shape)
 
-    x_a = np.concatenate([x, x_e_scaled_exp], axis=0) # augment actual x
+    x_a = np.concatenate([x, x_e_scaled_exp], axis=2) # augment actual x
 
     print('x_a shape:', x_a.shape)
 
