@@ -203,10 +203,13 @@ if __name__ == "__main__":
     x_r = vae.predict(x, batch_size=batch_size, verbose=0) # reconstructed x
     x_e = enc.predict(x, batch_size=batch_size, verbose=0) # encoder latent x
 
+    print('x_r shape:', x_r.shape)
+    print('x_e shape:', x_e.shape)
+
     n_pre = int(t0)-1
     seq_len = int(T)
 
-    x_obs = np.concatenate([x_r, x_e], axis=2)
+    x_obs = np.concatenate([x_r, x_e], axis=0)
     x_scaled = scaler.fit_transform(x_obs)
 
     print('raw x shape', x_scaled.shape)   
@@ -239,7 +242,10 @@ if __name__ == "__main__":
     y_r = vae.predict(y, batch_size=batch_size, verbose=0) # reconstructed y
     y_e = enc.predict(y, batch_size=batch_size, verbose=0) # encoder latent y  
 
-    y_obs = np.concatenate([y_r, y_e], axis=2)
+    print('y_r shape:', y_r.shape)
+    print('y_e shape:', y_e.shape)
+
+    y_obs = np.concatenate([y_r, y_e], axis=0)
     y_scaled = scaler.fit_transform(y_obs)
 
     preds_test = model.predict(y_scaled, batch_size=batch_size, verbose=0)
