@@ -182,7 +182,7 @@ if __name__ == "__main__":
         n_post=n_post,
         batch_size=batch_size, 
         intermediate_dim=32,
-        latent_dim=200,
+        latent_dim=int(T),
         lr = lr,
         penalty=penalty,
         dr=dr,
@@ -242,7 +242,17 @@ if __name__ == "__main__":
 
     y_scaled = scaler.fit_transform(y_e)
 
-    preds_test = model.predict(y_scaled, batch_size=batch_size, verbose=0)
+    print('raw y shape', y_scaled.shape)   
+
+    dXT = []
+    for i in range(seq_len-n_pre):
+        dXT.append(y_scaled[i:i+n_pre]) # treated is input
+
+    dataXT = np.array(dXT)
+
+    print('dataXT shape:', dataXT.shape)
+
+    preds_test = model.predict(dataXT, batch_size=batch_size, verbose=0)
     preds_test = np.squeeze(preds_test)
 
     preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
