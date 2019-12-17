@@ -11,7 +11,7 @@ keras.backend.tensorflow_backend.set_session(sess)
 
 from keras import backend as K
 from keras.models import Sequential, Model
-from keras.layers import Input, LSTM, RepeatVector
+from keras.layers import Input, LSTM, RepeatVector, TimeDistributed
 from keras.layers.core import Flatten, Dense, Lambda
 from keras.optimizers import SGD, RMSprop, Adam
 from keras import regularizers
@@ -53,12 +53,13 @@ def create_lstm_autoencoder(nb_features,
     """
 
     inputs = Input(shape=(n_pre, nb_features))
-    encoded = LSTM(latent_dim, dropout=dr)(inputs)
+    encoded = LSTM(latent_dim, dropout=dr, return_sequences=False)(inputs)
 
     decoded = RepeatVector(n_post)(encoded)
     decoded = LSTM(nb_features, dropout=dr, return_sequences=True)(decoded)
+    output = TimeDistributed(Dense(1, kernel_regularizer=regularizers.l2(penalty), name='Dense'), name='Outputs')(decoded)
 
-    sequence_autoencoder = Model(inputs, decoded)
+    sequence_autoencoder = Model(inputs, output)
     encoder = Model(inputs, encoded)
 
     sequence_autoencoder.compile(optimizer=Adam(lr=lr), loss='mean_squared_error')
