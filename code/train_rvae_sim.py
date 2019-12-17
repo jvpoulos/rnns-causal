@@ -198,7 +198,7 @@ if __name__ == "__main__":
     print('x shape', x.shape) 
     print('xt shape', xt.shape)
 
-    x_e = enc.predict(xt, batch_size=batch_size, verbose=0) # encoded x
+    x_e = enc.predict(x, batch_size=batch_size, verbose=0) # encoded x
     x_e_scaled = scaler.fit_transform(x_e)
 
     print('x_e_scaled shape:', x_e_scaled.shape)
