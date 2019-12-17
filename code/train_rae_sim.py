@@ -113,6 +113,9 @@ if __name__ == "__main__":
     # now test 
     print('Generate predictions on test set')
 
+    print('x shape', x.shape)  
+    print('y shape', y.shape)  
+
     preds_test = sequence_autoencoder.predict(y, batch_size=batch_size, verbose=0)
     preds_test = np.squeeze(preds_test)
 
