@@ -161,19 +161,14 @@ def get_data():
 
     print('raw x shape', x_scaled.shape)   
 
-    y = np.array(pd.read_csv("data/{}-y.csv".format(dataname)))
-    y_scaled = scaler.fit_transform(y)
-
-    print('raw y shape', y_scaled.shape) 
-
     dXC, dXT = [], []
     for i in range(seq_len-n_pre):
-        dXC.append(x_scaled[i:i+n_pre]) # pre-period controls are inputs
-        dXT.append(y_scaled[i:i+n_pre]) # pre-period treated 
-    return np.array(dXC),x_scaled,np.array(dXT),y_scaled,n_pre,n_post     
+        dXC.append(x_scaled[i:i+n_pre]) 
+        dXT.append(x_scaled[i+n_pre]) 
+    return np.array(dXC),np.array(dXT),n_pre,n_post     
 
 if __name__ == "__main__":
-    x, x_scaled, y, y_scaled, n_pre, n_post = get_data() 
+    x, xt, n_pre, n_post = get_data() 
     nb_features = x.shape[2]
     batch_size = 1
 
@@ -182,7 +177,7 @@ if __name__ == "__main__":
         n_post=n_post,
         batch_size=batch_size, 
         intermediate_dim=32,
-        latent_dim=int(T),
+        latent_dim=200,
         lr = lr,
         penalty=penalty,
         dr=dr,
@@ -200,56 +195,38 @@ if __name__ == "__main__":
 
 	# prediction model using encoder features
 
-    print('raw x shape', x_scaled.shape) 
-    print('raw y shape', y_scaled.shape)
-
     print('x shape', x.shape) 
-    print('y shape', y.shape)
+    print('xt shape', xt.shape)
 
-    x_e = enc.predict(x, batch_size=batch_size, verbose=0) # encoded x
-    x_e = np.squeeze(x_e)
-    print(x_e)
-    y_e = enc.predict(y, batch_size=batch_size, verbose=0) # encoded y
-    y_e = np.squeeze(y_e)
-    print(y_e)
+    x_e = enc.predict(xt, batch_size=batch_size, verbose=0) # encoded x
+    x_e_scaled = scaler.fit_transform(x_e)
 
-    print('x_e shape:', x_e.shape)
-    print('y_e shape:', y_e.shape)
+    print('x_e_scaled shape:', x_e_scaled.shape)
 
-    x_a = np.stack([x_scaled, x_e], axis=-1) # augment actual x
-    y_a = np.stack([y_scaled, y_e], axis=-1) # augment actual y
+    x_a = np.concatenate([x, x_e_scaled], axis=0) # augment actual x
 
     print('x_a shape:', x_a.shape)
-    print('y_a shape:', y_a.shape)
 
-    dXC, dYC = [], []
-    for i in range(seq_len-n_pre):
-        dXC.append(x_a[i:i+n_pre]) # controls are inputs
-        dYC.append(x_a[i+n_pre]) # controls are outputs
-    
-    dataXC = np.array(dXC)
-    dataYC = np.array(dYC)
-
-    print('dataXC shape:', dataXC.shape)
-    print('dataYC shape:', dataYC.shape)
-
-    nb_features = dataXC.shape[2]
-    output_dim = dataYC.shape[1]
+    nb_features = x_a.shape[2]
+    output_dim = y.shape[1]
   
     # create and fit the LSTM network
     print('creating model...')
     model = create_model(n_pre, nb_features, output_dim, lr, penalty, dr)
-    train_model(model, dataXC, dataYC, int(epochs), int(nb_batches))
+    train_model(model, x_a, xt, int(epochs), int(nb_batches))
 
     # now test
 
     print('Generate predictions on test set')
 
-    print('y samples shape', y.shape)   
+    y = np.array(pd.read_csv("data/{}-y.csv".format(dataname)))
+    y_scaled = scaler.fit_transform(y)
+
+    print('raw y shape', y_scaled.shape) 
 
     dXT = []
     for i in range(seq_len-n_pre):
-        dXT.append(y_a[i:i+n_pre]) # treated is input
+        dXT.append(y_scaled[i:i+n_pre]) # treated is input
 
     dataXT = np.array(dXT)
 
