@@ -40,6 +40,7 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
   MCPanel_RMSE_test <- matrix(0L,num_runs,length(T0))
   LSTM_RMSE_test <- matrix(0L,num_runs,length(T0))
   RVAE_RMSE_test <- matrix(0L,num_runs,length(T0))
+  RAE_RMSE_test <- matrix(0L,num_runs,length(T0)) 
   ED_RMSE_test <- matrix(0L,num_runs,length(T0))
   ENT_RMSE_test <- matrix(0L,num_runs,length(T0))
   DID_RMSE_test <- matrix(0L,num_runs,length(T0))
@@ -63,6 +64,16 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
 
       Y_obs <- Y * treat_mat
       Y_imp <- Y * Y.missing
+      
+      ## ------
+      ## RAE
+      ## ------
+      
+      source("code/rae.R")
+      est_model_RAE <- rae(Y_obs, Y, treat_indices, d, t0, T)
+      est_model_RAE_msk_err <- (est_model_RAE - Y_imp[treat_indices,][,t0:T])
+      est_model_RAE_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_RAE_msk_err^2, na.rm = TRUE))
+      RAE_RMSE_test[i,j] <- est_model_RAE_test_RMSE
       
       ## ------
       ## ED
@@ -143,6 +154,9 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
   RVAE_avg_RMSE <- apply(RVAE_RMSE_test,2,mean)
   RVAE_std_error <- apply(RVAE_RMSE_test,2,sd)/sqrt(num_runs)
   
+  RAE_avg_RMSE <- apply(RAE_RMSE_test,2,mean)
+  RAE_std_error <- apply(RAE_RMSE_test,2,sd)/sqrt(num_runs)
+  
   ED_avg_RMSE <- apply(ED_RMSE_test,2,mean)
   ED_std_error <- apply(ED_RMSE_test,2,sd)/sqrt(num_runs)
   
@@ -159,11 +173,12 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
   
   df1 <-
     data.frame(
-      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,RVAE_avg_RMSE,ADH_avg_RMSE,ENT_avg_RMSE),
+      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,RAE_avg_RMSE,RVAE_avg_RMSE,ADH_avg_RMSE,ENT_avg_RMSE),
       "lb" = c(DID_avg_RMSE - 1.96*DID_std_error,
                ED_avg_RMSE - 1.96*ED_std_error,
                LSTM_avg_RMSE - 1.96*LSTM_std_error,
                MCPanel_avg_RMSE - 1.96*MCPanel_std_error, 
+               RAE_avg_RMSE - 1.96*RAE_std_error,       
                RVAE_avg_RMSE - 1.96*RVAE_std_error, 
                ADH_avg_RMSE - 1.96*ADH_std_error,
                ENT_avg_RMSE - 1.96*ENT_std_error),
@@ -171,14 +186,16 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
                ED_avg_RMSE + 1.96*ED_std_error,
                LSTM_avg_RMSE + 1.96*LSTM_std_error,
                MCPanel_avg_RMSE + 1.96*MCPanel_std_error, 
+               RAE_avg_RMSE + 1.96*RAE_std_error,          
                RVAE_avg_RMSE + 1.96*RVAE_std_error, 
                ADH_avg_RMSE + 1.96*ADH_std_error,
                ENT_avg_RMSE + 1.96*ENT_std_error),
-      "x" = c(T0/T, T0/T ,T0/T, T0/T, T0/T, T0/T, T0/T),
+      "x" = c(T0/T, T0/T ,T0/T, T0/T, T0/T, T0/T, T0/T, T0/T),
       "Method" = c(replicate(length(T0),"DID"), 
                    replicate(length(T0),"Encoder-decoder"),
                    replicate(length(T0),"LSTM"), 
                    replicate(length(T0),"MC-NNM"), 
+                   replicate(length(T0),"RAE"),       
                    replicate(length(T0),"RVAE"), 
                    replicate(length(T0),"SCM"),
                    replicate(length(T0),"SCM-EN")))
@@ -190,7 +207,7 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
       width = 0.1,
       linetype = "solid",
       position=position_dodge(width=0.1)) +
-    scale_shape_manual("Method",values=c(1:7)) +
+    scale_shape_manual("Method",values=c(1:8)) +
     scale_color_discrete("Method")+
     theme_bw() +
     xlab(TeX('$T_0/T$')) +

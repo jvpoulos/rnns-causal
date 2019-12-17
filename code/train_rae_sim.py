@@ -32,19 +32,17 @@ if gpu < 3:
     from tensorflow.python.client import device_lib
     print(device_lib.list_local_devices())
 
-def create_lstm_vae(nb_features, 
+def create_lstm_autoencoder(nb_features, 
     n_pre, 
     n_post,
     batch_size, 
-    intermediate_dim, 
     latent_dim,
     lr,
     penalty,
-    dr,
-    epsilon_std=1.):
-
+    dr):
     """
-    Creates an LSTM Variational Autoencoder (VAE). Returns VAE, Encoder, Generator. 
+    Creates an LSTM Autoencoder (VAE). Returns Autoencoder, Encoder, Generator. 
+    (All code by fchollet - see reference.)
 
     # Arguments
         nb_features: int.
@@ -52,67 +50,22 @@ def create_lstm_vae(nb_features,
         batch_size: int.
         intermediate_dim: int, output shape of LSTM. 
         latent_dim: int, latent z-layer shape. 
-        epsilon_std: float, z-layer sigma.
-
 
     # References
         - [Building Autoencoders in Keras](https://blog.keras.io/building-autoencoders-in-keras.html)
-        - [Generating sentences from a continuous space](https://arxiv.org/abs/1511.06349)
     """
 
-    x = Input(shape=(n_pre, nb_features), name='Encoder_inputs')
+    inputs = Input(shape=(n_pre, nb_features))
+    encoded = LSTM(latent_dim)(inputs, dropout=dr)
 
-    # LSTM encoding
-    h = LSTM(intermediate_dim, dropout=dr, name='Encoder')(x)
+    decoded = RepeatVector(n_post)(encoded)
+    decoded = LSTM(nb_features, dropout=dr, return_sequences=True)(decoded)
 
-    # VAE Z layer
-    z_mean = Dense(latent_dim, name='z_mean')(h)
-    z_log_sigma = Dense(latent_dim, name='z_log_sigma')(h)
-    
-    def sampling(args):
-        z_mean, z_log_sigma = args
-        epsilon = K.random_normal(shape=(batch_size, latent_dim),
-                                  mean=0., stddev=epsilon_std)
-        return z_mean + K.exp(z_log_sigma) * epsilon
+    sequence_autoencoder = Model(inputs, decoded)
+    encoder = Model(inputs, encoded)
 
-    # note that "output_shape" isn't necessary with the TensorFlow backend
-    # so you could write `Lambda(sampling)([z_mean, z_log_sigma])`
-    z = Lambda(sampling, output_shape=(latent_dim,), name='Sampling')([z_mean, z_log_sigma])
-    
-    # decoded LSTM layer
-    decoder_h = LSTM(intermediate_dim, dropout=dr, return_sequences=True, name='Decoder_1')
-    decoder_mean = LSTM(nb_features, dropout=dr, return_sequences=True, name='Decoder_2')
-
-    h_decoded = RepeatVector(n_post, name='Repeat')(z)
-    h_decoded = decoder_h(h_decoded)
-
-    # decoded layer
-    x_decoded_mean = decoder_mean(h_decoded)
-    
-    # end-to-end autoencoder
-    vae = Model(x, x_decoded_mean)
-
-    # encoder, from inputs to latent space
-    encoder = Model(x, z_mean)
-
-    # generator, from latent space to reconstructed inputs
-    decoder_input = Input(shape=(latent_dim,))
-
-    _h_decoded = RepeatVector(n_post)(decoder_input)
-    _h_decoded = decoder_h(_h_decoded)
-
-    _x_decoded_mean = decoder_mean(_h_decoded)
-    generator = Model(decoder_input, _x_decoded_mean)
-    
-    def vae_loss(x, x_decoded_mean):
-        xent_loss = mean_squared_error(x, x_decoded_mean)
-        kl_loss = - 0.5 * K.mean(1 + z_log_sigma - K.square(z_mean) - K.exp(z_log_sigma))
-        loss = xent_loss + kl_loss
-        return loss
-
-    vae.compile(optimizer=Adam(lr=lr), loss=vae_loss)
-    
-    return vae, encoder, generator
+    sequence_autoencoder.compile(optimizer=Adam(lr=lr), loss=vae_loss)
+    return sequence_autoencoder, encoder
 
 def get_data():
     # read data from file
@@ -141,22 +94,20 @@ if __name__ == "__main__":
     nb_features = x.shape[2]
     batch_size = int(nb_batches)
 
-    vae, enc, gen = create_lstm_vae(nb_features, 
+    sequence_autoencoder, encoder = create_lstm_autoencoder(nb_features, 
         n_pre=n_pre, 
         n_post=n_post,
         batch_size=batch_size, 
-        intermediate_dim=32,
         latent_dim=200,
         lr = lr,
         penalty=penalty,
-        dr=dr,
-        epsilon_std=1.)
+        dr=dr)
 
     stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=50, verbose=0, mode='auto')
 
-    csv_logger = CSVLogger('results/rvae/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
+    csv_logger = CSVLogger('results/rae/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
 
-    vae.fit(x, x, 
+    sequence_autoencoder.fit(x, x, 
         epochs=int(epochs),
         verbose=1,
         callbacks=[stopping,csv_logger],
@@ -165,12 +116,12 @@ if __name__ == "__main__":
     # now test 
     print('Generate predictions on test set')
 
-    preds_test = vae.predict(y, batch_size=batch_size, verbose=0)
+    preds_test = sequence_autoencoder.predict(y, batch_size=batch_size, verbose=0)
     preds_test = np.squeeze(preds_test)
 
     preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
     print('predictions shape =', preds_test.shape)
 
-    print('Saving to results/rvae/{}/rvae-{}-test.csv'.format(dataname,dataname))
+    print('Saving to results/rae/{}/rae-{}-test.csv'.format(dataname,dataname))
 
-    np.savetxt("results/rvae/{}/rvae-{}-test.csv".format(dataname,dataname), preds_test, delimiter=",")
+    np.savetxt("results/rae/{}/rae-{}-test.csv".format(dataname,dataname), preds_test, delimiter=",")
