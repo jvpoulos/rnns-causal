@@ -58,7 +58,7 @@ $ ./main.sh > main.txt
 Experiments
 ------
 
-To run placebo experiments, for each DATANAME={basque,california,germany,stock_fixed,educ.pc} and each MODEL={encoder-decoder,lstm,rae,rvae}:
+To run placebo experiments, for each DATANAME={basque,california,germany,stock_fixed,educ.pc} and each MODEL={encoder-decoder,lstm,rvae}:
 
 ```
 $ mkdir data/$$DATANAME$$
