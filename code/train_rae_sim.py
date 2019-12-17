@@ -52,10 +52,10 @@ def create_lstm_autoencoder(nb_features,
         - [Building Autoencoders in Keras](https://blog.keras.io/building-autoencoders-in-keras.html)
     """
 
-    inputs = Input(shape=(n_pre, nb_features,))
+    inputs = Input(shape=(n_pre, nb_features))
     encoded = LSTM(latent_dim, dropout=dr)(inputs)
 
-    decoded = RepeatVector(n_pre)(encoded)
+    decoded = RepeatVector(n_post)(encoded)
     decoded = LSTM(nb_features, dropout=dr, return_sequences=True)(decoded)
 
     sequence_autoencoder = Model(inputs, decoded)
