@@ -200,21 +200,32 @@ if __name__ == "__main__":
 
 	# prediction model using encoder features
 
-    x_e = enc.predict(x, batch_size=batch_size, verbose=0) # encoder latent x
+    print('raw x shape', x_scaled.shape) 
+    print('raw y shape', y_scaled.shape)
+
+    print('x shape', x.shape) 
+    print('y shape', y.shape)
+
+    x_e = enc.predict(x, batch_size=batch_size, verbose=0) # encoded x
+    x_e = np.squeeze(x_e)
+    print(x_e)
+    y_e = enc.predict(y, batch_size=batch_size, verbose=0) # encoded y
+    y_e = np.squeeze(y_e)
+    print(y_e)
 
     print('x_e shape:', x_e.shape)
+    print('y_e shape:', y_e.shape)
 
-    n_pre = int(t0)-1
-    seq_len = int(T)
+    x_a = np.concatenate([x_scaled, x_e], axis=0) # augment actual x
+    y_a = np.concatenate([y_scaled, y_e], axis=0) # augment actual y
 
-    x_scaled = scaler.fit_transform(x_e)
-
-    print('raw x shape', x_scaled.shape)   
+    print('x_a shape:', x_a.shape)
+    print('y_a shape:', y_a.shape)
 
     dXC, dYC = [], []
     for i in range(seq_len-n_pre):
-        dXC.append(x_scaled[i:i+n_pre]) # controls are inputs
-        dYC.append(x_scaled[i+n_pre]) # controls are outputs
+        dXC.append(x_a[i:i+n_pre]) # controls are inputs
+        dYC.append(x_a[i+n_pre]) # controls are outputs
     
     dataXC = np.array(dXC)
     dataYC = np.array(dYC)
@@ -236,17 +247,9 @@ if __name__ == "__main__":
 
     print('y samples shape', y.shape)   
 
-    y_e = enc.predict(y, batch_size=batch_size, verbose=0) # encoder latent y
-
-    print('y_e shape:', y_e.shape)
-
-    y_scaled = scaler.fit_transform(y_e)
-
-    print('raw y shape', y_scaled.shape)   
-
     dXT = []
     for i in range(seq_len-n_pre):
-        dXT.append(y_scaled[i:i+n_pre]) # treated is input
+        dXT.append(y_a[i:i+n_pre]) # treated is input
 
     dataXT = np.array(dXT)
 

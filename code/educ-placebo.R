@@ -65,16 +65,6 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
       Y_imp <- Y * Y.missing
       
       ## ------
-      ## LSTM
-      ## ------
-      
-      source("code/lstm.R")
-      est_model_LSTM <- lstm(Y_obs, Y, treat_indices, d, t0, T)
-      est_model_LSTM_msk_err <- (est_model_LSTM - Y_imp[treat_indices,][,t0:T])
-      est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
-      LSTM_RMSE_test[i,j] <- est_model_LSTM_test_RMSE
-      
-      ## ------
       ## RVAE
       ## ------
       
@@ -93,6 +83,16 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
       est_model_ED_msk_err <- (est_model_ED - Y_imp[treat_indices,][,t0:T])
       est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
       ED_RMSE_test[i,j] <- est_model_ED_test_RMSE
+      
+      ## ------
+      ## LSTM
+      ## ------
+      
+      source("code/lstm.R")
+      est_model_LSTM <- lstm(Y_obs, Y, treat_indices, d, t0, T)
+      est_model_LSTM_msk_err <- (est_model_LSTM - Y_imp[treat_indices,][,t0:T])
+      est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
+      LSTM_RMSE_test[i,j] <- est_model_LSTM_test_RMSE
       
       ## ------
       ## MC-NNM
