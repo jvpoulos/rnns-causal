@@ -32,41 +32,6 @@ if gpu < 3:
     from tensorflow.python.client import device_lib
     print(device_lib.list_local_devices())
 
-def create_model(n_pre, nb_features, output_dim, lr, penalty, dr):
-    """ 
-        creates, compiles and returns a RNN model 
-        @param nb_features: the number of features in the model
-    """
-    # Define model parameters
-
-    n_hidden = 128
-
-    inputs = Input(shape=(n_pre, nb_features,), name="Inputs") 
-    lstm_1 = LSTM(n_hidden, dropout=dr)(inputs) 
-    output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(lstm_1)
-
-    model = Model(inputs=inputs, output=output)
-
-    model.compile(loss='mean_squared_error', optimizer=Adam(lr=lr)) 
-
-    return model
-
-def train_model(model, dataX, dataY, epoch_count, batches):
-
-    # Prepare model checkpoints and callbacks
-
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=50, verbose=0, mode='auto')
-
-    csv_logger = CSVLogger('results/lstm/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
-
-    history = model.fit(dataX, 
-        dataY, 
-        batch_size=batches, 
-        verbose=1,
-        epochs=epoch_count, 
-        callbacks=[stopping,csv_logger],
-        validation_split=0.1)
-
 def create_lstm_vae(nb_features, 
     n_pre, 
     n_post,
@@ -174,7 +139,7 @@ def get_data():
 if __name__ == "__main__":
     x, y, n_pre, n_post = get_data() 
     nb_features = x.shape[2]
-    batch_size = 1
+    batch_size = int(nb_batches)
 
     vae, enc, gen = create_lstm_vae(nb_features, 
         n_pre=n_pre, 
@@ -197,55 +162,13 @@ if __name__ == "__main__":
         callbacks=[stopping,csv_logger],
         validation_split=0.1)
 
-	# prediction model using encoder features
-
-    print('x shape', x.shape) 
-
-    x_e = enc.predict(x, batch_size=batch_size, verbose=0) # encoded x
-    x_e_scaled = scaler.fit_transform(x_e)
-
-    print('x_e_scaled shape:', x_e_scaled.shape)
-
-    dXC, dYC = [], []
-    for i in range(x_e_scaled.shape[0]-n_pre):
-        dXC.append(x_e_scaled[i:i+n_pre]) # controls are inputs
-        dYC.append(x_e_scaled[i+n_pre]) # controls are outputs
-    
-    dataXC = np.array(dXC)
-    dataYC = np.array(dYC)
-
-    print('dataXC shape:', dataXC.shape)
-    print('dataYC shape:', dataYC.shape)
-
-    nb_features = dataXC.shape[2]
-    output_dim = dataYC.shape[1]
-  
-    # create and fit the LSTM network
-    print('creating model...')
-    model = create_model(n_pre, nb_features, output_dim, lr, penalty, dr)
-    train_model(model, dataXC, dataYC, int(epochs), int(batch_size))
-
     # now test 
     print('Generate predictions on test set')
 
-    y_e = enc.predict(y, batch_size=batch_size, verbose=0) # encoded y
-    y_e_scaled = scaler.fit_transform(y_e)
-
-    print('y_e shape:', y_e.shape)
-
-    dXT = []
-    for i in range(y_e_scaled.shape[0]-n_pre):
-        dXT.append(y_e_scaled[i:i+n_pre]) # treated are inputs
-    
-    dataXT = np.array(dXT)
-
-    print('dataXT shape:', dataXT.shape)
-
-    preds_test = model.predict(dataXT, batch_size=batch_size, verbose=0)
+    preds_test = vae.predict(y, batch_size=batch_size, verbose=0)
     preds_test = np.squeeze(preds_test)
 
     preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
-
     print('predictions shape =', preds_test.shape)
 
     print('Saving to results/rvae/{}/rvae-{}-test.csv'.format(dataname,dataname))

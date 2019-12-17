@@ -42,10 +42,11 @@ imp = sys.argv[-1]
 T = sys.argv[-2] 
 t0 = sys.argv[-3] 
 dataname = sys.argv[-4] 
-nb_epochs = int(sys.argv[-5])
-lr = sys.argv[-6]
-penalty = sys.argv[-7]
-dropout = sys.argv[-8]
+nb_batches = int(sys.argv[-5])
+nb_epochs = int(sys.argv[-6])
+lr = sys.argv[-7]
+penalty = sys.argv[-8]
+dropout = sys.argv[-9]
 
 def create_lstm_vae(nb_features, 
     n_pre, 
@@ -170,7 +171,7 @@ def get_data():
 if __name__ == "__main__":
     x, wx, y, wy, n_pre, n_post = get_data() 
     nb_features = x.shape[2]
-    batch_size = 1
+    batch_size = nb_batches
 
     print('x samples shape', x_scaled.shape)     
     print('wx samples shape', wx_scaled.shape)  
