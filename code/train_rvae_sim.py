@@ -159,15 +159,20 @@ def get_data():
     x_obs = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))
     x_scaled = scaler.fit_transform(x_obs)
 
-    print('raw x shape', x_scaled.shape)  
+    y = np.array(pd.read_csv("data/{}-y.csv".format(dataname)))
+    y_scaled = scaler.fit_transform(y)
 
-    dXC = []
+    print('raw x shape', x_scaled.shape) 
+    print('raw y shape', y_scaled.shape)  
+
+    dXC, dXT = [], []
     for i in range(seq_len-n_pre):
         dXC.append(x_scaled[i:i+n_pre]) 
-    return np.array(dXC),n_pre,n_post     
+        dXT.append(y_scaled[i:i+n_pre]) 
+    return np.array(dXC),np.array(dXT),n_pre,n_post     
 
 if __name__ == "__main__":
-    x, n_pre, n_post = get_data() 
+    x, y, n_pre, n_post = get_data() 
     nb_features = x.shape[2]
     batch_size = 1
 
@@ -220,14 +225,8 @@ if __name__ == "__main__":
     model = create_model(n_pre, nb_features, output_dim, lr, penalty, dr)
     train_model(model, dataXC, dataYC, int(epochs), int(batch_size))
 
-    # now test
-
+    # now test 
     print('Generate predictions on test set')
-
-    y = np.array(pd.read_csv("data/{}-y.csv".format(dataname)))
-    y_scaled = scaler.fit_transform(y)
-
-    print('raw y shape', y_scaled.shape)  
 
     y_e = enc.predict(y, batch_size=batch_size, verbose=0) # encoded y
     y_e_scaled = scaler.fit_transform(y_e)
@@ -238,7 +237,7 @@ if __name__ == "__main__":
     for i in range(y_e_scaled.shape[0]-n_pre):
         dXT.append(y_e_scaled[i:i+n_pre]) # treated are inputs
     
-    dataXT = np.array(dXC)
+    dataXT = np.array(dXT)
 
     print('dataXT shape:', dataXT.shape)
 
