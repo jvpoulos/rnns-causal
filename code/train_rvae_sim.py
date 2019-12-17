@@ -170,10 +170,10 @@ def get_data():
     for i in range(seq_len-n_pre):
         dXC.append(x_scaled[i:i+n_pre]) # pre-period controls are inputs
         dXT.append(y_scaled[i:i+n_pre]) # pre-period treated 
-    return np.array(dXC),np.array(dXT),n_pre,n_post     
+    return np.array(dXC),x_scaled,np.array(dXT),y_scaled,n_pre,n_post     
 
 if __name__ == "__main__":
-    x, y, n_pre, n_post = get_data() 
+    x, x_scaled, y, y_scaled, n_pre, n_post = get_data() 
     nb_features = x.shape[2]
     batch_size = 1
 
