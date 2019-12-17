@@ -199,25 +199,17 @@ if __name__ == "__main__":
     print('xt shape', xt.shape)
 
     x_e = enc.predict(x, batch_size=batch_size, verbose=0) # encoded x
-    x_e_scaled = scaler.fit_transform(x_e)
+    x_e = scaler.fit_transform(x_e)
 
-    print('x_e_scaled shape:', x_e_scaled.shape)
+    print('x_e shape:', x_e.shape)
 
-    x_e_scaled_exp = np.repeat(np.expand_dims(x_e_scaled, axis=1), x.shape[1], axis=1)
-
-    print('x_e_scaled_exp shape:', x_e_scaled_exp.shape)
-
-    x_a = np.concatenate([x, x_e_scaled_exp], axis=2) # augment actual x
-
-    print('x_a shape:', x_a.shape)
-
-    nb_features = x_a.shape[2]
-    output_dim = y.shape[1]
+    nb_features = x_e.shape[1]
+    output_dim = xt.shape[1]
   
     # create and fit the LSTM network
     print('creating model...')
     model = create_model(n_pre, nb_features, output_dim, lr, penalty, dr)
-    train_model(model, x_a, xt, int(epochs), int(nb_batches))
+    train_model(model, x_e, xt, int(epochs), int(nb_batches))
 
     # now test
 
@@ -236,7 +228,12 @@ if __name__ == "__main__":
 
     print('dataXT shape:', dataXT.shape)
 
-    preds_test = model.predict(dataXT, batch_size=batch_size, verbose=0)
+    y_e = enc.predict(y, batch_size=batch_size, verbose=0) # encoded y
+    y_e = scaler.fit_transform(x_e)
+
+    print('y_e shape:', y_e.shape)
+
+    preds_test = model.predict(y_e, batch_size=batch_size, verbose=0)
     preds_test = np.squeeze(preds_test)
 
     preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
