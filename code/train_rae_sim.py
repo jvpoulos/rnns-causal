@@ -52,7 +52,7 @@ def create_lstm_autoencoder(nb_features,
         - [Building Autoencoders in Keras](https://blog.keras.io/building-autoencoders-in-keras.html)
     """
 
-    inputs = Input(shape=(n_pre, nb_features))
+    inputs = Input(shape=(n_pre, nb_features,))
     encoded = LSTM(latent_dim, dropout=dr)(inputs)
 
     decoded = RepeatVector(n_pre)(encoded)
@@ -88,6 +88,10 @@ def get_data():
 
 if __name__ == "__main__":
     x, y, n_pre, n_post = get_data() 
+
+    print('x shape', x.shape)  
+    print('y shape', y.shape)  
+
     nb_features = x.shape[2]
     batch_size = int(nb_batches)
 
@@ -112,9 +116,6 @@ if __name__ == "__main__":
 
     # now test 
     print('Generate predictions on test set')
-
-    print('x shape', x.shape)  
-    print('y shape', y.shape)  
 
     preds_test = sequence_autoencoder.predict(y, batch_size=batch_size, verbose=0)
     preds_test = np.squeeze(preds_test)
