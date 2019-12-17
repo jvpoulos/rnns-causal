@@ -200,6 +200,7 @@ if __name__ == "__main__":
 
     x_e = enc.predict(x, batch_size=batch_size, verbose=0) # encoded x
     x_e_scaled = scaler.fit_transform(x_e)
+    x_e_scaled = np.reshape(x_e_scaled, x.shape)
 
     print('x_e_scaled shape:', x_e_scaled.shape)
 
