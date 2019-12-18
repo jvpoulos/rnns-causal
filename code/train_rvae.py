@@ -24,8 +24,6 @@ def wrapped_partial(func, *args, **kwargs):
     update_wrapper(partial_func, func)
     return partial_func
 
-from train_lstm import create_model train_model
-
 def weighted_mse(y_true, y_pred, weights):
     return K.mean(K.square(y_true - y_pred) * weights, axis=-1)
 
@@ -162,9 +160,9 @@ def get_data():
 
     dXC,  wXC, dXT,  wXT  = [], [], [], []
     for i in range(seq_len-n_pre):
-        dXC.append(x_scaled[i:i+n_pre]) # controls are inputs
+        dXC.append(x_scaled[i:i+n_pre]) # controls
         wXC.append(wx_scaled[i:i+n_pre]) 
-        dXT.append(y_scaled[i:i+n_pre]) # pre-period treated 
+        dXT.append(y_scaled[i:i+n_pre]) # treated 
         wXT.append(wy_scaled[i:i+n_pre]) 
     return np.array(dXC),np.array(wXC),np.array(dXT),np.array(wXT),n_pre,n_post     
 
