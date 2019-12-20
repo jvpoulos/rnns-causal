@@ -213,8 +213,6 @@ SynthSim <- function(outcomes,d){
   }
 }
 
-# foreach(d = c('basque','california','germany')) %do% {
-#     SynthSim(synth.control.outcomes,d)
-# }
-
-SynthSim(synth.control.outcomes, d='california')
+foreach(d = c('basque','california','germany')) %do% {
+    SynthSim(synth.control.outcomes,d)
+}
