@@ -20,7 +20,7 @@ doParallel::registerDoParallel(cores) # register cores (<p)
 
 RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
-StockSim <- function(Y,N,fix_d){
+StockSim <- function(Y,N){
   ## Setting up the configuration
   Nbig <- nrow(Y)
   Tbig <- ncol(Y)
