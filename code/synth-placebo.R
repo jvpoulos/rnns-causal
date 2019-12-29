@@ -8,17 +8,17 @@ library(glmnet)
 library(ggplot2)
 library(latex2exp)
 
-# # Setup parallel processing 
-# library(parallel)
-# library(doParallel)
-# 
-# cores <- ceiling(detectCores()/4)
-# 
-# cl <- parallel::makeCluster(cores)
-# 
-# doParallel::registerDoParallel(cores) # register cores (<p)
-# 
-# RNGkind("L'Ecuyer-CMRG") # ensure random number generation
+# Setup parallel processing 
+library(parallel)
+library(doParallel)
+
+cores <- ceiling(detectCores()/4)
+
+cl <- parallel::makeCluster(cores)
+
+doParallel::registerDoParallel(cores) # register cores (<p)
+
+RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
 # Load data
 synth.control.outcomes <- readRDS("data/synth-control-outcomes.rds")
@@ -34,7 +34,7 @@ SynthSim <- function(outcomes,d){
   number_T0 <- 4
   T0 <- ceiling(T*((1:number_T0)*5-1)/(5*number_T0))
   N_t <- ceiling(N*0.5) # no. treated units desired <=N
-  num_runs <- 20
+  num_runs <- 40
   is_simul <- 1 ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   to_save <- 1 ## Whether to save the plot or not
   

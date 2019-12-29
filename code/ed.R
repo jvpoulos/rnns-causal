@@ -26,7 +26,7 @@ ed <- function(Y_obs,Y,treat_indices,d, t0, T){
   py$T <- T
   if(d=='stock'){
     py$nb_batches <- 16
-    py$gpu <- 1
+    py$gpu <- 3
     py$epochs <- 10000
     py$lr <- 0.0005
     py$penalty <- 0.1
@@ -34,7 +34,7 @@ ed <- function(Y_obs,Y,treat_indices,d, t0, T){
   } 
   if(d=='stock_fixed'){
     py$nb_batches <- 16
-    py$gpu <- 0
+    py$gpu <- 3
     py$epochs <- 10000
     py$lr <- 0.0005
     py$penalty <- 0.1
@@ -42,7 +42,7 @@ ed <- function(Y_obs,Y,treat_indices,d, t0, T){
   } 
   if(d=='educ.pc'){
     py$nb_batches <- 16
-    py$gpu <- 1
+    py$gpu <- 3
     py$epochs <- 10000
     py$lr <- 0.0005
     py$penalty <- 0.1
@@ -50,7 +50,7 @@ ed <- function(Y_obs,Y,treat_indices,d, t0, T){
   } 
   if(d%in%c('basque','california','germany')){
     py$nb_batches <- 4
-    py$gpu <- 1
+    py$gpu <- 3
     py$epochs <- 10000
     py$lr <- 0.0005
     py$penalty <- 0.001

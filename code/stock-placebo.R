@@ -30,7 +30,7 @@ StockSim <- function(Y,T){
   
   T0 <- ceiling(T/2)
   N_t <- ceiling(N/2)
-  num_runs <- 20
+  num_runs <- 40
   is_simul <- 1 ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   d <- 'stock'
 
@@ -201,7 +201,7 @@ StockSim <- function(Y,T){
 Y <- t(read.csv('data/returns_no_missing.csv',header=F)) # N X T
 
 # increase dimensions
-results <- foreach(T = c(250,500,1000,2000), .combine='rbind') %do% {
+results <- foreach(T = c(175,350,700,1400), .combine='rbind') %do% {
   StockSim(Y,T)
 }
 saveRDS(results, "results/stock-placebo-results-inc.rds")

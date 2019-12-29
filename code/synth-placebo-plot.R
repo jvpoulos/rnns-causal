@@ -8,7 +8,7 @@ df1 <- df1 %>% group_by(x) %>% mutate(y = y,
                                       lb= lb,
                                       ub = ub)
 
-basque <- ggplot(data = df1[df1$Method!="RVAE",], aes(x, y, color = Method, shape = Method)) +
+basque <- ggplot(data = df1, aes(x, y, color = Method, shape = Method)) +
   geom_point(size = 5, position=position_dodge(width=0.1)) +
   geom_errorbar(
     aes(ymin = lb, ymax = ub),
@@ -38,7 +38,7 @@ df1 <- df1 %>% group_by(x) %>% mutate(y = y,
                                       lb= lb,
                                       ub = ub)
 
-germany <- ggplot(data = df1[df1$Method!="RVAE",], aes(x, y, color = Method, shape = Method)) +
+germany <- ggplot(data = df1, aes(x, y, color = Method, shape = Method)) +
   geom_point(size = 5, position=position_dodge(width=0.1)) +
   geom_errorbar(
     aes(ymin = lb, ymax = ub),
@@ -68,7 +68,7 @@ df1 <- df1 %>% group_by(x) %>% mutate(y = y,
                                       lb= lb,
                                       ub = ub)
 
-california <- ggplot(data = df1[df1$Method!="RVAE",], aes(x, y, color = Method, shape = Method)) +
+california <- ggplot(data = df1, aes(x, y, color = Method, shape = Method)) +
   geom_point(size = 5, position=position_dodge(width=0.1)) +
   geom_errorbar(
     aes(ymin = lb, ymax = ub),
