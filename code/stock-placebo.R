@@ -7,18 +7,7 @@ library(MCPanel)
 library(glmnet)
 library(ggplot2)
 library(latex2exp)
-
-# Setup parallel processing 
-library(parallel)
-library(doParallel)
-
-cores <- ceiling(detectCores()/4)
-
-cl <- parallel::makeCluster(cores)
-
-doParallel::registerDoParallel(cores) # register cores (<p)
-
-RNGkind("L'Ecuyer-CMRG") # ensure random number generation
+library(foreach)
 
 StockSim <- function(Y,T){
   ## Setting up the configuration
@@ -30,7 +19,7 @@ StockSim <- function(Y,T){
   
   T0 <- ceiling(T/2)
   N_t <- ceiling(N/2)
-  num_runs <- 40
+  num_runs <- 30
   is_simul <- 1 ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   d <- 'stock'
 
