@@ -74,14 +74,14 @@ and then execute
 Counterfactual predictions
 ------
 
-To get encoder-decoder estimates run `train_encoder_decoder.py <GPU_ID> <epochs> <batches> <data name> <t_0> <T> <imputation_method>`; e.g., 
+To get encoder-decoder estimates run `train_encoder_decoder.py <GPU_ID> <patience> <epochs> <batches> <data name> <t_0> <T> <imputation_method>`; e.g., 
 ```
-python train_encoder_decoder.py 0 1000 8 'educ' 87 156 'locf'
+python train_encoder_decoder.py 0 250 000 8 'educ' 87 156 'locf'
 ```
 
-Similarly, for RVAE estimates run `train_rvae.py <GPU ID> <epochs> <batches> <data name> <t_0> <T> <imputation_method>`; e.g., 
+Similarly, for RVAE estimates run `train_rvae.py <GPU ID> <patience> <epochs> <batches> <data name> <t_0> <T> <imputation_method>`; e.g., 
 ```
-python train_rvae.py 0 1000 1 'educ' 87 156 'locf'
+python train_rvae.py 0 250 1000 1 'educ' 87 156 'locf'
 ```
 
 To plot the training and validation error, run `plot_history.py <file location of training log>`; e.g., 
