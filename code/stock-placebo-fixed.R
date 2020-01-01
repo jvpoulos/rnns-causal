@@ -1,13 +1,10 @@
-###################################
-# Stock Market Data Simulations #
-###################################
+###################################################
+# Stock Market Data Simulations: Fixed dimensions #
+###################################################
 
 ## Loading Source files
 library(MCPanel)
 library(glmnet)
-library(ggplot2)
-library(latex2exp)
-library(foreach)
 
 StockSim <- function(Y,N){
   ## Setting up the configuration
@@ -184,14 +181,11 @@ StockSim <- function(Y,N){
   ##
   filename<-paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".rds")
   saveRDS(df1, file = paste0("results/plots/",filename))
-  return(df1)
 }
 
 # Load data
 Y <- t(read.csv('data/returns_no_missing.csv',header=F)) # N X T
 
-# fixed dimensions
-results <- foreach(N = c(10,50,100,200), .combine='rbind') %do% {
+for(N in c(10,50,100,200)){
   StockSim(Y,N)
 }
-saveRDS(results, "results/stock-placebo-results-fixed.rds")

@@ -5,9 +5,6 @@
 ## Loading Source files
 library(MCPanel)
 library(glmnet)
-library(ggplot2)
-library(latex2exp)
-library(foreach)
 
 # Load data
 synth.control.outcomes <- readRDS("data/synth-control-outcomes.rds")
@@ -25,7 +22,6 @@ SynthSim <- function(outcomes,d){
   N_t <- ceiling(N*0.5) # no. treated units desired <=N
   num_runs <- 25
   is_simul <- 1 ## Whether to simulate Simultaneus Adoption or Staggered Adoption
-  to_save <- 1 ## Whether to save the plot or not
   
   ## Matrices for saving RMSE values
   
@@ -43,7 +39,7 @@ SynthSim <- function(outcomes,d){
     print(paste0(paste0("Run number ", i)," started"))
     ## Fix the treated units in the whole run for a better comparison
     treat_indices <- sample(1:N, N_t)
-    for (j in c(1:length(T0))){
+    for(j in c(1:length(T0))){
       treat_mat <- matrix(1L, N, T) # masked matrix, 1= control units and treated units before treatment and 0 = treated units after treatment
       t0 <- T0[j]
       ## Simultaneuous (simul_adapt) or Staggered adoption (stag_adapt)
@@ -89,7 +85,7 @@ SynthSim <- function(outcomes,d){
       ## MC-NNM
       ## ------
 
-      est_model_MCPanel <- mcnnm_cv(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, num_folds = 5)
+      est_model_MCPanel <- mcnnm_cv(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, num_folds = 2)
       est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
       est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y)*(1-treat_mat)
       est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
@@ -174,34 +170,10 @@ SynthSim <- function(outcomes,d){
                    replicate(length(T0),"SCM"),
                    replicate(length(T0),"SCM-EN")))
   
-  p <- ggplot(data = df1, aes(x, y, color = Method, shape = Method)) +
-    geom_point(size = 2, position=position_dodge(width=0.1)) +
-    geom_errorbar(
-      aes(ymin = lb, ymax = ub),
-      width = 0.1,
-      linetype = "solid",
-      position=position_dodge(width=0.1)) +
-    scale_shape_manual("Method",values=c(1:7)) +
-    scale_color_discrete("Method")+
-    theme_bw() +
-    xlab(TeX('$T_0/T$')) +
-    ylab("Average RMSE") +
-    theme(axis.title=element_text(family="Times", size=14)) +
-    theme(axis.text=element_text(family="Times", size=12)) +
-    theme(legend.text=element_text(family="Times", size = 12)) +
-    theme(legend.title=element_text(family="Times", size = 12))
-  print(p)
-  
-  ##
-  if(to_save == 1){
-    filename<-paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".png")
-    ggsave(filename, plot = last_plot(), device="png", dpi=600)
-    
-    filename<-paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".rds")
-    save(df1, file = paste0("results/plots/",filename))
-  }
+  filename<-paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".rds")
+  save(df1, file = paste0("results/plots/",filename))
 }
 
-foreach(d = c('basque','california','germany')) %do% {
+for(d in c('basque','california','germany')) {
     SynthSim(synth.control.outcomes,d)
 }
