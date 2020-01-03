@@ -24,12 +24,12 @@ ed <- function(Y_obs,Y,treat_indices,d, t0, T){
   py$dataname <- d
   py$t0 <- t0
   py$T <- T
-  py$patience <- 100
+  py$patience <- 500
   py$nb_batches <- 16
   py$gpu <- 3
   py$epochs <- 10000
   py$lr <- 0.001
-  py$penalty <- 0.01
+  py$penalty <- 0.001
   py$dr <- 0.5
   
   source_python("code/train_encoder_decoder_sim.py")
