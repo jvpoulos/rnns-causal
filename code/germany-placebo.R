@@ -174,6 +174,4 @@ SynthSim <- function(outcomes,d){
   save(df1, file = paste0("results/plots/",filename))
 }
 
-for(d in c('basque','california','germany')) {
-    SynthSim(synth.control.outcomes,d)
-}
+SynthSim(synth.control.outcomes,'germany')

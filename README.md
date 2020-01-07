@@ -67,7 +67,7 @@ $ mkdir results/$$MODEL$$/$$DATANAME$$
 
 and then execute
 
-* `synth-placebo.sh`: synthetic control datasets
+* `basque-placebo.sh`, `california-placebo.sh`, `germany-placebo.sh`: synthetic control datasets
 * `stock-placebo-fixed.sh`: stock market prices with fixed dimensions
 * `educ-placebo.sh`: state government education spending
 
