@@ -49,7 +49,7 @@ def create_model(n_pre, nb_features, output_dim, lr, penalty, dr):
 
     n_hidden = 128
 
-    inputs = Input(shape=(n_pre, nb_features,), name="Inputs") 
+    inputs = Input(shape=(n_pre, nb_features), name="Inputs") 
     weights_tensor = Input(shape=(n_pre, nb_features), name="Weights")
     lstm_1 = LSTM(n_hidden, dropout=dr)(inputs) 
     output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(lstm_1)
