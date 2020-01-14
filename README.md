@@ -25,11 +25,11 @@ archivePrefix = {arXiv},
 Prerequsites
 ------
 
-* Python 2 (tested on Python 2.7.16)
+* Python 2.7
 
-* Tensorflow 1.2
+* Tensorflow 2.1.0
 
-* **R** version 3.5.2 (2018-12-20). 
+* **R** version 3.6.1
 
 Set up
 ------

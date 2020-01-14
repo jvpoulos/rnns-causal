@@ -140,9 +140,8 @@ def get_data():
     seq_len = int(T)
 
     wx = np.array(pd.read_csv("data/{}-wx-{}.csv".format(dataname,imp)))  
-    wx_scaled = scaler.fit_transform(wx)  
 
-    print('raw wx shape', wx_scaled.shape)   
+    print('raw wx shape', wx.shape)   
                 
     x_obs = np.array(pd.read_csv("data/{}-x-{}.csv".format(dataname,imp)))
     x_scaled = scaler.fit_transform(x_obs)
@@ -150,9 +149,8 @@ def get_data():
     print('raw x shape', x_scaled.shape)   
 
     wy = np.array(pd.read_csv("data/{}-wy-{}.csv".format(dataname,imp)))    
-    wy_scaled = scaler.fit_transform(wy)
 
-    print('raw wy shape', wy_scaled.shape)  
+    print('raw wy shape', wy.shape)  
 
     y = np.array(pd.read_csv("data/{}-y-{}.csv".format(dataname,imp)))
     y_scaled = scaler.fit_transform(y)
@@ -162,18 +160,15 @@ def get_data():
     dXC,  wXC, dXT,  wXT  = [], [], [], []
     for i in range(seq_len-n_pre):
         dXC.append(x_scaled[i:i+n_pre]) # controls
-        wXC.append(wx_scaled[i:i+n_pre]) 
+        wXC.append(wx[i:i+n_pre]) 
         dXT.append(y_scaled[i:i+n_pre]) # treated 
-        wXT.append(wy_scaled[i:i+n_pre]) 
+        wXT.append(wy[i:i+n_pre]) 
     return np.array(dXC),np.array(wXC),np.array(dXT),np.array(wXT),n_pre,n_post     
 
 if __name__ == "__main__":
     x, wx, y, wy, n_pre, n_post = get_data() 
     nb_features = x.shape[2]
     batch_size = nb_batches
-
-    print('x samples shape', x_scaled.shape)     
-    print('wx samples shape', wx_scaled.shape)  
 
     vae, enc, gen = create_lstm_vae(nb_features, 
         n_pre=n_pre, 

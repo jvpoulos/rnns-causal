@@ -21,6 +21,16 @@ from keras.optimizers import Adam
 from sklearn.preprocessing import MinMaxScaler
 scaler = MinMaxScaler(feature_range = (0, 1))
 
+from functools import partial, update_wrapper
+
+def wrapped_partial(func, *args, **kwargs):
+    partial_func = partial(func, *args, **kwargs)
+    update_wrapper(partial_func, func)
+    return partial_func
+
+def weighted_mse(y_true, y_pred, weights):
+    return K.mean(K.square(y_true - y_pred) * weights, axis=-1)
+
 # Select gpu
 import os
 if gpu < 3:
@@ -41,19 +51,22 @@ def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr):
     decoder_hidden = 128
 
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
+    weights_tensor = Input(shape=(n_pre, nb_features), name="Weights")
     lstm_1 = LSTM(encoder_hidden, dropout=dr, return_sequences=True, name='LSTM_1')(inputs) # Encoder
     lstm_2 = LSTM(encoder_hidden, dropout=dr, return_sequences=False, name='LSTM_2')(lstm_1) # Encoder
     repeat = RepeatVector(n_post, name='Repeat')(lstm_2) # get the last output of the LSTM and repeats it
     lstm_3 = LSTM(decoder_hidden, dropout=dr, return_sequences=True, name='Decoder')(repeat)  # Decoder
     output= TimeDistributed(Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense'), name='Outputs')(lstm_3)
 
-    model = Model(inputs=inputs, output=output)
+    cl = wrapped_partial(weighted_mse, weights=weights_tensor)
 
-    model.compile(optimizer=Adam(lr=lr), loss='mean_squared_error')  
+    model = Model([inputs, weights_tensor], output)
+
+    model.compile(optimizer=Adam(lr=lr), loss=cl)
 
     return model
 
-def train_model(model, dataX, dataY, epoch_count, batches):
+def train_model(model, dataX, dataY, weights, epoch_count, batches):
 
     # Prepare model checkpoints and callbacks
 
@@ -61,7 +74,7 @@ def train_model(model, dataX, dataY, epoch_count, batches):
 
     csv_logger = CSVLogger('results/encoder-decoder/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
 
-    history = model.fit(dataX, 
+    history = model.fit([dataX,weights], 
         dataY, 
         batch_size=batches, 
         verbose=1,
@@ -74,6 +87,18 @@ def test_model():
     n_post = int(1)
     n_pre =int(t0)-1
     seq_len = int(T)
+
+    wx = np.array(pd.read_csv("data/{}-wx.csv".format(dataname)))
+
+    print('raw wx shape', wx.shape)  
+
+    wX = []
+    for i in range(seq_len-n_pre):
+        wX.append(wx[i:i+n_pre]) # controls are inputs
+    
+    wXC = np.array(wX)
+
+    print('wXC shape:', wXC.shape)
 
     x_obs = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))
     x_scaled = scaler.fit_transform(x_obs)
@@ -100,12 +125,24 @@ def test_model():
     # create and fit the LSTM network
     print('creating model...')
     model = create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr)
-    train_model(model, dataXC, dataYC, int(epochs), int(nb_batches))
+    train_model(model, dataXC, dataYC, wXC, int(epochs), int(nb_batches))
 
     # now test
 
     print('Generate predictions on test set')
 
+    wy = np.array(pd.read_csv("data/{}-wy-{}.csv".format(dataname,imp)))
+
+    print('raw wy shape', wy.shape)  
+
+    wY = []
+    for i in range(seq_len-n_pre):
+        wY.append(wy[i:i+n_pre]) # controls are inputs
+    
+    wXT = np.array(wY)
+
+    print('wXT shape:', wXT.shape)
+    
     y = np.array(pd.read_csv("data/{}-y.csv".format(dataname)))
      
     y_scaled = scaler.fit_transform(y)
@@ -120,7 +157,7 @@ def test_model():
 
     print('dataXT shape:', dataXT.shape)
 
-    preds_test = model.predict(dataXT, batch_size=int(nb_batches), verbose=1)
+    preds_test = model.predict([dataXT, wXT], batch_size=int(nb_batches), verbose=1)
     preds_test = np.squeeze(preds_test)
     preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
 

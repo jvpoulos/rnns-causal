@@ -6,7 +6,7 @@
 library(MCPanel)
 library(glmnet)
 
-StockSim <- function(Y,T){
+StockSim <- function(Y,T,sim){
   ## Setting up the configuration
   Nbig <- nrow(Y)
   Tbig <- ncol(Y)
@@ -17,12 +17,13 @@ StockSim <- function(Y,T){
   T0 <- ceiling(T/2)
   N_t <- ceiling(N/2)
   num_runs <- 50
-  is_simul <- 1 ## Whether to simulate Simultaneus Adoption or Staggered Adoption
+  is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   d <- 'stock'
 
   ## Matrices for saving RMSE values
   
   MCPanel_RMSE_test <- matrix(0L,num_runs,length(T0))
+  VAR_RMSE_test <- matrix(0L,num_runs,length(T0))
   LSTM_RMSE_test <- matrix(0L,num_runs,length(T0))
   RVAE_RMSE_test <- matrix(0L,num_runs,length(T0))
   ED_RMSE_test <- matrix(0L,num_runs,length(T0))
@@ -49,6 +50,17 @@ StockSim <- function(Y,T){
       }
       
       Y_obs <- Y_sub * treat_mat
+      
+      ## ------
+      ## VAR
+      ## ------
+      
+      print("VAR Started")
+      source("code/varEst.R")
+      est_model_VAR <- varEst(Y_obs, Y, treat_indices, t0, T)
+      est_model_VAR_msk_err <- (est_model_VAR - Y[treat_indices,][,t0:T])
+      est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
+      VAR_RMSE_test[i,j] <- est_model_VAR_test_RMSE
       
       ## ------
       ## LSTM
@@ -131,6 +143,9 @@ StockSim <- function(Y,T){
   MCPanel_avg_RMSE <- apply(MCPanel_RMSE_test,2,mean)
   MCPanel_std_error <- apply(MCPanel_RMSE_test,2,sd)/sqrt(num_runs)
   
+  VAR_avg_RMSE <- apply(VAR_RMSE_test,2,mean)
+  VAR_std_error <- apply(VAR_RMSE_test,2,sd)/sqrt(num_runs)
+  
   LSTM_avg_RMSE <- apply(LSTM_RMSE_test,2,mean)
   LSTM_std_error <- apply(LSTM_RMSE_test,2,sd)/sqrt(num_runs)
   
@@ -153,30 +168,32 @@ StockSim <- function(Y,T){
   
   df1 <-
     data.frame(
-      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,RVAE_avg_RMSE,ADH_avg_RMSE,ENT_avg_RMSE),
+      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,RVAE_avg_RMSE,ADH_avg_RMSE,ENT_avg_RMSE,VAR_avg_RMSE),
       "lb" = c(DID_avg_RMSE - 1.96*DID_std_error,
                ED_avg_RMSE - 1.96*ED_std_error,
                LSTM_avg_RMSE - 1.96*LSTM_std_error,
                MCPanel_avg_RMSE - 1.96*MCPanel_std_error, 
                RVAE_avg_RMSE - 1.96*RVAE_std_error, 
                ADH_avg_RMSE - 1.96*ADH_std_error,
-               ENT_avg_RMSE - 1.96*ENT_std_error),
+               ENT_avg_RMSE - 1.96*ENT_std_error,
+               VAR_avg_RMSE - 1.96*VAR_std_error),
       "ub" = c(DID_avg_RMSE + 1.96*DID_std_error, 
                ED_avg_RMSE + 1.96*ED_std_error,
                LSTM_avg_RMSE + 1.96*LSTM_std_error,
                MCPanel_avg_RMSE + 1.96*MCPanel_std_error, 
                RVAE_avg_RMSE + 1.96*RVAE_std_error, 
                ADH_avg_RMSE + 1.96*ADH_std_error,
-               ENT_avg_RMSE + 1.96*ENT_std_error),
-      "N" = rep(N,7),
-      "T" = rep(T,7),
+               ENT_avg_RMSE + 1.96*ENT_std_error,
+               VAR_avg_RMSE - 1.96*VAR_std_error),
+      "x" = c(T0/T, T0/T ,T0/T, T0/T, T0/T, T0/T, T0/T, T0/T),
       "Method" = c(replicate(length(T0),"DID"), 
                    replicate(length(T0),"Encoder-decoder"),
                    replicate(length(T0),"LSTM"), 
                    replicate(length(T0),"MC-NNM"), 
                    replicate(length(T0),"RVAE"), 
                    replicate(length(T0),"SCM"),
-                   replicate(length(T0),"SCM-EN")))
+                   replicate(length(T0),"SCM-EN"),
+                   replicate(length(T0),"VAR")))
   
   filename<-paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".rds")
   saveRDS(df1, file = paste0("results/plots/",filename))
@@ -186,5 +203,5 @@ StockSim <- function(Y,T){
 Y <- t(read.csv('data/returns_no_missing.csv',header=F)) # N X T
 
 for(T in c(175,350,700,1400)){
-  StockSim(Y,T)
+  StockSim(Y,T,sim=1)
 }

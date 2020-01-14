@@ -5,12 +5,15 @@
 ## Loading Source files
 library(MCPanel)
 library(glmnet)
+library(dplyr)
+library(caret)
 
 # Load data
 synth.control.outcomes <- readRDS("data/synth-control-outcomes.rds")
+synth.control.covars <- readRDS("data/synth-control-covars.rds")
 
 ## Reading data
-SynthSim <- function(outcomes,d){
+SynthSim <- function(outcomes,covars.x,covars.z,d,sim){
   Y <- outcomes[[d]]$M # NxT outcomes
   treat <- outcomes[[d]]$mask # NxT masked matrix 
 
@@ -21,11 +24,12 @@ SynthSim <- function(outcomes,d){
   T0 <- ceiling(T*((1:number_T0)*5-1)/(5*number_T0))
   N_t <- ceiling(N*0.5) # no. treated units desired <=N
   num_runs <- 50
-  is_simul <- 1 ## Whether to simulate Simultaneus Adoption or Staggered Adoption
+  is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   
   ## Matrices for saving RMSE values
   
   MCPanel_RMSE_test <- matrix(0L,num_runs,length(T0))
+  VAR_RMSE_test <- matrix(0L,num_runs,length(T0))
   LSTM_RMSE_test <- matrix(0L,num_runs,length(T0))
   RVAE_RMSE_test <- matrix(0L,num_runs,length(T0))
   ED_RMSE_test <- matrix(0L,num_runs,length(T0))
@@ -50,13 +54,33 @@ SynthSim <- function(outcomes,d){
       }
 
       Y_obs <- Y * treat_mat
-    
+      
+      ## Estimate propensity scores
+      
+      logitMod.x <- glm.fit(x=covars.x, y=(1-treat_mat)[,t0], family=binomial(link="logit"))
+      logitMod.z <- glm.fit(x=covars.z, y=(1-treat_mat)[treat_indices[1],], family=binomial(link="logit"))
+      
+      plogis(logitMod.x$linear.predictors) # convert it into prediction probability scores that is bound between 0 and 1
+      plogis(logitMod.z$linear.predictors)
+      
+      p.weights <- outer(fitted(logitMod.x),fitted(logitMod.z)) # outer product of fitted values on response scale
+      
+      ## ------
+      ## VAR
+      ## ------
+      
+      source("code/varEst.R")
+      est_model_VAR <- varEst(Y_obs, Y, treat_indices, t0, T)
+      est_model_VAR_msk_err <- (est_model_VAR - Y[treat_indices,][,t0:T])
+      est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
+      VAR_RMSE_test[i,j] <- est_model_VAR_test_RMSE
+      
       ## ------
       ## LSTM
       ## ------
       
       source("code/lstm.R")
-      est_model_LSTM <- lstm(Y_obs, Y, treat_indices, d, t0, T)
+      est_model_LSTM <- lstm(Y_obs, Y, p.weights, treat_indices, d, t0, T)
       est_model_LSTM_msk_err <- (est_model_LSTM - Y[treat_indices,][,t0:T])
       est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
       LSTM_RMSE_test[i,j] <- est_model_LSTM_test_RMSE
@@ -66,7 +90,7 @@ SynthSim <- function(outcomes,d){
       ## ------
       
       source("code/rvae.R")
-      est_model_RVAE <- rvae(Y_obs, Y, treat_indices, d, t0, T)
+      est_model_RVAE <- rvae(Y_obs, Y, p.weights, treat_indices, d, t0, T)
       est_model_RVAE_msk_err <- (est_model_RVAE - Y[treat_indices,][,t0:T])
       est_model_RVAE_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_RVAE_msk_err^2, na.rm = TRUE))
       RVAE_RMSE_test[i,j] <- est_model_RVAE_test_RMSE
@@ -76,7 +100,7 @@ SynthSim <- function(outcomes,d){
       ## ------
       
       source("code/ed.R")
-      est_model_ED <- ed(Y_obs, Y, treat_indices, d, t0, T)
+      est_model_ED <- ed(Y_obs, Y, p.weights, treat_indices, d, t0, T)
       est_model_ED_msk_err <- (est_model_ED - Y[treat_indices,][,t0:T])
       est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
       ED_RMSE_test[i,j] <- est_model_ED_test_RMSE
@@ -124,6 +148,9 @@ SynthSim <- function(outcomes,d){
   MCPanel_avg_RMSE <- apply(MCPanel_RMSE_test,2,mean)
   MCPanel_std_error <- apply(MCPanel_RMSE_test,2,sd)/sqrt(num_runs)
   
+  VAR_avg_RMSE <- apply(VAR_RMSE_test,2,mean)
+  VAR_std_error <- apply(VAR_RMSE_test,2,sd)/sqrt(num_runs)
+  
   LSTM_avg_RMSE <- apply(LSTM_RMSE_test,2,mean)
   LSTM_std_error <- apply(LSTM_RMSE_test,2,sd)/sqrt(num_runs)
   
@@ -146,32 +173,51 @@ SynthSim <- function(outcomes,d){
   
   df1 <-
     data.frame(
-      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,RVAE_avg_RMSE,ADH_avg_RMSE,ENT_avg_RMSE),
+      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,RVAE_avg_RMSE,ADH_avg_RMSE,ENT_avg_RMSE,VAR_avg_RMSE),
       "lb" = c(DID_avg_RMSE - 1.96*DID_std_error,
                ED_avg_RMSE - 1.96*ED_std_error,
                LSTM_avg_RMSE - 1.96*LSTM_std_error,
                MCPanel_avg_RMSE - 1.96*MCPanel_std_error, 
                RVAE_avg_RMSE - 1.96*RVAE_std_error, 
                ADH_avg_RMSE - 1.96*ADH_std_error,
-               ENT_avg_RMSE - 1.96*ENT_std_error),
+               ENT_avg_RMSE - 1.96*ENT_std_error,
+               VAR_avg_RMSE - 1.96*VAR_std_error),
       "ub" = c(DID_avg_RMSE + 1.96*DID_std_error, 
                ED_avg_RMSE + 1.96*ED_std_error,
                LSTM_avg_RMSE + 1.96*LSTM_std_error,
                MCPanel_avg_RMSE + 1.96*MCPanel_std_error, 
                RVAE_avg_RMSE + 1.96*RVAE_std_error, 
                ADH_avg_RMSE + 1.96*ADH_std_error,
-               ENT_avg_RMSE + 1.96*ENT_std_error),
-      "x" = c(T0/T, T0/T ,T0/T, T0/T, T0/T, T0/T, T0/T),
+               ENT_avg_RMSE + 1.96*ENT_std_error,
+               VAR_avg_RMSE - 1.96*VAR_std_error),
+      "x" = c(T0/T, T0/T ,T0/T, T0/T, T0/T, T0/T, T0/T, T0/T),
       "Method" = c(replicate(length(T0),"DID"), 
                    replicate(length(T0),"Encoder-decoder"),
                    replicate(length(T0),"LSTM"), 
                    replicate(length(T0),"MC-NNM"), 
                    replicate(length(T0),"RVAE"), 
                    replicate(length(T0),"SCM"),
-                   replicate(length(T0),"SCM-EN")))
+                   replicate(length(T0),"SCM-EN"),
+                   replicate(length(T0),"VAR")))
   
   filename<-paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".rds")
   save(df1, file = paste0("results/plots/",filename))
 }
 
-SynthSim(synth.control.outcomes,'basque')
+names(synth.control.covars$basque.xz) <- 1:length(synth.control.covars$basque.xz)
+basque.covars.x <- t(as.matrix(bind_rows(lapply(synth.control.covars$basque.xz,colMeans)))) # N x # predictors
+colnames(basque.covars.x) <- 1:ncol(basque.covars.x)
+
+preProcValues <- preProcess(basque.covars.x, method = c("nzv","center","scale")) # preprocess
+basque.covars.xt <- predict(preProcValues, basque.covars.x)
+
+basque.covars.z <- Reduce(`+`,synth.control.covars$basque.xz)/length(synth.control.covars$basque.xz) # T x #predictors
+colnames(basque.covars.z) <- gsub('.{2}$', '', colnames(basque.covars.z))
+
+preProcValues <- preProcess(basque.covars.z, method = c("nzv","center","scale")) # preprocess
+basque.covars.zt <- predict(preProcValues, basque.covars.z)
+
+colnames(basque.covars.xt) <- colnames(basque.covars.zt)
+rownames(basque.covars.zt) <- 1:nrow(basque.covars.zt)
+
+SynthSim(outcomes=synth.control.outcomes,covars.x=basque.covars.xt, covars.z=basque.covars.zt,d='basque',sim=1)

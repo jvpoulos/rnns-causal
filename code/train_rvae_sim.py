@@ -20,8 +20,15 @@ from keras.callbacks import CSVLogger, EarlyStopping
 from sklearn.preprocessing import MinMaxScaler
 scaler = MinMaxScaler(feature_range = (0, 1))
 
-def mean_squared_error(y_true, y_pred):
-        return K.mean(K.square(y_pred - y_true))
+from functools import partial, update_wrapper
+
+def wrapped_partial(func, *args, **kwargs):
+    partial_func = partial(func, *args, **kwargs)
+    update_wrapper(partial_func, func)
+    return partial_func
+
+def weighted_mse(y_true, y_pred, weights):
+    return K.mean(K.square(y_true - y_pred) * weights, axis=-1)
 
 # Select gpu
 import os
@@ -61,6 +68,7 @@ def create_lstm_vae(nb_features,
     """
 
     x = Input(shape=(n_pre, nb_features), name='Encoder_inputs')
+    weights_tensor = Input(shape=(n_pre, nb_features), name="Weights")
 
     # LSTM encoding
     h = LSTM(intermediate_dim, dropout=dr, name='Encoder')(x)
@@ -90,7 +98,7 @@ def create_lstm_vae(nb_features,
     x_decoded_mean = decoder_mean(h_decoded)
     
     # end-to-end autoencoder
-    vae = Model(x, x_decoded_mean)
+    vae = Model([x, weights_tensor], x_decoded_mean)
 
     # encoder, from inputs to latent space
     encoder = Model(x, z_mean)
@@ -104,13 +112,15 @@ def create_lstm_vae(nb_features,
     _x_decoded_mean = decoder_mean(_h_decoded)
     generator = Model(decoder_input, _x_decoded_mean)
     
-    def vae_loss(x, x_decoded_mean):
-        xent_loss = mean_squared_error(x, x_decoded_mean)
+    def vae_loss(x, x_decoded_mean, weights):
+        xent_loss = weighted_mse(x, x_decoded_mean, weights)
         kl_loss = - 0.5 * K.mean(1 + z_log_sigma - K.square(z_mean) - K.exp(z_log_sigma))
         loss = xent_loss + kl_loss
         return loss
 
-    vae.compile(optimizer=Adam(lr=lr), loss=vae_loss)
+    cl = wrapped_partial(vae_loss, weights=weights_tensor)
+
+    vae.compile(optimizer=Adam(lr=lr), loss=cl)
     
     return vae, encoder, generator
 
@@ -120,9 +130,17 @@ def get_data():
     n_post = int(1)
     n_pre =int(t0)-1
     seq_len = int(T)
-                
+
+    wx = np.array(pd.read_csv("data/{}-wx-{}.csv".format(dataname,imp)))  
+
+    print('raw wx shape', wx.shape)   
+
     x_obs = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))
     x_scaled = scaler.fit_transform(x_obs)
+
+    wy = np.array(pd.read_csv("data/{}-wy-{}.csv".format(dataname,imp)))    
+
+    print('raw wy shape', wy.shape)  
 
     y = np.array(pd.read_csv("data/{}-y.csv".format(dataname)))
     y_scaled = scaler.fit_transform(y)
@@ -130,14 +148,16 @@ def get_data():
     print('raw x shape', x_scaled.shape) 
     print('raw y shape', y_scaled.shape)  
 
-    dXC, dXT = [], []
+    dXC,  wXC, dXT,  wXT  = [], [], [], []
     for i in range(seq_len-n_pre):
-        dXC.append(x_scaled[i:i+n_pre]) 
-        dXT.append(y_scaled[i:i+n_pre]) 
-    return np.array(dXC),np.array(dXT),n_pre,n_post     
+        dXC.append(x_scaled[i:i+n_pre]) # controls
+        wXC.append(wx[i:i+n_pre]) 
+        dXT.append(y_scaled[i:i+n_pre]) # treated 
+        wXT.append(wy[i:i+n_pre]) 
+    return np.array(dXC),np.array(wXC),np.array(dXT),np.array(wXT),n_pre,n_post      
 
 if __name__ == "__main__":
-    x, y, n_pre, n_post = get_data() 
+    x, wx, y, wy, n_pre, n_post = get_data() 
     nb_features = x.shape[2]
     batch_size = int(nb_batches)
 
@@ -156,7 +176,7 @@ if __name__ == "__main__":
 
     csv_logger = CSVLogger('results/rvae/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
 
-    vae.fit(x, x, 
+    vae.fit([x,wx], x, 
         epochs=int(epochs),
         verbose=1,
         callbacks=[stopping,csv_logger],
@@ -165,7 +185,7 @@ if __name__ == "__main__":
     # now test 
     print('Generate predictions on test set')
 
-    preds_test = vae.predict(y, batch_size=batch_size, verbose=0)
+    preds_test = vae.predict([wy,y], batch_size=batch_size, verbose=0)
     preds_test = np.squeeze(preds_test)
 
     preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
