@@ -7,7 +7,7 @@ import pandas as pd
 
 from keras import backend as K
 from keras.models import Model
-from keras.layers import LSTM, Input, Dense
+from keras.layers import LSTM, Input, Dense, TimeDistributed
 from keras.callbacks import ModelCheckpoint, CSVLogger, EarlyStopping
 from keras import regularizers
 from keras.optimizers import Adam
@@ -55,14 +55,13 @@ def create_model(n_pre, nb_features, output_dim, lr, penalty, dr):
     n_hidden = 128
 
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
-    weights_tensor = Input(shape=(n_pre, nb_features), name="Weights")
-    lstm_1 = LSTM(n_hidden, dropout=dr)(inputs) 
-    output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(lstm_1)
+    weights_tensor = Input(shape=(n_pre,nb_features), name="Weights")
+    lstm_1 = LSTM(n_hidden, return_sequences=True, dropout=dr)(inputs) 
+    output= TimeDistributed(Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense'))(lstm_1)
+
+    model = Model([inputs,weights_tensor],output) 
 
     cl = wrapped_partial(weighted_mse, weights=weights_tensor)
-
-    model = Model([inputs, weights_tensor], output)
-
     model.compile(optimizer=Adam(lr=lr), loss=cl)
 
     print(model.summary()) 
@@ -121,8 +120,11 @@ def test_model():
     print('dataXC shape:', dataXC.shape)
     print('dataYC shape:', dataYC.shape)
 
+    dataYC = np.expand_dims(dataYC, axis=1)
+    print('dataYC expanded shape:', dataYC.shape)
+
     nb_features = dataXC.shape[2]
-    output_dim = dataYC.shape[1]
+    output_dim = dataYC.shape[2]
 
     # create and fit the lstm network
     print('creating model...')
@@ -174,10 +176,8 @@ def test_model():
     print('dataXT shape:', dataXT.shape)
 
     preds_test = model.predict([dataXT, wXT], batch_size=int(nb_batches), verbose=1)
-
-    preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
-
     preds_test = np.squeeze(preds_test)
+    preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
 
     print('predictions shape =', preds_test.shape)
 

@@ -14,7 +14,7 @@ varEst <- function(Y_obs,Y,treat_indices, t0, T){
   
   test_data <- data_truth[,(treat_indices)] # treated units
   
-  var.fit <- onlineVAR(train_data, nu = 0.9, lags = t0-1, ahead = 1)
+  var.fit <- onlineVAR(train_data, nu = 0.9, lags = 1, ahead = 1)
 
   var.pred.test <- predict(var.fit, newdata = test_data)[(t0:T),]
     
