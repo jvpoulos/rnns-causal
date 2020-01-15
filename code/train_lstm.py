@@ -120,11 +120,8 @@ def test_model():
     print('dataXC shape:', dataXC.shape)
     print('dataYC shape:', dataYC.shape)
 
-    dataYC = np.expand_dims(dataYC, axis=1)
-    print('dataYC expanded shape:', dataYC.shape)
-
     nb_features = dataXC.shape[2]
-    output_dim = dataYC.shape[2]
+    output_dim = dataYC.shape[1]
 
     # create and fit the lstm network
     print('creating model...')
