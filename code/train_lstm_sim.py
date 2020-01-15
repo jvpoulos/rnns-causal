@@ -113,8 +113,11 @@ def test_model():
     print('dataXC shape:', dataXC.shape)
     print('dataYC shape:', dataYC.shape)
 
+    dataYC = np.expand_dims(dataYC, axis=1)
+    print('dataYC expanded shape:', dataYC.shape)
+
     nb_features = dataXC.shape[2]
-    output_dim = dataYC.shape[1]
+    output_dim = dataYC.shape[2]
   
     # create and fit the LSTM network
     print('creating model...')
@@ -152,8 +155,9 @@ def test_model():
     print('dataXT shape:', dataXT.shape)
 
     preds_test = model.predict([dataXT, wXT], batch_size=int(nb_batches), verbose=1)
-    preds_test = np.squeeze(preds_test)
     preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
+
+    preds_test = np.squeeze(preds_test)
 
     print('predictions shape =', preds_test.shape)
 
