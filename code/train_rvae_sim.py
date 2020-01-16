@@ -171,7 +171,7 @@ if __name__ == "__main__":
 
     vae.fit([x,wx], x, 
         epochs=int(epochs),
-        verbose=1,
+        verbose=0,
         callbacks=[stopping,csv_logger],
         validation_split=0.1)
 

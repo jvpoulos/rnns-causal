@@ -69,7 +69,7 @@ def train_model(model, dataX, dataY, weights, epoch_count, batches):
     history = model.fit(x=[dataX,weights], 
         y=dataY, 
         batch_size=batches, 
-        verbose=1,
+        verbose=0,
         epochs=epoch_count, 
         callbacks=[stopping,csv_logger],
         validation_split=0.1)
@@ -148,7 +148,7 @@ def test_model():
 
     print('dataXT shape:', dataXT.shape)
 
-    preds_test = model.predict([dataXT, wXT], batch_size=int(nb_batches), verbose=1)
+    preds_test = model.predict([dataXT, wXT], batch_size=int(nb_batches), verbose=0)
     
     print('predictions shape =', preds_test.shape)
 
