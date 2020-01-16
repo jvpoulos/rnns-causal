@@ -83,13 +83,12 @@ def test_model():
     seq_len = int(T)
 
     wx = np.array(pd.read_csv("data/{}-wx.csv".format(dataname)))  
-    wx_scaled = scaler.fit_transform(wx)
 
     print('raw wx shape', wx.shape)  
 
     wXC = []
     for i in range(seq_len-n_pre):
-        wXC.append(wx_scaled[i:i+n_pre])
+        wXC.append(wx[i:i+n_pre])
    
     wXC = np.array(wXC)
 
@@ -127,13 +126,12 @@ def test_model():
     print('Generate predictions on test set')
 
     wy = np.array(pd.read_csv("data/{}-wy.csv".format(dataname)))
-    wy_scaled = scaler.fit_transform(wy)
 
     print('raw wy shape', wy.shape)  
 
     wY = []
     for i in range(seq_len-n_pre):
-        wY.append(wy_scaled[i:i+n_pre]) # controls are inputs
+        wY.append(wy[i:i+n_pre]) # controls are inputs
     
     wXT = np.array(wY)
 
