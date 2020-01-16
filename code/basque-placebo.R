@@ -62,12 +62,12 @@ SynthSim <- function(outcomes,covars.x,covars.z,d,sim){
       
       p.weights <- outer(fitted(logitMod.x),fitted(logitMod.z)) # outer product of fitted values on response scale
       
-      d <- c(seq_len(length.out = t0), rev(seq_len(length.out = (T-t0))))
+      z <- c(seq_len(length.out = t0), rev(seq_len(length.out = (T-t0))))
       
       range01 <- function(x, ...){(x - min(x, ...)) / (max(x, ...) - min(x, ...))}
-      d <-range01(d) # weight obs closer to t0
+      z <-range01(z) # weight obs closer to t0
       
-      p.weights <- p.weights%*%diag(d)
+      p.weights <- p.weights%*%diag(z)
       
       ## ------
       ## VAR
