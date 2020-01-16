@@ -63,7 +63,7 @@ SynthSim <- function(outcomes,covars.x,covars.z,d,sim){
       plogis(logitMod.x$linear.predictors) # convert it into prediction probability scores that is bound between 0 and 1
       plogis(logitMod.z$linear.predictors)
       
-      p.weights <- outer(fitted(logitMod.x),fitted(logitMod.z)) # outer product of fitted values on response scale
+      p.weights <- outer(fitted(logitMod.x),fitted(logitMod.z))-.Machine$double.eps # outer product of fitted values on response scale
       
       z <- c(seq_len(length.out = t0), rev(seq_len(length.out = (T-t0))))
       
