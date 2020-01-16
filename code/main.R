@@ -17,17 +17,18 @@ RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 source("prepare-synth.R") # ---> data/synth-control-outcomes.rds
 source("elections.R") # --> data/elections/votediff.csv
 
-# elections-placebo.sh  --> elections-placebo.R
-# stock-placebo.sh ---> stock-placebo.R 
+# basque-placebo.sh ---> basque-placebo.R 
+# california-placebo.sh ---> california-placebo.R 
+# germany-placebo.sh ---> germany-placebo.R 
 # educ-placebo.sh ---> educ-placebo.R 
-# synth-placebo.sh ---> synth-placebo.R 
+# stock-placebo.sh ---> stock-placebo.R 
+# stock-placebo-fixed.sh ---> stock-placebo-fixed.R 
 
 figures <- FALSE
 if(figures){
-  source("elections-placebo-plot.R")
-  source("stock-placebo-plot.R")
-  source("educ-placebo-plot.R")
   source("synth-placebo-plot.R")
+  source("educ-placebo-plot.R")  
+  source("stock-placebo-plot.R")
 }
 
 # Causal impact estimates: public education spending

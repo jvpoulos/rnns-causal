@@ -28,7 +28,7 @@ def wrapped_partial(func, *args, **kwargs):
     return partial_func
 
 def weighted_mse(y_true, y_pred, weights):
-    return K.mean(K.square(y_true - y_pred) * weights, axis=-1)
+    return K.mean(K.square(y_true - y_pred) * (weights/(1-weights)), axis=-1)
 
 # Select gpu
 import os
@@ -131,16 +131,14 @@ def get_data():
     n_pre =int(t0)-1
     seq_len = int(T)
 
-    wx = np.array(pd.read_csv("data/{}-wx-{}.csv".format(dataname,imp)))  
-
-    print('raw wx shape', wx.shape)   
+    wx = np.array(pd.read_csv("data/{}-wx.csv".format(dataname)))  
+    wx_scaled = scaler.fit_transform(wx)
 
     x_obs = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))
     x_scaled = scaler.fit_transform(x_obs)
 
-    wy = np.array(pd.read_csv("data/{}-wy-{}.csv".format(dataname,imp)))    
-
-    print('raw wy shape', wy.shape)  
+    wy = np.array(pd.read_csv("data/{}-wy.csv".format(dataname)))    
+    wy_scaled = scaler.fit_transform(wy)
 
     y = np.array(pd.read_csv("data/{}-y.csv".format(dataname)))
     y_scaled = scaler.fit_transform(y)
@@ -151,9 +149,9 @@ def get_data():
     dXC,  wXC, dXT,  wXT  = [], [], [], []
     for i in range(seq_len-n_pre):
         dXC.append(x_scaled[i:i+n_pre]) # controls
-        wXC.append(wx[i:i+n_pre]) 
+        wXC.append(wx_scaled[i:i+n_pre]) 
         dXT.append(y_scaled[i:i+n_pre]) # treated 
-        wXT.append(wy[i:i+n_pre]) 
+        wXT.append(wy_scaled[i:i+n_pre]) 
     return np.array(dXC),np.array(wXC),np.array(dXT),np.array(wXT),n_pre,n_post      
 
 if __name__ == "__main__":
@@ -186,10 +184,12 @@ if __name__ == "__main__":
     print('Generate predictions on test set')
 
     preds_test = vae.predict([wy,y], batch_size=batch_size, verbose=0)
+    print('predictions shape =', preds_test.shape)
     preds_test = np.squeeze(preds_test)
+    print('predictions shape (squeezed) =', preds_test.shape)
 
     preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
-    print('predictions shape =', preds_test.shape)
+    print('predictions shape (transformed)=', preds_test.shape)
 
     print('Saving to results/rvae/{}/rvae-{}-test.csv'.format(dataname,dataname))
 

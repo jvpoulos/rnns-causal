@@ -29,7 +29,7 @@ def wrapped_partial(func, *args, **kwargs):
     return partial_func
 
 def weighted_mse(y_true, y_pred, weights):
-    return K.mean(K.square(y_true - y_pred) * weights, axis=-1)
+    return K.mean(K.square(y_true - y_pred) * (weights/(1-weights)), axis=-1)
 
 # Select gpu
 import os
@@ -83,19 +83,17 @@ def test_model():
     seq_len = int(T)
 
     wx = np.array(pd.read_csv("data/{}-wx.csv".format(dataname)))  
+    wx_scaled = scaler.fit_transform(wx)
 
     print('raw wx shape', wx.shape)  
 
-    wXC, wXT = [], []
+    wXC = []
     for i in range(seq_len-n_pre):
-        wXC.append(wx[i:i+n_pre])
-        wXT.append(wx[i+n_pre])
-    
+        wXC.append(wx_scaled[i:i+n_pre])
+   
     wXC = np.array(wXC)
-    wXT = np.array(wXT)
 
     print('wXC shape:', wXC.shape)
-    print('wXT shape:', wXT.shape)
 
     x = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))
     x_scaled = scaler.fit_transform(x)
@@ -129,12 +127,13 @@ def test_model():
     print('Generate predictions on test set')
 
     wy = np.array(pd.read_csv("data/{}-wy.csv".format(dataname)))
+    wy_scaled = scaler.fit_transform(wy)
 
     print('raw wy shape', wy.shape)  
 
     wY = []
     for i in range(seq_len-n_pre):
-        wY.append(wy[i:i+n_pre]) # controls are inputs
+        wY.append(wy_scaled[i:i+n_pre]) # controls are inputs
     
     wXT = np.array(wY)
 
@@ -155,11 +154,14 @@ def test_model():
     print('dataXT shape:', dataXT.shape)
 
     preds_test = model.predict([dataXT, wXT], batch_size=int(nb_batches), verbose=1)
-    preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
-
-    preds_test = np.squeeze(preds_test)
-
+    
     print('predictions shape =', preds_test.shape)
+
+    preds_test = np.mean(preds_test, axis=1)
+
+    print('predictions shape (squeezed) =', preds_test.shape)
+
+    preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
 
     print('Saving to results/lstm/{}/lstm-{}-test.csv'.format(dataname,dataname))
 

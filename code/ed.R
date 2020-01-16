@@ -31,7 +31,7 @@ ed <- function(Y_obs,Y,p.weights,treat_indices,d, t0, T){
   py$dataname <- d
   py$t0 <- t0
   py$T <- T
-  py$patience <- 500
+  py$patience <- 250
   py$nb_batches <- 16
   py$gpu <- 3
   py$epochs <- 10000
