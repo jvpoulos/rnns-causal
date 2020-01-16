@@ -53,7 +53,7 @@ StockSim <- function(Y,N,sim){
       
       ## Estimate propensity scores
       
-      p.weights <- matrix(1-Machine$double.eps, nrow=nrow(Y_obs), ncol=ncol(Y_obs))
+      p.weights <- matrix(0.5, nrow=nrow(Y_obs), ncol=ncol(Y_obs))
       z <- c(seq_len(length.out = t0), rev(seq_len(length.out = (T-t0))))
       
       range01 <- function(x, ...){(x - min(x, ...)) / (max(x, ...) - min(x, ...))}
