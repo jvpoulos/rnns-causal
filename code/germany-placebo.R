@@ -196,7 +196,7 @@ SynthSim <- function(outcomes,covars.x,covars.z,d,sim){
                RVAE_avg_RMSE + 1.96*RVAE_std_error, 
                ADH_avg_RMSE + 1.96*ADH_std_error,
                ENT_avg_RMSE + 1.96*ENT_std_error,
-               VAR_avg_RMSE - 1.96*VAR_std_error),
+               VAR_avg_RMSE + 1.96*VAR_std_error),
       "x" = c(T0/T, T0/T ,T0/T, T0/T, T0/T, T0/T, T0/T, T0/T),
       "Method" = c(replicate(length(T0),"DID"), 
                    replicate(length(T0),"Encoder-decoder"),
