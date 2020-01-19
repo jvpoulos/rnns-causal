@@ -14,9 +14,6 @@ RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
 ## Placebo tests
 
-source("prepare-synth.R") # ---> data/synth-control-outcomes.rds
-source("elections.R") # --> data/elections/votediff.csv
-
 # basque-placebo.sh ---> basque-placebo.R 
 # california-placebo.sh ---> california-placebo.R 
 # germany-placebo.sh ---> germany-placebo.R 
