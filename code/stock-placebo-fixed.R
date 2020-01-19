@@ -53,13 +53,7 @@ StockSim <- function(Y,N,sim){
       
       ## Estimate propensity scores
       
-      p.weights <- matrix(0.5, nrow=nrow(Y_obs), ncol=ncol(Y_obs))
-      z <- c(seq_len(length.out = t0), rev(seq_len(length.out = (T-t0))))
-      
-      range01 <- function(x, ...){(x - min(x, ...)) / (max(x, ...) - min(x, ...))}
-      z <-range01(z) # weight obs closer to t0
-      
-      p.weights <- p.weights%*%diag(z)
+      p.weights <- matrix(1, nrow=nrow(Y_obs), ncol=ncol(Y_obs)) # no covars
       
       ## ------
       ## VAR
@@ -212,6 +206,6 @@ StockSim <- function(Y,N,sim){
 # Load data
 Y <- t(read.csv('data/returns_no_missing.csv',header=F)) # N X T
 
-for(N in c(10,50,100,200)){
+for(N in c(25,50,100,175)){
   StockSim(Y,N,sim=1)
 }

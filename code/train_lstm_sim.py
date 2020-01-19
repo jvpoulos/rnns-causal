@@ -15,8 +15,8 @@ from keras.callbacks import CSVLogger, EarlyStopping
 from keras import regularizers
 from keras.optimizers import Adam
 
-from sklearn.preprocessing import MinMaxScaler
-scaler = MinMaxScaler(feature_range = (0, 1))
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler()
 
 from functools import partial, update_wrapper
 
@@ -136,7 +136,7 @@ def test_model():
 
     y = np.array(pd.read_csv("data/{}-y.csv".format(dataname)))
 
-    y_scaled = scaler.fit_transform(y)
+    y_scaled = scaler.transform(y)
      
     print('raw y shape', y_scaled.shape)   
 

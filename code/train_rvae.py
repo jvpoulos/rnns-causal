@@ -14,8 +14,8 @@ from keras.optimizers import SGD, RMSprop, Adam
 from keras import regularizers
 from keras.callbacks import ModelCheckpoint, CSVLogger, EarlyStopping
 
-from sklearn.preprocessing import MinMaxScaler
-scaler = MinMaxScaler(feature_range = (0, 1))
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler()
 
 from functools import partial, update_wrapper
 
@@ -149,7 +149,7 @@ def get_data():
     wy = np.array(pd.read_csv("data/{}-wy-{}.csv".format(dataname,imp)))    
 
     y = np.array(pd.read_csv("data/{}-y-{}.csv".format(dataname,imp)))
-    y_scaled = scaler.fit_transform(y)
+    y_scaled = scaler.transform(y)
 
     print('raw y shape', y.shape) 
 

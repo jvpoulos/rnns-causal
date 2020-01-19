@@ -60,14 +60,7 @@ SynthSim <- function(outcomes,covars.x,covars.z,d,sim){
       logitMod.x <- glm.fit(x=covars.x, y=(1-treat_mat)[,t0], family=binomial(link="logit"))
       logitMod.z <- glm.fit(x=covars.z, y=(1-treat_mat)[treat_indices[1],], family=binomial(link="logit"))
       
-      p.weights <- outer(fitted(logitMod.x),fitted(logitMod.z))-.Machine$double.eps # outer product of fitted values on response scale
-      
-      z <- c(seq_len(length.out = t0), rev(seq_len(length.out = (T-t0))))
-      
-      range01 <- function(x, ...){(x - min(x, ...)) / (max(x, ...) - min(x, ...))}
-      z <-range01(z) # weight obs closer to t0
-      
-      p.weights <- p.weights%*%diag(z)
+      p.weights <- outer(fitted(logitMod.x),fitted(logitMod.z))  # outer product of fitted values on response scale
       
       ## ------
       ## VAR

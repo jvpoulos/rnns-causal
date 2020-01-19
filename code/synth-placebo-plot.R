@@ -2,7 +2,7 @@ library(ggplot2)
 library(latex2exp)
 library(dplyr)
 
-load("results/plots/basque_N_16_T_43_numruns_20_num_treated_8_simultaneuous_1.rds")
+load("results/plots/basque_N_16_T_43_numruns_50_num_treated_8_simultaneuous_1.rds")
 
 df1 <- df1 %>% group_by(x) %>% mutate(y = y,
                                       lb= lb,
@@ -32,7 +32,7 @@ basque <- ggplot(data = df1, aes(x, y, color = Method, shape = Method)) +
 ggsave("results/plots/basque-sim.png", basque + theme( legend.position = "none"), width=8.5, height=11) 
 ggsave("results/plots/basque-sim-slides.png", basque + ggtitle("Basque Country terrorism") + theme(plot.title = element_text(family="serif", size=16, hjust = 0.5))) 
 
-load("results/plots/germany_N_16_T_44_numruns_20_num_treated_8_simultaneuous_1.rds")
+load("results/plots/germany_N_16_T_44_numruns_50_num_treated_8_simultaneuous_1.rds")
 
 df1 <- df1 %>% group_by(x) %>% mutate(y = y,
                                       lb= lb,
@@ -45,7 +45,7 @@ germany <- ggplot(data = df1, aes(x, y, color = Method, shape = Method)) +
     width = 0.1,
     linetype = "solid",
     position=position_dodge(width=0.1)) +
-  scale_shape_manual(values=c(1:6,8)) +
+  scale_shape_manual(values=c(1:8)) +
   scale_x_continuous(breaks=c(0.25,0.5,0.75,1), labels=c("0.25","0.5","0.75","1")) +
   theme_bw() +
   xlab(TeX('$T_0/T$')) +
@@ -62,7 +62,7 @@ germany <- ggplot(data = df1, aes(x, y, color = Method, shape = Method)) +
 ggsave("results/plots/germany-sim.png", germany + theme( legend.position = "none"), width=8.5, height=11)
 ggsave("results/plots/germany-sim-slides.png", germany + ggtitle("German reunification") + theme(plot.title = element_text(family="serif", size=16, hjust = 0.5)))
 
-load("results/plots/california_N_38_T_31_numruns_20_num_treated_19_simultaneuous_1.rds")
+load("results/plots/california_N_38_T_31_numruns_50_num_treated_19_simultaneuous_1.rds")
 
 df1 <- df1 %>% group_by(x) %>% mutate(y = y,
                                       lb= lb,
@@ -75,7 +75,7 @@ california <- ggplot(data = df1, aes(x, y, color = Method, shape = Method)) +
     width = 0.1,
     linetype = "solid",
     position=position_dodge(width=0.1)) +
-  scale_shape_manual(values=c(1:6,8)) +
+  scale_shape_manual(values=c(1:8)) +
   scale_x_continuous(breaks=c(0.25,0.5,0.75,1), labels=c("0.25","0.5","0.75","1")) +
   theme_bw() +
   xlab(TeX('$T_0/T$')) +
