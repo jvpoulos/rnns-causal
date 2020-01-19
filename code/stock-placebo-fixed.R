@@ -53,7 +53,7 @@ StockSim <- function(Y,N,sim){
       
       ## Estimate propensity scores
       
-      p.weights <- matrix(1, nrow=nrow(Y_obs), ncol=ncol(Y_obs)) # no covars
+      p.weights <- matrix(1-.Machine$double.eps, nrow=nrow(Y_obs), ncol=ncol(Y_obs)) # no covars
       
       ## ------
       ## VAR
