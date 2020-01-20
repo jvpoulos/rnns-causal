@@ -11,7 +11,7 @@ StockSim <- function(Y,T,sim){
   Nbig <- nrow(Y)
   Tbig <- ncol(Y)
   
-  N <- 100
+  N <- 50
   T <- T
   
   T0 <- ceiling(T/2)
@@ -53,7 +53,13 @@ StockSim <- function(Y,T,sim){
       
       ## Estimate propensity scores
       
-      p.weights <- matrix(1-.Machine$double.eps, nrow=nrow(Y_obs), ncol=ncol(Y_obs)) # no covars
+      p.weights <- matrix(0.99, nrow=nrow(Y_obs), ncol=ncol(Y_obs))
+      z <- c(seq_len(length.out = t0), rev(seq_len(length.out = (T-t0))))
+      
+      range01 <- function(x, ...){(x - min(x, ...)) / (max(x, ...) - min(x, ...))}
+      z <-range01(z) # weight obs closer to t0
+      
+      p.weights <- p.weights%*%diag(z)
       
       ## ------
       ## VAR
@@ -61,8 +67,8 @@ StockSim <- function(Y,T,sim){
       
       print("VAR Started")
       source("code/varEst.R")
-      est_model_VAR <- varEst(Y_obs, Y, treat_indices, t0, T)
-      est_model_VAR_msk_err <- (est_model_VAR - Y[treat_indices,][,t0:T])
+      est_model_VAR <- varEst(Y_obs, Y_sub, treat_indices, t0, T)
+      est_model_VAR_msk_err <- (est_model_VAR - Y_sub[treat_indices,][,t0:T])
       est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
       VAR_RMSE_test[i,j] <- est_model_VAR_test_RMSE
       
@@ -72,7 +78,7 @@ StockSim <- function(Y,T,sim){
       
       print("LSTM Started")
       source("code/lstm.R")
-      est_model_LSTM <- lstm(Y_obs, Y, p.weights, treat_indices, d, t0, T)
+      est_model_LSTM <- lstm(Y_obs, Y_sub, p.weights, treat_indices, d, t0, T)
       est_model_LSTM_msk_err <- (est_model_LSTM - Y_sub[treat_indices,][,t0:T])
       est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
       LSTM_RMSE_test[i,j] <- est_model_LSTM_test_RMSE
@@ -83,7 +89,7 @@ StockSim <- function(Y,T,sim){
 
       print("RVAE Started")
       source("code/rvae.R")
-      est_model_RVAE <- rvae(Y_obs, Y, p.weights, treat_indices, d, t0, T)
+      est_model_RVAE <- rvae(Y_obs, Y_sub, p.weights, treat_indices, d, t0, T)
       est_model_RVAE_msk_err <- (est_model_RVAE - Y_sub[treat_indices,][,t0:T])
       est_model_RVAE_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_RVAE_msk_err^2, na.rm = TRUE))
       RVAE_RMSE_test[i,j] <- est_model_RVAE_test_RMSE
@@ -94,7 +100,7 @@ StockSim <- function(Y,T,sim){
       
       print("ED Started")
       source("code/ed.R")
-      est_model_ED <- ed(Y_obs, Y, p.weights, treat_indices, d, t0, T)
+      est_model_ED <- ed(Y_obs, Y_sub, p.weights, treat_indices, d, t0, T)
       est_model_ED_msk_err <- (est_model_ED - Y_sub[treat_indices,][,t0:T])
       est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
       ED_RMSE_test[i,j] <- est_model_ED_test_RMSE
