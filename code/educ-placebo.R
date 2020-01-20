@@ -8,11 +8,6 @@ library(glmnet)
 library(dplyr)
 library(caret)
 
-# Load data
-capacity.outcomes <- readRDS("data/capacity-outcomes-locf.rds")
-capacity.covariates <- readRDS("data/capacity-covariates.rds")
-
-## Reading data
 CapacitySim <- function(outcomes,covars.x,covars.z,d,sim,treated.indices){
   Y <- outcomes[[d]]$M # NxT 
   Y.missing <- outcomes[[d]]$M.missing # NxT 
@@ -25,6 +20,8 @@ CapacitySim <- function(outcomes,covars.x,covars.z,d,sim,treated.indices){
   treat <- treat[!rownames(treat)%in%c(rownames(treat_y),"TN"),] # (randomly) drop TN for parity
   Y <- Y[!rownames(Y)%in%c(rownames(treat_y),"TN"),] 
   Y.missing <- Y.missing[!rownames(Y.missing)%in%c(rownames(treat_y),"TN"),] 
+  covars.x <- covars.x[!rownames(covars.x)%in%c(rownames(treat_y),"TN","GA"),] # GA not in outcomes
+  covars.z <- covars.z[!rownames(covars.z)%in%c(rownames(treat_y),"TN","GA"),] 
   
   ## Setting up the configuration
   N <- nrow(treat)
@@ -212,22 +209,56 @@ CapacitySim <- function(outcomes,covars.x,covars.z,d,sim,treated.indices){
 
 }
 
-names(synth.control.covars$capacity.xz) <- 1:length(synth.control.covars$capacity.xz)
-capacity.covars.x <- t(as.matrix(bind_rows(lapply(synth.control.covars$capacity.xz,colMeans)))) # N x # predictors
-colnames(capacity.covars.x) <- 1:ncol(capacity.covars.x)
+# Read data
+capacity.outcomes <- readRDS("data/capacity-outcomes-locf.rds")
+capacity.covariates <- readRDS("data/capacity-covariates.rds")
+
+# Transform covars to unit and time-specific inputs
+capacity.covars.x <- as.matrix(bind_rows(lapply(capacity.covariates,rowMeans))) # N x # predictors
+rownames(capacity.covars.x) <- rownames(capacity.covariates$faval)
 
 preProcValues <- preProcess(capacity.covars.x, method = c("nzv","center","scale")) # preprocess
 capacity.covars.xt <- predict(preProcValues, capacity.covars.x)
 
-capacity.covars.z <- Reduce(`+`,synth.control.covars$capacity.xz)/length(synth.control.covars$capacity.xz) # T x #predictors
-colnames(capacity.covars.z) <- gsub('.{2}$', '', colnames(capacity.covars.z))
+# matrix of same time dimension as outcomes
+capacity.covars.z <- list("faval"=matrix(NA, nrow = nrow(capacity.outcomes$educ.pc$M), ncol = ncol(capacity.outcomes$educ.pc$M)),
+                          "farmsize"=matrix(NA, nrow = nrow(capacity.outcomes$educ.pc$M), ncol = ncol(capacity.outcomes$educ.pc$M)),
+                          "access"=matrix(NA, nrow = nrow(capacity.outcomes$educ.pc$M), ncol = ncol(capacity.outcomes$educ.pc$M)))
+
+for(i in c("faval","farmsize","access")){
+  colnames(capacity.covars.z[[i]]) <- colnames(capacity.outcomes$educ.pc$M)
+  rownames(capacity.covars.z[[i]]) <- rownames(capacity.outcomes$educ.pc$M)
+}
+
+colnames(capacity.covariates$faval) <- sub('faval.', '', colnames(capacity.covariates$faval))
+colnames(capacity.covariates$farmsize) <- sub('farmsize.', '', colnames(capacity.covariates$farmsize))
+colnames(capacity.covariates$access) <- sub('track2.', '', colnames(capacity.covariates$access))
+
+# fill in observed data and impute missing 
+
+for(i in c("faval","farmsize","access")){
+  for(n in rownames(capacity.outcomes$educ.pc$M)){
+    for(t in colnames(capacity.outcomes$educ.pc$M)){
+      capacity.covars.z[[i]][n,][t] <- capacity.covariates[[i]][n,][t]
+    }
+  }
+  
+  capacity.covars.z[[i]] <- t(capacity.covars.z[[i]])
+  preProcValues <- preProcess(capacity.covars.z[[i]], method = c("medianImpute"), verbose=TRUE) # use training set median
+  
+  capacity.covars.z[[i]] <- na_locf(capacity.covars.z[[i]], option = "locf", na_remaining = "keep") 
+  
+  capacity.covars.z[[i]] <- predict(preProcValues, capacity.covars.z[[i]])
+  
+  capacity.covars.z[[i]] <- t(capacity.covars.z[[i]])
+}
+
+capacity.covars.z <- as.matrix(bind_rows(lapply(capacity.covars.z,colMeans))) # T x # predictors
+rownames(capacity.covars.z) <- colnames(capacity.outcomes$educ.pc$M)
 
 preProcValues <- preProcess(capacity.covars.z, method = c("nzv","center","scale")) # preprocess
 capacity.covars.zt <- predict(preProcValues, capacity.covars.z)
 
-colnames(capacity.covars.xt) <- colnames(capacity.covars.zt)
-rownames(capacity.covars.zt) <- 1:nrow(capacity.covars.zt)
-
 treat_indices_order <- c("CA", "IA", "KS", "MI", "MN", "MO", "OH", "OR", "WI", "IL", "NV", "AL", "MS", "FL", "LA", "IN")
 
-CapacitySim(capacity.outcomes,d="educ.pc",sim=1,treated.indices = treat_indices_order)
+CapacitySim(outcomes=capacity.outcomes,covars.x=capacity.covars.xt, covars.z= capacity.covars.zt, d="educ.pc",sim=1,treated.indices = treat_indices_order)
