@@ -7,6 +7,7 @@ library(MCPanel)
 library(glmnet)
 library(dplyr)
 library(caret)
+library(imputeTS)
 
 CapacitySim <- function(outcomes,covars.x,covars.z,d,sim,treated.indices){
   Y <- outcomes[[d]]$M # NxT 
