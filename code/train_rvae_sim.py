@@ -141,9 +141,6 @@ def get_data():
     y = np.array(pd.read_csv("data/{}-y.csv".format(dataname)))
     y_scaled = scaler.transform(y)
 
-    print('raw x shape', x_scaled.shape) 
-    print('raw y shape', y_scaled.shape)  
-
     dXC,  wXC, dXT,  wXT  = [], [], [], []
     for i in range(seq_len-n_pre):
         dXC.append(x_scaled[i:i+n_pre]) # controls
@@ -154,6 +151,14 @@ def get_data():
 
 if __name__ == "__main__":
     x, wx, y, wy, n_pre, n_post = get_data() 
+
+    print('raw x shape', x.shape) 
+    print('raw wx shape', wx.shape) 
+    print('raw y shape', y.shape)  
+    print('raw wy shape', wy.shape) 
+    print('n_pre', n_pre) 
+    print('n_post', n_post) 
+
     nb_features = x.shape[2]
     batch_size = int(nb_batches)
 
@@ -168,13 +173,13 @@ if __name__ == "__main__":
         dr=dr,
         epsilon_std=1.)
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=int(patience), verbose=0, mode='auto')
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=int(patience), verbose=1, mode='auto')
 
     csv_logger = CSVLogger('results/rvae/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
 
     vae.fit([x,wx], x, 
         epochs=int(epochs),
-        verbose=0,
+        verbose=1,
         callbacks=[stopping,csv_logger],
         validation_split=0.1)
 

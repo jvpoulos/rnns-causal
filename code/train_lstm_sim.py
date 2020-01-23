@@ -63,14 +63,14 @@ def train_model(model, dataX, dataY, weights, epoch_count, batches):
 
     # Prepare model checkpoints and callbacks
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=int(patience), verbose=0, mode='auto')
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=int(patience), verbose=1, mode='auto')
 
     csv_logger = CSVLogger('results/lstm/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
 
     history = model.fit(x=[dataX,weights], 
         y=dataY, 
         batch_size=batches, 
-        verbose=0,
+        verbose=1,
         epochs=epoch_count, 
         callbacks=[stopping,csv_logger],
         validation_split=0.1)
