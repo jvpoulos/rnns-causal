@@ -177,7 +177,7 @@ if __name__ == "__main__":
 
     csv_logger = CSVLogger('results/rvae/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
 
-    vae.fit([x,wx], [x,wx], 
+    vae.fit([x,wx], x, 
         epochs=int(epochs),
         verbose=1,
         callbacks=[stopping,csv_logger],
