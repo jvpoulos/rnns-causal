@@ -12,8 +12,9 @@ from keras.callbacks import ModelCheckpoint, CSVLogger, EarlyStopping, TimeDistr
 from keras import regularizers
 from keras.optimizers import Adam
 
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 scaler = StandardScaler()
+weights_scaler = MinMaxScaler(feature_range = (0.01, 0.99))
 
 from functools import partial, update_wrapper
 
@@ -99,12 +100,15 @@ def test_model():
     seq_len = int(T)
 
     wx = np.array(pd.read_csv("data/{}-wx-{}.csv".format(dataname,imp)))
+    wx_scaled = weights_scaler.fit_transform(wx)
 
-    wX = []
+    print('raw wx shape', wx_scaled.shape)  
+
+    wXC = []
     for i in range(seq_len-n_pre):
-        wX.append(wx[i:i+n_pre]) # controls are inputs
-    
-    wXC = np.array(wX)
+        wXC.append(wx_scaled[i:i+n_pre])
+   
+    wXC = np.array(wXC)
 
     print('wXC shape:', wXC.shape)
     
@@ -158,12 +162,13 @@ def test_model():
     print('Generate predictions on test set')
     
     wy = np.array(pd.read_csv("data/{}-wy-{}.csv".format(dataname,imp)))
- 
-    print('raw wy shape', wy.shape)  
+    wy_scaled = weights_scaler.transform(wy)
+
+    print('raw wy shape', wy_scaled.shape)  
 
     wY = []
     for i in range(seq_len-n_pre):
-        wY.append(wy[i:i+n_pre]) # controls are inputs
+        wY.append(wy_scaled[i:i+n_pre]) # controls are inputs
     
     wXT = np.array(wY)
 

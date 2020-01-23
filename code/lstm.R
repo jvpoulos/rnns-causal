@@ -31,14 +31,57 @@ lstm <- function(Y_obs,Y,p.weights,treat_indices,d, t0, T){
   py$dataname <- d
   py$t0 <- t0
   py$T <- T
-  py$patience <- 250
-  py$nb_batches <- 16
   py$gpu <- 3
-  py$epochs <- 10000
-  py$lr <- 0.001
-  py$penalty <- 0.001
-  py$dr <- 0.5
-  
+
+  if(d=='stock'){
+    py$nb_batches <- 4
+    py$lr <- 0.001
+    py$penalty <- 0.1
+    py$dr <- 0.5
+    py$patience <- 10
+    py$epochs <- 1000
+  } 
+  if(d=='stock_fixed'){
+    py$nb_batches <- 4
+    py$lr <- 0.001
+    py$penalty <- 0.1
+    py$dr <- 0.5
+    py$patience <- 10
+    py$epochs <- 1000
+  } 
+  if(d=='educ.pc'){
+    py$nb_batches <- 16
+    py$lr <- 0.0005
+    py$penalty <- 0.1
+    py$dr <- 0.5
+    py$patience <- 50
+    py$epochs <- 10000
+  } 
+  if(d=='basque'){
+    py$nb_batches <- 4
+    py$lr <- 0.0005
+    py$penalty <- 0.001
+    py$dr <- 0.5
+    py$patience <- 50
+    py$epochs <- 10000
+  } 
+  if(d=='california'){
+    py$nb_batches <- 4
+    py$lr <- 0.0005
+    py$penalty <- 0.001
+    py$dr <- 0.5
+    py$patience <- 50
+    py$epochs <- 10000
+  } 
+  if(d=='germany'){
+    py$nb_batches <- 4
+    py$lr <- 0.0005
+    py$penalty <- 0.001
+    py$dr <- 0.5
+    py$patience <- 50
+    py$epochs <- 10000
+  } 
+
   source_python("code/train_lstm_sim.py")
   
   lstm.pred.test <- as.matrix(read_csv(paste0("results/lstm/",d,"/lstm-",d,"-test.csv"), col_names = FALSE))

@@ -14,8 +14,9 @@ from keras.optimizers import SGD, RMSprop, Adam
 from keras import regularizers
 from keras.callbacks import CSVLogger, EarlyStopping
 
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 scaler = StandardScaler()
+weights_scaler = MinMaxScaler(feature_range = (0.01, 0.99))
 
 from functools import partial, update_wrapper
 
@@ -128,12 +129,14 @@ def get_data():
     n_pre =int(t0)-1
     seq_len = int(T)
 
-    wx = np.array(pd.read_csv("data/{}-wx.csv".format(dataname)))  
+    wx = np.array(pd.read_csv("data/{}-wx.csv".format(dataname))) 
+    wx_scaled = weights_scaler.fit_transform(wx) 
 
     x_obs = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))
     x_scaled = scaler.fit_transform(x_obs)
 
-    wy = np.array(pd.read_csv("data/{}-wy.csv".format(dataname)))    
+    wy = np.array(pd.read_csv("data/{}-wy.csv".format(dataname)))   
+    wy_scaled = weights_scaler.fit_transform(wy)  
 
     y = np.array(pd.read_csv("data/{}-y.csv".format(dataname)))
     y_scaled = scaler.transform(y)
@@ -144,9 +147,9 @@ def get_data():
     dXC,  wXC, dXT,  wXT  = [], [], [], []
     for i in range(seq_len-n_pre):
         dXC.append(x_scaled[i:i+n_pre]) # controls
-        wXC.append(wx[i:i+n_pre]) 
+        wXC.append(wx_scaled[i:i+n_pre]) 
         dXT.append(y_scaled[i:i+n_pre]) # treated 
-        wXT.append(wy[i:i+n_pre]) 
+        wXT.append(wy_scaled[i:i+n_pre]) 
     return np.array(dXC),np.array(wXC),np.array(dXT),np.array(wXT),n_pre,n_post      
 
 if __name__ == "__main__":

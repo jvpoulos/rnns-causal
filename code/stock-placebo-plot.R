@@ -5,6 +5,8 @@ library(dplyr)
 # Fixed dimensions
 #df1<- readRDS("results/plots/stock-placebo-results-fixed.rds")
 
+t250 <- readRDS('results/plots/stock_N_50_T_250_numruns_50_num_treated_25_simultaneuous_1.rds')
+
 n10 <- readRDS("results/plots/stock_fixed_N_10_T_980_numruns_20_num_treated_5_simultaneuous_1.rds")
 n50 <- readRDS("results/plots/stock_fixed_N_50_T_196_numruns_20_num_treated_25_simultaneuous_1.rds")
 n100 <- readRDS("results/plots/stock_fixed_N_100_T_98_numruns_20_num_treated_50_simultaneuous_1.rds")
@@ -42,6 +44,8 @@ ggsave("results/plots/stock-sim-fixed-slides.png", stock + ggtitle("Stock market
 
 # Increasing T
 #df1<- readRDS("results/plots/stock-placebo-results.rds")
+
+t125 <- readRDS('results/plots/stock_N_50_T_125_numruns_50_num_treated_25_simultaneuous_1.rds')
 
 t250 <- readRDS("results/plots/stock_N_100_T_250_numruns_20_num_treated_50_simultaneuous_1.rds")
 t500 <- readRDS("results/plots/stock_N_100_T_500_numruns_20_num_treated_50_simultaneuous_1.rds")
