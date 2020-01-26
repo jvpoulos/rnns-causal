@@ -2,7 +2,7 @@ library(ggplot2)
 library(latex2exp)
 library(dplyr)
 
-load("results/plots/basque_N_16_T_43_numruns_50_num_treated_8_simultaneuous_1.rds")
+load("results/plots/basque_N_16_T_43_numruns_25_num_treated_8_simultaneuous_1.rds")
 
 df1 <- df1 %>% group_by(x) %>% mutate(y = y,
                                       lb= lb,
@@ -45,7 +45,7 @@ germany <- ggplot(data = df1, aes(x, y, color = Method, shape = Method)) +
     width = 0.1,
     linetype = "solid",
     position=position_dodge(width=0.1)) +
-  scale_shape_manual(values=c(1:8)) +
+  scale_shape_manual(values=c(1:6,8)) +
   scale_x_continuous(breaks=c(0.25,0.5,0.75,1), labels=c("0.25","0.5","0.75","1")) +
   theme_bw() +
   xlab(TeX('$T_0/T$')) +
@@ -75,7 +75,7 @@ california <- ggplot(data = df1, aes(x, y, color = Method, shape = Method)) +
     width = 0.1,
     linetype = "solid",
     position=position_dodge(width=0.1)) +
-  scale_shape_manual(values=c(1:8)) +
+  scale_shape_manual(values=c(1:6,8)) +
   scale_x_continuous(breaks=c(0.25,0.5,0.75,1), labels=c("0.25","0.5","0.75","1")) +
   theme_bw() +
   xlab(TeX('$T_0/T$')) +

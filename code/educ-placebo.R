@@ -6,6 +6,7 @@
 library(MCPanel)
 library(glmnet)
 library(dplyr)
+library(glmnet)
 library(caret)
 library(imputeTS)
 
@@ -38,7 +39,6 @@ CapacitySim <- function(outcomes,covars.x,covars.z,d,sim,treated.indices){
   MCPanel_RMSE_test <- matrix(0L,num_runs,length(T0))
   VAR_RMSE_test <- matrix(0L,num_runs,length(T0))
   LSTM_RMSE_test <- matrix(0L,num_runs,length(T0))
-  RVAE_RMSE_test <- matrix(0L,num_runs,length(T0))
   ED_RMSE_test <- matrix(0L,num_runs,length(T0))
   ENT_RMSE_test <- matrix(0L,num_runs,length(T0))
   DID_RMSE_test <- matrix(0L,num_runs,length(T0))
@@ -65,10 +65,14 @@ CapacitySim <- function(outcomes,covars.x,covars.z,d,sim,treated.indices){
   
       ## Estimate propensity scores
       
-      logitMod.x <- glm.fit(x=covars.x, y=(1-treat_mat)[,t0], family=binomial(link="logit"))
-      logitMod.z <- glm.fit(x=covars.z, y=(1-treat_mat)[treat_indices[1],], family=binomial(link="logit"))
+      logitMod.x <- glmnet(x=covars.x, y=as.factor((1-treat_mat)[,t0]), family="binomial")
       
-      p.weights <- outer(fitted(logitMod.x),fitted(logitMod.z))  # outer product of fitted values on response scale
+      logitMod.z <- glmnet(x=covars.z, y=as.factor((1-treat_mat)[treat_indices[1],]), family="binomial")
+      
+      p.weights.x <- as.vector(predict(logitMod.x, covars.x, type="response", s = 0.01))
+      p.weights.z <- as.vector(predict(logitMod.z, covars.z, type="response", s = 0.01))
+      
+      p.weights <- outer(p.weights.x,p.weights.z)   # outer product of fitted values on response scale
       
       ## ------
       ## VAR
@@ -76,7 +80,7 @@ CapacitySim <- function(outcomes,covars.x,covars.z,d,sim,treated.indices){
       
       source("code/varEst.R")
       est_model_VAR <- varEst(Y_obs, Y, treat_indices, t0, T)
-      est_model_VAR_msk_err <- (est_model_VAR - Y[treat_indices,][,t0:T])
+      est_model_VAR_msk_err <- (est_model_VAR[,t0:T] - Y[treat_indices,][,t0:T])
       est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
       VAR_RMSE_test[i,j] <- est_model_VAR_test_RMSE
       
@@ -89,16 +93,6 @@ CapacitySim <- function(outcomes,covars.x,covars.z,d,sim,treated.indices){
       est_model_ED_msk_err <- (est_model_ED - Y_imp[treat_indices,][,t0:T])
       est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
       ED_RMSE_test[i,j] <- est_model_ED_test_RMSE
-      
-      ## ------
-      ## RVAE
-      ## ------
-      
-      source("code/rvae.R")
-      est_model_RVAE <- rvae(Y_obs, Y, p.weights, treat_indices, d, t0, T)
-      est_model_RVAE_msk_err <- (est_model_RVAE - Y_imp[treat_indices,][,t0:T])
-      est_model_RVAE_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_RVAE_msk_err^2, na.rm = TRUE))
-      RVAE_RMSE_test[i,j] <- est_model_RVAE_test_RMSE
       
       ## ------
       ## LSTM
@@ -159,9 +153,6 @@ CapacitySim <- function(outcomes,covars.x,covars.z,d,sim,treated.indices){
   LSTM_avg_RMSE <- apply(LSTM_RMSE_test,2,mean)
   LSTM_std_error <- apply(LSTM_RMSE_test,2,sd)/sqrt(num_runs)
   
-  RVAE_avg_RMSE <- apply(RVAE_RMSE_test,2,mean)
-  RVAE_std_error <- apply(RVAE_RMSE_test,2,sd)/sqrt(num_runs)
-  
   ED_avg_RMSE <- apply(ED_RMSE_test,2,mean)
   ED_std_error <- apply(ED_RMSE_test,2,sd)/sqrt(num_runs)
   
@@ -178,12 +169,11 @@ CapacitySim <- function(outcomes,covars.x,covars.z,d,sim,treated.indices){
   
   df1 <-
     data.frame(
-      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,RVAE_avg_RMSE,ADH_avg_RMSE,ENT_avg_RMSE,VAR_avg_RMSE),
+      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,ADH_avg_RMSE,ENT_avg_RMSE,VAR_avg_RMSE),
       "lb" = c(DID_avg_RMSE - 1.96*DID_std_error,
                ED_avg_RMSE - 1.96*ED_std_error,
                LSTM_avg_RMSE - 1.96*LSTM_std_error,
                MCPanel_avg_RMSE - 1.96*MCPanel_std_error, 
-               RVAE_avg_RMSE - 1.96*RVAE_std_error, 
                ADH_avg_RMSE - 1.96*ADH_std_error,
                ENT_avg_RMSE - 1.96*ENT_std_error,
                VAR_avg_RMSE - 1.96*VAR_std_error),
@@ -191,16 +181,14 @@ CapacitySim <- function(outcomes,covars.x,covars.z,d,sim,treated.indices){
                ED_avg_RMSE + 1.96*ED_std_error,
                LSTM_avg_RMSE + 1.96*LSTM_std_error,
                MCPanel_avg_RMSE + 1.96*MCPanel_std_error, 
-               RVAE_avg_RMSE + 1.96*RVAE_std_error, 
                ADH_avg_RMSE + 1.96*ADH_std_error,
                ENT_avg_RMSE + 1.96*ENT_std_error,
                VAR_avg_RMSE + 1.96*VAR_std_error),
-      "x" = c(T0/T, T0/T ,T0/T, T0/T, T0/T, T0/T, T0/T, T0/T),
+      "x" = c(T0/T, T0/T ,T0/T, T0/T, T0/T, T0/T, T0/T),
       "Method" = c(replicate(length(T0),"DID"), 
                    replicate(length(T0),"Encoder-decoder"),
                    replicate(length(T0),"LSTM"), 
                    replicate(length(T0),"MC-NNM"), 
-                   replicate(length(T0),"RVAE"), 
                    replicate(length(T0),"SCM"),
                    replicate(length(T0),"SCM-EN"),
                    replicate(length(T0),"VAR")))
@@ -217,9 +205,6 @@ capacity.covariates <- readRDS("data/capacity-covariates.rds")
 # Transform covars to unit and time-specific inputs
 capacity.covars.x <- as.matrix(bind_rows(lapply(capacity.covariates,rowMeans))) # N x # predictors
 rownames(capacity.covars.x) <- rownames(capacity.covariates$faval)
-
-preProcValues <- preProcess(capacity.covars.x, method = c("nzv","center","scale")) # preprocess
-capacity.covars.xt <- predict(preProcValues, capacity.covars.x)
 
 # matrix of same time dimension as outcomes
 capacity.covars.z <- list("faval"=matrix(NA, nrow = nrow(capacity.outcomes$educ.pc$M), ncol = ncol(capacity.outcomes$educ.pc$M)),
@@ -257,9 +242,6 @@ for(i in c("faval","farmsize","access")){
 capacity.covars.z <- as.matrix(bind_rows(lapply(capacity.covars.z,colMeans))) # T x # predictors
 rownames(capacity.covars.z) <- colnames(capacity.outcomes$educ.pc$M)
 
-preProcValues <- preProcess(capacity.covars.z, method = c("nzv","center","scale")) # preprocess
-capacity.covars.zt <- predict(preProcValues, capacity.covars.z)
-
 treat_indices_order <- c("CA", "IA", "KS", "MI", "MN", "MO", "OH", "OR", "WI", "IL", "NV", "AL", "MS", "FL", "LA", "IN")
 
-CapacitySim(outcomes=capacity.outcomes,covars.x=capacity.covars.xt, covars.z= capacity.covars.zt, d="educ.pc",sim=1,treated.indices = treat_indices_order)
+CapacitySim(outcomes=capacity.outcomes,covars.x=capacity.covars.x, covars.z= capacity.covars.z, d="educ.pc",sim=1,treated.indices = treat_indices_order)

@@ -2,7 +2,9 @@
 # VAR for Synth Simulations #
 ###################################
 
-library(onlineVAR)
+#library(devtools)
+#install_github("lcallot/lassovar")
+library(lassovar)
 
 varEst <- function(Y_obs,Y,treat_indices, t0, T){
   # Converting the data to a floating point matrix
@@ -10,13 +12,12 @@ varEst <- function(Y_obs,Y,treat_indices, t0, T){
   data_truth <- data.matrix(t(Y)) # T x N
   
   # Splits
-  train_data <- data_obs[,(-treat_indices)] # train on control units
+  train_data <- log1p(data_obs[,(-treat_indices)]) # train on control units # log transform
   
-  test_data <- data_truth[,(treat_indices)] # treated units
+  test_data <- log1p(data_truth[,(treat_indices)]) # treated units # log transform
   
-  var.fit <- onlineVAR(train_data, nu = 0.99, lags = 1, ahead = 1)
+  var.fit <- lassovar(ts(train_data), lags = 1, horizon = 1)
+  var.preds <- expm1(predict(var.fit, ts(test_data))) # revert log transformation
 
-  var.pred.test <- predict(var.fit, newdata = test_data)[(t0:T),]
-    
-  return(t(var.pred.test))
+  return(t(var.preds))
 }

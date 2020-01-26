@@ -15,8 +15,9 @@ from keras.callbacks import CSVLogger, EarlyStopping
 from keras import regularizers
 from keras.optimizers import Adam
 
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
-scaler = StandardScaler()
+from sklearn.preprocessing import FunctionTransformer, MinMaxScaler
+
+scaler = FunctionTransformer(np.log1p, validate=True)
 weights_scaler = MinMaxScaler(feature_range = (0.01, 0.99))
 
 from functools import partial, update_wrapper

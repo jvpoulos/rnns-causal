@@ -37,12 +37,6 @@ Set up
 ```
 $ git clone https://github.com/jvpoulos/rnns-causal
 ```
-* In **R**, install MCPanel from the forked repo:
-```
-install.packages("devtools")
-library(devtools) 
-install_github("jvpoulos/MCPanel")
-```
 * Open `package-list.R` in a script editor
   * Verify that all required packages in `package-list.R` are installed in your **R** library
 
@@ -58,7 +52,7 @@ $ ./main.sh > main.txt
 Experiments
 ------
 
-To run placebo experiments, for each DATANAME={basque,california,germany,stock,stock_fixed,educ.pc} and each MODEL={encoder-decoder,lstm,rvae}:
+To run placebo experiments, for each DATANAME={basque,california,germany,stock,stock_fixed,educ.pc} and each MODEL={encoder-decoder,lstm}:
 
 ```
 $ mkdir data/$$DATANAME$$
@@ -79,12 +73,7 @@ To get encoder-decoder estimates run `train_encoder_decoder.py <GPU_ID> <patienc
 python train_encoder_decoder.py 0 250 000 8 'educ' 87 156 'locf'
 ```
 
-Similarly, for RVAE estimates run `train_rvae.py <GPU ID> <patience> <epochs> <batches> <data name> <t_0> <T> <imputation_method>`; e.g., 
-```
-python train_rvae.py 0 250 1000 1 'educ' 87 156 'locf'
-```
-
 To plot the training and validation error, run `plot_history.py <file location of training log>`; e.g., 
 ```
-python plot_history.py '../results/rvae/educ/training_log_educ.csv'
+python plot_history.py '../results/encoder-decoder/educ/training_log_educ.csv'
 ```
