@@ -10,15 +10,13 @@ import tensorflow as tf
 
 from keras import backend as K
 from keras.models import Model
-from keras.layers import LSTM, Input, Dense, TimeDistributed
+from keras.layers import LSTM, Input, Dense
 from keras.callbacks import CSVLogger, EarlyStopping
 from keras import regularizers
 from keras.optimizers import Adam
 
-from sklearn.preprocessing import FunctionTransformer, MinMaxScaler
-
-scaler = FunctionTransformer(np.log1p, validate=True)
-weights_scaler = MinMaxScaler(feature_range = (0.01, 0.99))
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler()
 
 from functools import partial, update_wrapper
 
@@ -49,9 +47,9 @@ def create_model(n_pre, nb_features, output_dim, lr, penalty, dr):
     n_hidden = 128
 
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
-    weights_tensor = Input(shape=(n_pre,nb_features), name="Weights")
-    lstm_1 = LSTM(n_hidden, return_sequences=True, dropout=dr)(inputs) 
-    output= TimeDistributed(Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense'))(lstm_1)
+    weights_tensor = Input(shape=(nb_features,), name="Weights")
+    lstm_1 = LSTM(n_hidden, dropout=dr)(inputs) 
+    output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(lstm_1)
 
     model = Model([inputs,weights_tensor],output) 
 
@@ -66,15 +64,13 @@ def train_model(model, dataX, dataY, weights, epoch_count, batches):
 
     stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=int(patience), verbose=1, mode='auto')
 
-    csv_logger = CSVLogger('results/lstm/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
-
     history = model.fit(x=[dataX,weights], 
         y=dataY, 
         batch_size=batches, 
         verbose=1,
         epochs=epoch_count, 
-        callbacks=[stopping,csv_logger],
-        validation_split=0.1)
+        callbacks=[stopping],
+        validation_split=0.2)
 
 def test_model():
 
@@ -82,13 +78,12 @@ def test_model():
     seq_len = int(T)
 
     wx = np.array(pd.read_csv("data/{}-wx.csv".format(dataname)))  
-    wx_scaled = weights_scaler.fit_transform(wx)
 
-    print('raw wx shape', wx_scaled.shape)  
+    print('raw wx shape', wx.shape)  
 
     wXC = []
     for i in range(seq_len-n_pre):
-        wXC.append(wx_scaled[i:i+n_pre])
+        wXC.append(wx[i+n_pre]) # weights for outputs
    
     wXC = np.array(wXC)
 
@@ -110,11 +105,8 @@ def test_model():
     print('dataXC shape:', dataXC.shape)
     print('dataYC shape:', dataYC.shape)
 
-    dataYC = np.expand_dims(dataYC, axis=1)
-    print('dataYC expanded shape:', dataYC.shape)
-
     nb_features = dataXC.shape[2]
-    output_dim = dataYC.shape[2]
+    output_dim = dataYC.shape[1]
   
     # create and fit the LSTM network
     print('creating model...')
@@ -126,13 +118,12 @@ def test_model():
     print('Generate predictions on test set')
 
     wy = np.array(pd.read_csv("data/{}-wy.csv".format(dataname)))
-    wy_scaled = weights_scaler.transform(wy)
 
-    print('raw wy shape', wy_scaled.shape)  
+    print('raw wy shape', wy.shape)  
 
     wY = []
     for i in range(seq_len-n_pre):
-        wY.append(wy_scaled[i:i+n_pre]) # controls are inputs
+        wY.append(wy[i+n_pre]) # weights for outputs
     
     wXT = np.array(wY)
 
@@ -155,10 +146,6 @@ def test_model():
     preds_test = model.predict([dataXT, wXT], batch_size=int(nb_batches), verbose=0)
     
     print('predictions shape =', preds_test.shape)
-
-    preds_test = np.mean(preds_test, axis=1)
-
-    print('predictions shape (squeezed) =', preds_test.shape)
 
     preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
 

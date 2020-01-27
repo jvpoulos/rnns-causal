@@ -52,6 +52,29 @@ SynthSim <- function(outcomes,covars.x,covars.z,d,sim){
       p.weights <- outer(p.weights.x,p.weights.z)   # outer product of fitted values on response scale
       
       ## ------
+      ## LSTM
+      ## ------
+      
+      source("code/lstm.R")
+      est_model_LSTM <- lstm(Y, p.weights, treat_indices, d, t0, T)
+      est_model_LSTM_msk_err <- (est_model_LSTM - Y[treat_indices,][,t0:T])
+      est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
+      LSTM_RMSE_test[i,j] <- est_model_LSTM_test_RMSE
+      print(paste("LSTM RMSE:", round(est_model_LSTM_test_RMSE,3),"run",i))
+      
+      ## ------
+      ## ED
+      ## ------
+      
+      source("code/ed.R")
+      est_model_ED <- ed(Y, p.weights, treat_indices, d, t0, T)
+      est_model_ED_msk_err <- (est_model_ED - Y[treat_indices,][,t0:T])
+      est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
+      ED_RMSE_test[i,j] <- est_model_ED_test_RMSE
+      print(paste("ED RMSE:", round(est_model_ED_test_RMSE,3),"run",i))
+      
+      
+      ## ------
       ## VAR
       ## ------
       
@@ -60,26 +83,7 @@ SynthSim <- function(outcomes,covars.x,covars.z,d,sim){
       est_model_VAR_msk_err <- (est_model_VAR - Y[treat_indices,][,t0:T])
       est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
       VAR_RMSE_test[i,j] <- est_model_VAR_test_RMSE
-      
-      ## ------
-      ## LSTM
-      ## ------
-      
-      source("code/lstm.R")
-      est_model_LSTM <- lstm(Y_obs, Y, p.weights, treat_indices, d, t0, T)
-      est_model_LSTM_msk_err <- (est_model_LSTM - Y[treat_indices,][,t0:T])
-      est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
-      LSTM_RMSE_test[i,j] <- est_model_LSTM_test_RMSE
-      
-      ## ------
-      ## ED
-      ## ------
-      
-      source("code/ed.R")
-      est_model_ED <- ed(Y_obs, Y, p.weights, treat_indices, d, t0, T)
-      est_model_ED_msk_err <- (est_model_ED - Y[treat_indices,][,t0:T])
-      est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
-      ED_RMSE_test[i,j] <- est_model_ED_test_RMSE
+      print(paste("VAR RMSE:", round(est_model_VAR_test_RMSE,3),"run",i))
       
       ## ------
       ## MC-NNM
@@ -90,6 +94,7 @@ SynthSim <- function(outcomes,covars.x,covars.z,d,sim){
       est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y)*(1-treat_mat)
       est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
       MCPanel_RMSE_test[i,j] <- est_model_MCPanel$test_RMSE
+      print(paste("MC-NNM RMSE:", round(est_model_MCPanel$test_RMSE,3),"run",i))
       
       ## -----
       ## VT-EN 
@@ -99,6 +104,8 @@ SynthSim <- function(outcomes,covars.x,covars.z,d,sim){
       est_model_ENT_msk_err <- (est_model_ENT - Y)*(1-treat_mat)
       est_model_ENT_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ENT_msk_err^2, na.rm = TRUE))
       ENT_RMSE_test[i,j] <- est_model_ENT_test_RMSE
+      print(paste("VT-EN RMSE:", round(est_model_ENT_test_RMSE,3),"run",i))
+      
       
       ## -----
       ## DID
@@ -108,6 +115,7 @@ SynthSim <- function(outcomes,covars.x,covars.z,d,sim){
       est_model_DID_msk_err <- (est_model_DID - Y)*(1-treat_mat)
       est_model_DID_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_DID_msk_err^2, na.rm = TRUE))
       DID_RMSE_test[i,j] <- est_model_DID_test_RMSE
+      print(paste("DID RMSE:", round(est_model_DID_test_RMSE,3),"run",i))
       
       ## -----
       ## ADH
@@ -116,6 +124,7 @@ SynthSim <- function(outcomes,covars.x,covars.z,d,sim){
       est_model_ADH_msk_err <- (est_model_ADH - Y)*(1-treat_mat)
       est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
       ADH_RMSE_test[i,j] <- est_model_ADH_test_RMSE
+      print(paste("ADH RMSE:", round(est_model_ADH_test_RMSE,3),"run",i))
     }
   }
   

@@ -6,6 +6,18 @@
 library(MCPanel)
 library(glmnet)
 
+# Setup parallel processing 
+library(parallel)
+library(doParallel)
+
+cores <- 2
+
+cl <- parallel::makeForkCluster(cores)
+
+doParallel::registerDoParallel(cores) # register cores (<p)
+
+RNGkind("L'Ecuyer-CMRG") # ensure random number generation
+
 StockSim <- function(Y,T,sim){
   ## Setting up the configuration
   Nbig <- nrow(Y)
@@ -62,26 +74,16 @@ StockSim <- function(Y,T,sim){
       p.weights <- outer(p.weights.x,p.weights.z)   # outer product of fitted values on response scale
       
       ## ------
-      ## VAR
-      ## ------
-      
-      print("VAR Started")
-      source("code/varEst.R")
-      est_model_VAR <- varEst(Y, treat_indices, t0, T)
-      est_model_VAR_msk_err <- (est_model_VAR - Y[treat_indices,][,t0:T])
-      est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
-      VAR_RMSE_test[i,j] <- est_model_VAR_test_RMSE
-      
-      ## ------
       ## LSTM
       ## ------
       
       print("LSTM Started")
       source("code/lstm.R")
-      est_model_LSTM <- lstm(Y_obs, Y_sub, p.weights, treat_indices, d, t0, T)
+      est_model_LSTM <- lstm(Y=Y_sub, p.weights, treat_indices, d, t0, T)
       est_model_LSTM_msk_err <- (est_model_LSTM - Y_sub[treat_indices,][,t0:T])
       est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
       LSTM_RMSE_test[i,j] <- est_model_LSTM_test_RMSE
+      print(paste("LSTM RMSE:", round(est_model_LSTM_test_RMSE,3),"run",i))
       
       ## ------
       ## ED
@@ -89,10 +91,23 @@ StockSim <- function(Y,T,sim){
       
       print("ED Started")
       source("code/ed.R")
-      est_model_ED <- ed(Y_obs, Y_sub, p.weights, treat_indices, d, t0, T)
+      est_model_ED <- ed(Y=Y_sub, p.weights, treat_indices, d, t0, T)
       est_model_ED_msk_err <- (est_model_ED - Y_sub[treat_indices,][,t0:T])
       est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
       ED_RMSE_test[i,j] <- est_model_ED_test_RMSE
+      print(paste("ED RMSE:", round(est_model_ED_test_RMSE,3),"run",i))
+      
+      ## ------
+      ## VAR
+      ## ------
+      
+      print("VAR Started")
+      source("code/varEst.R")
+      est_model_VAR <- varEst(Y=Y_sub, treat_indices, t0, T)
+      est_model_VAR_msk_err <- (est_model_VAR - Y_sub[treat_indices,][,t0:T])
+      est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
+      VAR_RMSE_test[i,j] <- est_model_VAR_test_RMSE
+      print(paste("VAR RMSE:", round(est_model_VAR_test_RMSE,3),"run",i))
       
       ## ------
       ## MC-NNM
@@ -104,6 +119,7 @@ StockSim <- function(Y,T,sim){
       est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y_sub)*(1-treat_mat)
       est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
       MCPanel_RMSE_test[i,j] <- est_model_MCPanel$test_RMSE
+      print(paste("MC-NNM RMSE:", round(est_model_MCPanel$test_RMSE,3),"run",i))
       
       ## -----
       ## VT-EN 
@@ -114,6 +130,7 @@ StockSim <- function(Y,T,sim){
       est_model_ENT_msk_err <- (est_model_ENT - Y_sub)*(1-treat_mat)
       est_model_ENT_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ENT_msk_err^2, na.rm = TRUE))
       ENT_RMSE_test[i,j] <- est_model_ENT_test_RMSE
+      print(paste("VT-EN RMSE:", round(est_model_ENT_test_RMSE,3),"run",i))
       
       ## -----
       ## DID
@@ -124,6 +141,7 @@ StockSim <- function(Y,T,sim){
       est_model_DID_msk_err <- (est_model_DID - Y_sub)*(1-treat_mat)
       est_model_DID_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_DID_msk_err^2, na.rm = TRUE))
       DID_RMSE_test[i,j] <- est_model_DID_test_RMSE
+      print(paste("DID RMSE:", round(est_model_DID_test_RMSE,3),"run",i))
       
       ## -----
       ## ADH
@@ -134,6 +152,7 @@ StockSim <- function(Y,T,sim){
       est_model_ADH_msk_err <- (est_model_ADH - Y_sub)*(1-treat_mat)
       est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
       ADH_RMSE_test[i,j] <- est_model_ADH_test_RMSE
+      print(paste("ADH RMSE:", round(est_model_ADH_test_RMSE,3),"run",i))
     }
   }
   

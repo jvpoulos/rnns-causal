@@ -8,6 +8,18 @@ library(glmnet)
 library(dplyr)
 library(caret)
 
+# Setup parallel processing 
+library(parallel)
+library(doParallel)
+
+cores <- 2
+
+cl <- parallel::makeForkCluster(cores)
+
+doParallel::registerDoParallel(cores) # register cores (<p)
+
+RNGkind("L'Ecuyer-CMRG") # ensure random number generation
+
 # Load data
 synth.control.outcomes <- readRDS("data/synth-control-outcomes.rds")
 synth.control.covars <- readRDS("data/synth-control-covars.rds")

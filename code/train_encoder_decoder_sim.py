@@ -15,9 +15,8 @@ from keras.callbacks import CSVLogger, EarlyStopping
 from keras import regularizers
 from keras.optimizers import Adam
 
-from sklearn.preprocessing import FunctionTransformer
-
-scaler = FunctionTransformer(func=np.log1p, inverse_func=np.expm1, validate=True)
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler()
 
 from functools import partial, update_wrapper
 
@@ -49,11 +48,11 @@ def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr):
     decoder_hidden = 128
 
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
-    weights_tensor = Input(shape=(n_pre, nb_features), name="Weights")
+    weights_tensor = Input(shape=(nb_features,), name="Weights")
     lstm_1 = LSTM(encoder_hidden, dropout=dr, return_sequences=True, name='LSTM_1')(inputs) # Encoder
     lstm_2 = LSTM(encoder_hidden, dropout=dr, return_sequences=False, name='LSTM_2')(lstm_1) # Encoder
     repeat = RepeatVector(n_post, name='Repeat')(lstm_2) # get the last output of the LSTM and repeats it
-    lstm_3 = LSTM(decoder_hidden, dropout=dr, return_sequences=True, name='Decoder')(repeat)  # Decoder
+    lstm_3 = LSTM(decoder_hidden, return_sequences=True, name='Decoder')(repeat)  # Decoder
     output= TimeDistributed(Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense'), name='Outputs')(lstm_3)
 
     cl = wrapped_partial(weighted_mse, weights=weights_tensor)
@@ -70,15 +69,13 @@ def train_model(model, dataX, dataY, weights, epoch_count, batches):
 
     stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=int(patience), verbose=1, mode='auto')
 
-    csv_logger = CSVLogger('results/encoder-decoder/{}/training_log_{}.csv'.format(dataname,dataname), separator=',', append=False)
-
     history = model.fit([dataX,weights], 
         dataY, 
         batch_size=batches, 
         verbose=1,
         epochs=epoch_count, 
-        callbacks=[stopping,csv_logger],
-        validation_split=0.1)
+        callbacks=[stopping],
+        validation_split=0.2)
 
 def test_model():
 
@@ -92,22 +89,21 @@ def test_model():
 
     wXC = []
     for i in range(seq_len-n_pre):
-        wXC.append(wx[i:i+n_pre])
+        wXC.append(wx[i+n_pre]) # weights for outputs
    
     wXC = np.array(wXC)
 
     print('wXC shape:', wXC.shape)
 
-    x_obs = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))
-    x_scaled = scaler.fit_transform(x_obs)
+    x = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))
+    x_scaled = scaler.fit_transform(x)
 
     print('raw x shape', x_scaled.shape)   
 
     dXC, dYC = [], []
     for i in range(seq_len-n_pre):
-        initial_x = x_scaled[i:i+n_pre][:1:,] # first t values in sliding window
-        dXC.append(x_scaled[i:i+n_pre]-initial_x) # controls are inputs
-        dYC.append(x_scaled[i+n_pre]-initial_x) # controls are outputs
+        dXC.append(x_scaled[i:i+n_pre]) # controls are inputs 
+        dYC.append(x_scaled[i+n_pre]) # controls are outputs
     
     dataXC = np.array(dXC)
     dataYC = np.array(dYC)
@@ -115,11 +111,8 @@ def test_model():
     print('dataXC shape:', dataXC.shape)
     print('dataYC shape:', dataYC.shape)
 
-    dataYC = np.expand_dims(dataYC, axis=1)
-    print('dataYC expanded shape:', dataYC.shape)
-
     nb_features = dataXC.shape[2]
-    output_dim = dataYC.shape[2]
+    output_dim = dataYC.shape[1]
 
     # create and fit the LSTM network
     print('creating model...')
@@ -136,7 +129,7 @@ def test_model():
 
     wY = []
     for i in range(seq_len-n_pre):
-        wY.append(wy[i:i+n_pre]) # controls are inputs
+        wY.append(wy[i+n_pre]) # weights for outputs
     
     wXT = np.array(wY)
 
@@ -148,31 +141,23 @@ def test_model():
      
     print('raw y shape', y_scaled.shape)   
 
-    dXT, dIT = [], []
+    dXT = []
     for i in range(seq_len-n_pre):
-        initial_y = y_scaled[i:i+n_pre][:1:,] # subtract initial x values
-        dIT.append(initial_y) 
-        dXT.append(y_scaled[i:i+n_pre] - initial_x) # treated is input
+        dXT.append(y_scaled[i:i+n_pre]) # treated is input
 
     dataXT = np.array(dXT)
-    dataIT = np.array(dIT)
 
     print('dataXT shape:', dataXT.shape)
-    print('dataIT shape:', dataIT.shape)
 
     preds_test = model.predict([dataXT, wXT], batch_size=int(nb_batches), verbose=0)
     
     print('predictions shape =', preds_test.shape)
 
-    preds_test = preds_test + dataIT # restore initial values
-
-    preds_test = np.squeeze(preds_test, axis=1)
-
-    print('predictions shape (squeezed) =', preds_test.shape)
-
     preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
 
-    print('predictions shape (transformed) =', preds_test.shape)
+    preds_test = np.squeeze(preds_test)
+
+    print('predictions shape (squeezed)=', preds_test.shape)
 
     print('Saving to results/encoder-decoder/{}/encoder-decoder-{}-test.csv'.format(dataname,dataname))
 
