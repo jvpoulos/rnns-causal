@@ -52,12 +52,12 @@ StockSim <- function(Y,T,sim){
       
       ## Estimate propensity scores
       
-      logitMod.x <- glmnet(x=Y_obs, y=as.factor((1-treat_mat)[,t0]), family="binomial")
+      logitMod.x <- cv.glmnet(x=Y_obs, y=as.factor((1-treat_mat)[,t0]), family="binomial", parallel = TRUE)
       
-      logitMod.z <- glmnet(x=t(Y_obs), y=as.factor((1-treat_mat)[treat_indices[1],]), family="binomial")
+      logitMod.z <- cv.glmnet(x=t(Y_obs), y=as.factor((1-treat_mat)[treat_indices[1],]), family="binomial", parallel = TRUE)
       
-      p.weights.x <- as.vector(predict(logitMod.x, Y_obs, type="response", s = 0.01))
-      p.weights.z <- as.vector(predict(logitMod.z, t(Y_obs), type="response", s = 0.01))
+      p.weights.x <- as.vector(predict(logitMod.x, Y_obs, type="response", s = "lambda.min"))
+      p.weights.z <- as.vector(predict(logitMod.z, t(Y_obs), type="response", s = "lambda.min"))
       
       p.weights <- outer(p.weights.x,p.weights.z)   # outer product of fitted values on response scale
       
@@ -67,8 +67,8 @@ StockSim <- function(Y,T,sim){
       
       print("VAR Started")
       source("code/varEst.R")
-      est_model_VAR <- varEst(Y_obs, Y_sub, treat_indices, t0, T)
-      est_model_VAR_msk_err <- (est_model_VAR[,t0:T] - Y[treat_indices,][,t0:T])
+      est_model_VAR <- varEst(Y, treat_indices, t0, T)
+      est_model_VAR_msk_err <- (est_model_VAR - Y[treat_indices,][,t0:T])
       est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
       VAR_RMSE_test[i,j] <- est_model_VAR_test_RMSE
       

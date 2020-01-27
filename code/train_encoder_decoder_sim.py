@@ -19,14 +19,6 @@ from sklearn.preprocessing import FunctionTransformer
 
 scaler = FunctionTransformer(func=np.log1p, inverse_func=np.expm1, validate=True)
 
-def subtract_values(X):
-    return X-X[: 1:,]
-
-def add_back_values(X):
-    return X+X[: 1:,]
-
-incremental_value = FunctionTransformer(func=subtract_values, inverse_func=add_back_values, validate=True)
-
 from functools import partial, update_wrapper
 
 def wrapped_partial(func, *args, **kwargs):
@@ -113,8 +105,9 @@ def test_model():
 
     dXC, dYC = [], []
     for i in range(seq_len-n_pre):
-        dXC.append(x_scaled[i:i+n_pre]) # controls are inputs
-        dYC.append(x_scaled[i+n_pre]) # controls are outputs
+        initial_x = x_scaled[i:i+n_pre][:1:,] # first t values in sliding window
+        dXC.append(x_scaled[i:i+n_pre]-initial_x) # controls are inputs
+        dYC.append(x_scaled[i+n_pre]-initial_x) # controls are outputs
     
     dataXC = np.array(dXC)
     dataYC = np.array(dYC)
@@ -155,19 +148,25 @@ def test_model():
      
     print('raw y shape', y_scaled.shape)   
 
-    dXT = []
+    dXT, dIT = [], []
     for i in range(seq_len-n_pre):
-        dXT.append(y_scaled[i:i+n_pre]) # treated is input
+        initial_y = y_scaled[i:i+n_pre][:1:,] # subtract initial x values
+        dIT.append(initial_y) 
+        dXT.append(y_scaled[i:i+n_pre] - initial_x) # treated is input
 
     dataXT = np.array(dXT)
+    dataIT = np.array(dIT)
 
     print('dataXT shape:', dataXT.shape)
+    print('dataIT shape:', dataIT.shape)
 
     preds_test = model.predict([dataXT, wXT], batch_size=int(nb_batches), verbose=0)
     
     print('predictions shape =', preds_test.shape)
 
-    preds_test = np.mean(preds_test, axis=1)
+    preds_test = preds_test + dataIT # restore initial values
+
+    preds_test = np.squeeze(preds_test, axis=1)
 
     print('predictions shape (squeezed) =', preds_test.shape)
 
