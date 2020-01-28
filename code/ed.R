@@ -31,9 +31,9 @@ ed <- function(Y,p.weights,treat_indices,d, t0, T){
   py$t0 <- t0
   py$T <- T
   py$gpu <- 3
-  py$patience <- 25
   py$epochs <- 10000
-  
+  py$patience <- 50
+
   if(d=='stock'){
     py$nb_batches <- 16
     py$lr <- 0.001
@@ -48,27 +48,27 @@ ed <- function(Y,p.weights,treat_indices,d, t0, T){
   } 
   if(d=='educ.pc'){
     py$nb_batches <- 8
-    py$lr <- 0.0005
+    py$lr <- 0.001
     py$penalty <- 0.1
     py$dr <- 0.5
   } 
   if(d=='basque'){
     py$nb_batches <- 4
-    py$lr <- 0.0005
+    py$lr <- 0.001
     py$penalty <- 0.001
-    py$dr <- 0.5
+    py$dr <- 0.2
   } 
   if(d=='california'){
     py$nb_batches <- 4
-    py$lr <- 0.0005
+    py$lr <- 0.001
     py$penalty <- 0.001
-    py$dr <- 0.5
+    py$dr <- 0.2
   } 
   if(d=='germany'){
     py$nb_batches <- 4
-    py$lr <- 0.0005
+    py$lr <- 0.001
     py$penalty <- 0.001
-    py$dr <- 0.5
+    py$dr <- 0.2
   } 
   
   source_python("code/train_encoder_decoder_sim.py")

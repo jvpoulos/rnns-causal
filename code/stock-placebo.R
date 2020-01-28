@@ -1,5 +1,5 @@
 ######################################################
-# Stock Market Data Simulations: Increase Dimensions #
+# Stock Market Data Simulations: Differing t0 #
 ######################################################
 
 ## Loading Source files
@@ -18,16 +18,17 @@ doParallel::registerDoParallel(cores) # register cores (<p)
 
 RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
-StockSim <- function(Y,T,sim){
+StockSim <- function(Y,sim){
   ## Setting up the configuration
   Nbig <- nrow(Y)
   Tbig <- ncol(Y)
   
-  N <- 50
-  T <- T
+  N <- 100
+  T <- 2000
   
-  T0 <- ceiling(T/2)
-  N_t <- ceiling(N/2)
+  number_T0 <- 5
+  T0 <- ceiling(T*((1:number_T0)*2-1)/(2*number_T0))
+  N_t <- ceiling(N*0.5) # no. treated units desired <=N
   num_runs <- 25
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   d <- 'stock'
@@ -51,22 +52,21 @@ StockSim <- function(Y,T,sim){
     treat_indices <- sample(1:N, N_t)
     Y_sub <- Y[all_indices,1:T]
     for (j in c(1:length(T0))){
-      treat_mat <- matrix(1L, N, T) # masked matrix, 1= control units and treated units before treatment and 0 = treated units after treatment
       t0 <- T0[j]
       ## Simultaneuous (simul_adapt) or Staggered adoption (stag_adapt)
       if(is_simul == 1){
-        treat_mat <- simul_adapt(Y_sub, N_t, t0-1, treat_indices)
+        treat_mat <- simul_adapt(Y_sub, N_t, (t0-1), treat_indices) # t0 is time of initial treatment
       }else{
-        treat_mat <- stag_adapt(Y_sub, N_t, t0-1, treat_indices)
+        treat_mat <- stag_adapt(Y_sub, N_t, (t0-1), treat_indices)
       }
       
       Y_obs <- Y_sub * treat_mat
       
       ## Estimate propensity scores
       
-      logitMod.x <- cv.glmnet(x=Y_obs, y=as.factor((1-treat_mat)[,t0]), family="binomial", parallel = TRUE)
+      logitMod.x <- cv.glmnet(x=Y_obs, y=as.factor((1-treat_mat)[,t0]), family="binomial", nfolds=nrow(Y_obs), parallel = TRUE) # LOO
       
-      logitMod.z <- cv.glmnet(x=t(Y_obs), y=as.factor((1-treat_mat)[treat_indices[1],]), family="binomial", parallel = TRUE)
+      logitMod.z <- cv.glmnet(x=t(Y_obs), y=as.factor((1-treat_mat)[treat_indices[1],]), family="binomial", nfolds=nrow(t(Y_obs)), parallel = TRUE)
       
       p.weights.x <- as.vector(predict(logitMod.x, Y_obs, type="response", s = "lambda.min"))
       p.weights.z <- as.vector(predict(logitMod.z, t(Y_obs), type="response", s = "lambda.min"))
@@ -214,6 +214,4 @@ StockSim <- function(Y,T,sim){
 # Load data
 Y <- t(read.csv('data/returns_no_missing.csv',header=F)) # N X T
 
-for(T in c(125,250,500,1000)){
-  StockSim(Y,T,sim=1)
-}
+StockSim(Y,sim=1)

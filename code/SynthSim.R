@@ -6,8 +6,8 @@ SynthSim <- function(outcomes,covars.x,covars.z,d,sim){
   ## Setting up the configuration
   N <- nrow(treat)
   T <- ncol(treat)
-  number_T0 <- 4
-  T0 <- ceiling(T*((1:number_T0)*5-1)/(5*number_T0))
+  number_T0 <- 5
+  T0 <- ceiling(T*((1:number_T0)*2-1)/(2*number_T0))
   N_t <- ceiling(N*0.5) # no. treated units desired <=N
   num_runs <- 25
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
@@ -29,22 +29,21 @@ SynthSim <- function(outcomes,covars.x,covars.z,d,sim){
     ## Fix the treated units in the whole run for a better comparison
     treat_indices <- sample(1:N, N_t)
     for(j in c(1:length(T0))){
-      treat_mat <- matrix(1L, N, T) # masked matrix, 1= control units and treated units before treatment and 0 = treated units after treatment
       t0 <- T0[j]
       ## Simultaneuous (simul_adapt) or Staggered adoption (stag_adapt)
       if(is_simul == 1){
-        treat_mat <- simul_adapt(Y, N_t, t0-1, treat_indices) # t0 is time of initial treatment
+        treat_mat <- simul_adapt(Y, N_t, (t0-1), treat_indices) # t0 is time of initial treatment
       }else{
-        treat_mat <- stag_adapt(Y, N_t, t0-1, treat_indices)
+        treat_mat <- stag_adapt(Y, N_t, (t0-1), treat_indices)
       }
       
       Y_obs <- Y * treat_mat
       
       ## Estimate propensity scores
       
-      logitMod.x <- cv.glmnet(x=covars.x, y=as.factor((1-treat_mat)[,t0]), family="binomial", parallel = TRUE)
+      logitMod.x <- cv.glmnet(x=covars.x, y=as.factor((1-treat_mat)[,t0]), family="binomial", nfolds= nrow(covars.x), parallel = TRUE) # LOO
       
-      logitMod.z <- cv.glmnet(x=covars.z, y=as.factor((1-treat_mat)[treat_indices[1],]), family="binomial", parallel = TRUE)
+      logitMod.z <- cv.glmnet(x=covars.z, y=as.factor((1-treat_mat)[treat_indices[1],]), family="binomial", nfolds=nrow(covars.z), parallel = TRUE)
       
       p.weights.x <- as.vector(predict(logitMod.x, covars.x, type="response", s ="lambda.min"))
       p.weights.z <- as.vector(predict(logitMod.z, covars.z, type="response", s ="lambda.min"))

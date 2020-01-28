@@ -1,5 +1,8 @@
 from __future__ import print_function
 
+import glob
+import os
+
 import sys
 import math
 import numpy as np
@@ -11,7 +14,7 @@ import tensorflow as tf
 from keras import backend as K
 from keras.models import Model
 from keras.layers import LSTM, Input, Dense, RepeatVector, TimeDistributed
-from keras.callbacks import CSVLogger, EarlyStopping
+from keras.callbacks import EarlyStopping, TerminateOnNaN
 from keras import regularizers
 from keras.optimizers import Adam
 
@@ -55,10 +58,10 @@ def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr):
     lstm_3 = LSTM(decoder_hidden, return_sequences=True, name='Decoder')(repeat)  # Decoder
     output= TimeDistributed(Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense'), name='Outputs')(lstm_3)
 
-    cl = wrapped_partial(weighted_mse, weights=weights_tensor)
-
     model = Model([inputs, weights_tensor], output)
 
+    # Compile
+    cl = wrapped_partial(weighted_mse, weights=weights_tensor)
     model.compile(optimizer=Adam(lr=lr), loss=cl)
 
     return model
@@ -67,15 +70,19 @@ def train_model(model, dataX, dataY, weights, epoch_count, batches):
 
     # Prepare model checkpoints and callbacks
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=int(patience), verbose=1, mode='auto')
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0.001, patience=int(patience), verbose=1, mode='min', restore_best_weights=True)
+
+    terminate = TerminateOnNaN()
+
+    # Model fit
 
     history = model.fit([dataX,weights], 
         dataY, 
         batch_size=batches, 
         verbose=1,
         epochs=epoch_count, 
-        callbacks=[stopping],
-        validation_split=0.2)
+        callbacks=[stopping,terminate],
+        validation_split=0.1)
 
 def test_model():
 
@@ -117,7 +124,18 @@ def test_model():
     # create and fit the LSTM network
     print('creating model...')
     model = create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr)
+
+    # Load pre-trained weights
+    list_of_files = glob.glob('results/encoder-decoder/{}'.format(dataname) +'/*.h5')
+    latest_file = max(list_of_files, key=os.path.getctime)
+
+    print("loading weights from", latest_file)
+    model.load_weights(latest_file)
+
     train_model(model, dataXC, dataYC, wXC, int(epochs), int(nb_batches))
+
+    # save weights
+    model.save_weights('results/encoder-decoder/{}'.format(dataname) +'/weights-placebo.h5')
 
     # now test
 

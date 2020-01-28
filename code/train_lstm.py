@@ -1,5 +1,8 @@
 from __future__ import print_function
 
+import glob
+import os
+
 import sys
 import math
 import numpy as np
@@ -8,7 +11,7 @@ import pandas as pd
 from keras import backend as K
 from keras.models import Model
 from keras.layers import LSTM, Input, Dense
-from keras.callbacks import ModelCheckpoint, CSVLogger, EarlyStopping
+from keras.callbacks import ModelCheckpoint, CSVLogger, EarlyStopping, TerminateOnNaN
 from keras import regularizers
 from keras.optimizers import Adam
 
@@ -56,11 +59,12 @@ def create_model(n_pre, nb_features, output_dim, lr, penalty, dr):
 
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
     weights_tensor = Input(shape=(nb_features,), name="Weights")
-    lstm_1 = LSTM(n_hidden, dropout=dr)(inputs) 
+    lstm_1 = LSTM(n_hidden, dropout=dr, name="LSTM_1")(inputs) 
     output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(lstm_1)
 
     model = Model([inputs,weights_tensor],output) 
 
+    # Compile 
     cl = wrapped_partial(weighted_mse, weights=weights_tensor)
     model.compile(optimizer=Adam(lr=lr), loss=cl)
 
@@ -72,20 +76,24 @@ def train_model(model, dataX, dataY, weights, nb_epoches, nb_batches):
 
     # Prepare model checkpoints and callbacks
 
-    filepath="results/lstm/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
-    checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=50, save_best_only=True)
+    filepath="results/lstm/{}".format(dataname) + "/weights-{epoch:02d}-{val_loss:.3f}.hdf5"
+    checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=10, save_best_only=True)
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=int(patience), verbose=1, mode='auto')
+    stopping = EarlyStopping(monitor='val_loss', min_delta=0.001, patience=int(patience), verbose=1, mode='min', restore_best_weights=True)
 
     csv_logger = CSVLogger('results/lstm/{}/training_log_{}_{}.csv'.format(dataname,dataname,imp), separator=',', append=False)
+
+    terminate = TerminateOnNaN()
+
+    # Model fit
 
     history = model.fit(x=[dataX,weights], 
         y=dataY, 
         batch_size=nb_batches, 
         verbose=1,
         epochs=nb_epoches, 
-        callbacks=[checkpointer,stopping,csv_logger],
-        validation_split=0.2)
+        callbacks=[checkpointer,stopping,csv_logger,terminate],
+        validation_split=0.1)
 
 def test_model():
 
@@ -126,6 +134,14 @@ def test_model():
     # create and fit the lstm network
     print('creating model...')
     model = create_model(n_pre, nb_features, output_dim, lr, penalty, dr)
+
+    # Load pre-trained weights
+    list_of_files = glob.glob('results/lstm/{}'.format(dataname) +'/*.hdf5')
+    latest_file = max(list_of_files, key=os.path.getctime)
+
+    print("loading weights from", latest_file)
+    model.load_weights(latest_file)
+
     train_model(model, dataXC, dataYC, wXC, int(nb_epochs), int(nb_batches))
 
     # now test
