@@ -18,6 +18,8 @@ from keras.callbacks import EarlyStopping, TerminateOnNaN
 from keras import regularizers
 from keras.optimizers import Adam
 
+from code.attention_decoder import AttentionDecoder
+
 from sklearn.preprocessing import StandardScaler
 scaler = StandardScaler()
 
@@ -51,14 +53,12 @@ def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr):
     decoder_hidden = 128
 
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
-    weights_tensor = Input(shape=(nb_features,), name="Weights")
+    weights_tensor = Input(shape=(n_pre,nb_features), name="Weights")
     lstm_1 = LSTM(encoder_hidden, dropout=dr, return_sequences=True, name='LSTM_1')(inputs) # Encoder
-    lstm_2 = LSTM(encoder_hidden, dropout=dr, return_sequences=False, name='LSTM_2')(lstm_1) # Encoder
-    repeat = RepeatVector(n_post, name='Repeat')(lstm_2) # get the last output of the LSTM and repeats it
-    lstm_3 = LSTM(decoder_hidden, return_sequences=True, name='Decoder')(repeat)  # Decoder
-    output= TimeDistributed(Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense'), name='Outputs')(lstm_3)
+    lstm_2 = LSTM(encoder_hidden, dropout=dr, return_sequences=True, name='LSTM_2')(lstm_1) # Encoder
+    decoder = AttentionDecoder(decoder_hidden,output_dim, name="Decoder")(lstm_2)
 
-    model = Model([inputs, weights_tensor], output)
+    model = Model([inputs, weights_tensor], decoder)
 
     # Compile
     cl = wrapped_partial(weighted_mse, weights=weights_tensor)
@@ -96,7 +96,7 @@ def test_model():
 
     wXC = []
     for i in range(seq_len-n_pre):
-        wXC.append(wx[i+n_pre]) # weights for outputs
+        wXC.append(wx[i:i+n_pre]) 
    
     wXC = np.array(wXC)
 
@@ -118,8 +118,11 @@ def test_model():
     print('dataXC shape:', dataXC.shape)
     print('dataYC shape:', dataYC.shape)
 
+    dataYC = np.expand_dims(dataYC, axis=1)
+    print('dataYC expanded shape:', dataYC.shape)
+
     nb_features = dataXC.shape[2]
-    output_dim = dataYC.shape[1]
+    output_dim = dataYC.shape[2]
 
     # create and fit the LSTM network
     print('creating model...')
@@ -147,7 +150,7 @@ def test_model():
 
     wY = []
     for i in range(seq_len-n_pre):
-        wY.append(wy[i+n_pre]) # weights for outputs
+        wY.append(wy[i:i+n_pre]) 
     
     wXT = np.array(wY)
 
@@ -167,15 +170,15 @@ def test_model():
 
     print('dataXT shape:', dataXT.shape)
 
-    preds_test = model.predict([dataXT, wXT], batch_size=int(nb_batches), verbose=0)
+    preds_test = model.predict([dataXT, wXT], batch_size=int(nb_batches), verbose=1)
     
     print('predictions shape =', preds_test.shape)
 
-    preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
-
-    preds_test = np.squeeze(preds_test)
+    preds_test = np.squeeze(preds_test[::,(preds_test.shape[1]-1)])
 
     print('predictions shape (squeezed)=', preds_test.shape)
+
+    preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
 
     print('Saving to results/encoder-decoder/{}/encoder-decoder-{}-test.csv'.format(dataname,dataname))
 
