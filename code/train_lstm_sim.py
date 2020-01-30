@@ -1,7 +1,7 @@
 from __future__ import print_function
 
-import glob
-import os
+import os.path
+from os import path
 
 import sys
 import math
@@ -122,11 +122,10 @@ def test_model():
     model = create_model(n_pre, nb_features, output_dim, lr, penalty, dr)
 
     # load pre-trained weights
-    list_of_files = glob.glob('results/lstm/{}'.format(dataname) +'/*.h5')
-    latest_file = max(list_of_files, key=os.path.getctime)
-
-    print("loading weights from", latest_file)
-    model.load_weights(latest_file)
+    weights_path = 'results/lstm/{}'.format(dataname) +'/weights-placebo.h5'
+    if path.exists(weights_path):
+        print("loading weights from", weights_path)
+        model.load_weights(weights_path)
 
     train_model(model, dataXC, dataYC, wXC, int(epochs), int(nb_batches))
 

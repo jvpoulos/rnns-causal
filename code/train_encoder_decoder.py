@@ -1,8 +1,7 @@
 from __future__ import print_function
 
-
-import glob
-import os
+import os.path
+from os import path
 
 import sys
 import math
@@ -15,8 +14,6 @@ from keras.layers import LSTM, Input, Dense, RepeatVector
 from keras.callbacks import ModelCheckpoint, CSVLogger, EarlyStopping, TerminateOnNaN
 from keras import regularizers
 from keras.optimizers import Adam
-
-from code.attention_decoder import AttentionDecoder
 
 from sklearn.preprocessing import StandardScaler
 scaler = StandardScaler()
@@ -62,12 +59,14 @@ def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr):
     decoder_hidden = 128
 
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
-    weights_tensor = Input(shape=(n_pre,nb_features), name="Weights")
+    weights_tensor = Input(shape=(nb_features,), name="Weights")
     lstm_1 = LSTM(encoder_hidden, dropout=dr, return_sequences=True, name='LSTM_1')(inputs) # Encoder
-    lstm_2 = LSTM(encoder_hidden, dropout=dr, return_sequences=True, name='LSTM_2')(lstm_1) # Encoder
-    decoder = AttentionDecoder(decoder_hidden,output_dim, name="Decoder")(lstm_2)
+    lstm_2 = LSTM(encoder_hidden, dropout=dr, return_sequences=False, name='LSTM_2')(lstm_1) # Encoder
+    repeat = RepeatVector(n_post, name='Repeat')(lstm_2) # get the last output of the LSTM and repeats it
+    lstm_3 = LSTM(decoder_hidden, return_sequences=True, name='Decoder')(repeat)  # Decoder
+    output= TimeDistributed(Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense'), name='Outputs')(lstm_3)
 
-    model = Model([inputs, weights_tensor], decoder)
+    model = Model([inputs, weights_tensor], output)
 
     # Compile
     cl = wrapped_partial(weighted_mse, weights=weights_tensor)
@@ -133,23 +132,19 @@ def test_model():
 
     print('dataXC shape:', dataXC.shape)
     print('dataYC shape:', dataYC.shape)
-    
-    dataYC = np.expand_dims(dataYC, axis=1)
-    print('dataYC expanded shape:', dataYC.shape)
 
     nb_features = dataXC.shape[2]
-    output_dim = dataYC.shape[2]
+    output_dim = dataYC.shape[1]
 
     # create and fit the encoder-decoder network
     print('creating model...')
     model = create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr)
 
     # Load pre-trained weights
-    list_of_files = glob.glob('results/encoder-decoder/{}'.format(dataname) +'/*.hdf5')
-    latest_file = max(list_of_files, key=os.path.getctime)
-
-    print("loading weights from", latest_file)
-    model.load_weights(latest_file)
+    weights_path = 'results/encoder-decoder/{}'.format(dataname) +'/weights-placebo.h5'
+    if path.exists(weights_path):
+        print("loading weights from", weights_path)
+        model.load_weights(weights_path)
 
     train_model(model, dataXC, dataYC, wXC, int(nb_epochs), int(nb_batches))
 
@@ -203,11 +198,11 @@ def test_model():
     
     print('predictions shape =', preds_test.shape)
 
-    preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
-
     preds_test = np.squeeze(preds_test)
 
     print('predictions shape (squeezed)=', preds_test.shape)
+
+    preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
 
     print('Saving to results/encoder-decoder/{}/encoder-decoder-{}-test-{}.csv'.format(dataname,dataname,imp))
 
