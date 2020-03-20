@@ -8,12 +8,12 @@ library(lassovar)
 
 varEst <- function(Y,treat_indices, t0, T){
   # Converting the data to a floating point matrix
-  data <- data.matrix(t(Y)) # T x N
+  data <- data.frame(t(Y)) # T x N
   rownames(data) <- 1: nrow(data)
   
-  train_data <- data[,(-treat_indices)] # train on control units 
+  train_data <- data.frame(data[,(-treat_indices)]) # train on control units 
   
-  test_data <- data[,(treat_indices)]
+  test_data <- data.frame(data[,(treat_indices)])
   
   # Fit the model
   var.fit <- lassovar(dat=train_data, exo=NULL, lags = 1, horizon = 1, mc=TRUE, ncores=2)
