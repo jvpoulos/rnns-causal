@@ -78,7 +78,7 @@ SalesSim <- function(Y,T,sim){
     print("LSTM Started")
     source("code/lstm.R")
     est_model_LSTM <- lstm(Y=Y_sub, p.weights, treat_indices, d, t0, T)
-    est_model_LSTM_msk_err <- (est_model_LSTM - Y_sub[treat_indices,][,t0:T])
+    est_model_LSTM_msk_err <- (round(est_model_LSTM) - Y_sub[treat_indices,][,t0:T])
     est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
     LSTM_RMSE_test[i] <- est_model_LSTM_test_RMSE
     print(paste("LSTM RMSE:", round(est_model_LSTM_test_RMSE,3),"run",i))
@@ -90,7 +90,7 @@ SalesSim <- function(Y,T,sim){
     print("ED Started")
     source("code/ed.R")
     est_model_ED <- ed(Y=Y_sub, p.weights, treat_indices, d, t0, T)
-    est_model_ED_msk_err <- (est_model_ED - Y_sub[treat_indices,][,t0:T])
+    est_model_ED_msk_err <- (round(est_model_ED) - Y_sub[treat_indices,][,t0:T])
     est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
     ED_RMSE_test[i] <- est_model_ED_test_RMSE
     print(paste("ED RMSE:", round(est_model_ED_test_RMSE,3),"run",i))
@@ -102,7 +102,7 @@ SalesSim <- function(Y,T,sim){
     print("VAR Started")
     source("code/varEst.R")
     est_model_VAR <- varEst(Y=Y_sub, treat_indices, t0, T)
-    est_model_VAR_msk_err <- (est_model_VAR - Y_sub[treat_indices,][,t0:T])
+    est_model_VAR_msk_err <- (round(est_model_VAR) - Y_sub[treat_indices,][,t0:T])
     est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
     VAR_RMSE_test[i] <- est_model_VAR_test_RMSE
     print(paste("VAR RMSE:", round(est_model_VAR_test_RMSE,3),"run",i))
@@ -114,7 +114,7 @@ SalesSim <- function(Y,T,sim){
     print("MC-NNM Started")
     est_model_MCPanel <- mcnnm_cv(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, num_folds = 2)
     est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
-    est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y_sub)*(1-treat_mat)
+    est_model_MCPanel$msk_err <- (round(est_model_MCPanel$Mhat) - Y_sub)*(1-treat_mat)
     est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
     MCPanel_RMSE_test[i] <- est_model_MCPanel$test_RMSE
     print(paste("MC-NNM RMSE:", round(est_model_MCPanel$test_RMSE,3),"run",i))
@@ -125,7 +125,7 @@ SalesSim <- function(Y,T,sim){
     
     print("VT-EN Started")
     est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat)))
-    est_model_ENT_msk_err <- (est_model_ENT - Y_sub)*(1-treat_mat)
+    est_model_ENT_msk_err <- (round(est_model_ENT) - Y_sub)*(1-treat_mat)
     est_model_ENT_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ENT_msk_err^2, na.rm = TRUE))
     ENT_RMSE_test[i] <- est_model_ENT_test_RMSE
     print(paste("VT-EN RMSE:", round(est_model_ENT_test_RMSE,3),"run",i))
@@ -136,7 +136,7 @@ SalesSim <- function(Y,T,sim){
     
     print("DID Started")
     est_model_DID <- t(DID(t(Y_obs), t(treat_mat)))
-    est_model_DID_msk_err <- (est_model_DID - Y_sub)*(1-treat_mat)
+    est_model_DID_msk_err <- (round(est_model_DID) - Y_sub)*(1-treat_mat)
     est_model_DID_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_DID_msk_err^2, na.rm = TRUE))
     DID_RMSE_test[i] <- est_model_DID_test_RMSE
     print(paste("DID RMSE:", round(est_model_DID_test_RMSE,3),"run",i))
@@ -147,7 +147,7 @@ SalesSim <- function(Y,T,sim){
     
     print("ADH Started")
     est_model_ADH <- adh_mp_rows(Y_obs, treat_mat)
-    est_model_ADH_msk_err <- (est_model_ADH - Y_sub)*(1-treat_mat)
+    est_model_ADH_msk_err <- (round(est_model_ADH) - Y_sub)*(1-treat_mat)
     est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
     ADH_RMSE_test[i] <- est_model_ADH_test_RMSE
     print(paste("ADH RMSE:", round(est_model_ADH_test_RMSE,3),"run",i))
