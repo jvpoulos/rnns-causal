@@ -26,7 +26,6 @@ StockSim <- function(Y,T,sim){
   N <- 10000/T
   T <- T
   
-  number_T <- 5
   t0 <- ceiling(T*(9/10)) # time of intiial treatment
   N_t <- ceiling(N/2)
   num_runs <- 25
@@ -35,13 +34,13 @@ StockSim <- function(Y,T,sim){
 
   ## Matrices for saving RMSE values
   
-  MCPanel_RMSE_test <- matrix(0L,num_runs,number_T)
-  VAR_RMSE_test <- matrix(0L,num_runs,number_T)
-  LSTM_RMSE_test <- matrix(0L,num_runs,number_T)
-  ED_RMSE_test <- matrix(0L,num_runs,number_T)
-  ENT_RMSE_test <- matrix(0L,num_runs,number_T)
-  DID_RMSE_test <- matrix(0L,num_runs,number_T)
-  ADH_RMSE_test <- matrix(0L,num_runs,number_T)
+  MCPanel_RMSE_test <- matrix(0L,num_runs)
+  VAR_RMSE_test <- matrix(0L,num_runs)
+  LSTM_RMSE_test <- matrix(0L,num_runs)
+  ED_RMSE_test <- matrix(0L,num_runs)
+  ENT_RMSE_test <- matrix(0L,num_runs)
+  DID_RMSE_test <- matrix(0L,num_runs)
+  ADH_RMSE_test <- matrix(0L,num_runs)
   
   ## Run different methods
   
@@ -80,7 +79,7 @@ StockSim <- function(Y,T,sim){
     est_model_LSTM <- lstm(Y=Y_sub, p.weights, treat_indices, d, t0, T)
     est_model_LSTM_msk_err <- (est_model_LSTM[,t0:T] - Y_sub[treat_indices,][,t0:T])
     est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
-    LSTM_RMSE_test[i,j] <- est_model_LSTM_test_RMSE
+    LSTM_RMSE_test[i] <- est_model_LSTM_test_RMSE
     print(paste("LSTM RMSE:", round(est_model_LSTM_test_RMSE,3),"run",i))
     
     ## ------
@@ -92,7 +91,7 @@ StockSim <- function(Y,T,sim){
     est_model_ED <- ed(Y=Y_sub, p.weights, treat_indices, d, t0, T)
     est_model_ED_msk_err <- (est_model_ED - Y_sub[treat_indices,][,t0:T])
     est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
-    ED_RMSE_test[i,j] <- est_model_ED_test_RMSE
+    ED_RMSE_test[i] <- est_model_ED_test_RMSE
     print(paste("ED RMSE:", round(est_model_ED_test_RMSE,3),"run",i))
     
     ## ------
@@ -104,7 +103,7 @@ StockSim <- function(Y,T,sim){
     est_model_VAR <- varEst(Y=Y_sub, treat_indices, t0, T)
     est_model_VAR_msk_err <- (est_model_VAR - Y_sub[treat_indices,][,t0:T])
     est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
-    VAR_RMSE_test[i,j] <- est_model_VAR_test_RMSE
+    VAR_RMSE_test[i] <- est_model_VAR_test_RMSE
     print(paste("VAR RMSE:", round(est_model_VAR_test_RMSE,3),"run",i))
     
     ## ------
@@ -116,7 +115,7 @@ StockSim <- function(Y,T,sim){
     est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
     est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y_sub)*(1-treat_mat)
     est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
-    MCPanel_RMSE_test[i,j] <- est_model_MCPanel$test_RMSE
+    MCPanel_RMSE_test[i] <- est_model_MCPanel$test_RMSE
     print(paste("MC-NNM RMSE:", round(est_model_MCPanel$test_RMSE,3),"run",i))
     
     ## -----
@@ -127,7 +126,7 @@ StockSim <- function(Y,T,sim){
     est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat)))
     est_model_ENT_msk_err <- (est_model_ENT - Y_sub)*(1-treat_mat)
     est_model_ENT_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ENT_msk_err^2, na.rm = TRUE))
-    ENT_RMSE_test[i,j] <- est_model_ENT_test_RMSE
+    ENT_RMSE_test[i] <- est_model_ENT_test_RMSE
     print(paste("VT-EN RMSE:", round(est_model_ENT_test_RMSE,3),"run",i))
     
     ## -----
@@ -138,7 +137,7 @@ StockSim <- function(Y,T,sim){
     est_model_DID <- t(DID(t(Y_obs), t(treat_mat)))
     est_model_DID_msk_err <- (est_model_DID - Y_sub)*(1-treat_mat)
     est_model_DID_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_DID_msk_err^2, na.rm = TRUE))
-    DID_RMSE_test[i,j] <- est_model_DID_test_RMSE
+    DID_RMSE_test[i] <- est_model_DID_test_RMSE
     print(paste("DID RMSE:", round(est_model_DID_test_RMSE,3),"run",i))
     
     ## -----
@@ -149,7 +148,7 @@ StockSim <- function(Y,T,sim){
     est_model_ADH <- adh_mp_rows(Y_obs, treat_mat)
     est_model_ADH_msk_err <- (est_model_ADH - Y_sub)*(1-treat_mat)
     est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
-    ADH_RMSE_test[i,j] <- est_model_ADH_test_RMSE
+    ADH_RMSE_test[i] <- est_model_ADH_test_RMSE
     print(paste("ADH RMSE:", round(est_model_ADH_test_RMSE,3),"run",i))
   }
   
@@ -196,13 +195,13 @@ StockSim <- function(Y,T,sim){
                ENT_avg_RMSE + 1.96*ENT_std_error,
                VAR_avg_RMSE + 1.96*VAR_std_error),
       "x" = c(T, T, T, T, T, T, T),
-      "Method" = c(replicate(number_T,"DID"), 
-                   replicate(number_T,"Encoder-decoder"),
-                   replicate(number_T,"LSTM"), 
-                   replicate(number_T,"MC-NNM"), 
-                   replicate(number_T,"SCM"),
-                   replicate(number_T,"SCM-EN"),
-                   replicate(number_T,"VAR")))
+      "Method" = c("DID", 
+                   "Encoder-decoder",
+                   "LSTM", 
+                   "MC-NNM", 
+                   "SCM",
+                   "SCM-EN",
+                   "VAR"))
   ##
   filename<-paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".rds")
   saveRDS(df1, file = paste0("results/plots/",filename))
