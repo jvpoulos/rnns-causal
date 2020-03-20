@@ -26,8 +26,8 @@ SalesSim <- function(Y,T,sim){
   N <- 5000/T
   T <- T
   
-  number_T <- 5
-  t0 <- ceiling(T*(9/10)) # time of intiial treatment
+  number_T <- 4
+  t0 <- ceiling(T/2) # time of intiial treatment
   N_t <- ceiling(N/2)
   num_runs <- 25
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
@@ -211,6 +211,7 @@ SalesSim <- function(Y,T,sim){
 # Load data
 Y <- read.csv('data/sales_train_validation.csv',header=T, stringsAsFactors = F) # N X T
 Y <- as.matrix(Y[,7:ncol(Y)])
+print(dim(Y))
 
 for(T in c(50,100,250,500,1000)){
   SalesSim(Y,T,sim=1)
