@@ -35,16 +35,16 @@ ed <- function(Y,p.weights,treat_indices,d, t0, T){
   py$patience <- 50
 
   
-  if(d=='stock'){
+  if(d=='sales_fixed'){
     py$nb_batches <- 32
     py$lr <- 0.001
-    py$penalty <- 0.01
+    py$penalty <- 0.001
     py$dr <- 0.5
   } 
   if(d=='stock_fixed'){
     py$nb_batches <- 32
     py$lr <- 0.001
-    py$penalty <- 0.01
+    py$penalty <- 0.001
     py$dr <- 0.5
   } 
   if(d=='educ.pc'){

@@ -52,7 +52,13 @@ $ ./main.sh > main.txt
 Experiments
 ------
 
-To run placebo experiments, for each DATANAME={basque,california,germany,stock,stock_fixed,educ.pc} and each MODEL={encoder-decoder,lstm}:
+Uncompress sales data:
+
+```
+$ tar xf sales_train_validation.tar.xz
+```
+
+To run placebo experiments, for each DATANAME={basque,california,germany,sales_fixed,stock_fixed,educ.pc} and each MODEL={encoder-decoder,lstm}:
 
 ```
 $ mkdir data/$$DATANAME$$
@@ -62,8 +68,9 @@ $ mkdir results/$$MODEL$$/$$DATANAME$$
 and then execute
 
 * `basque-placebo.sh`, `california-placebo.sh`, `germany-placebo.sh`: synthetic control datasets
-* `stock-placebo-fixed.sh`: stock market prices with fixed dimensions
 * `educ-placebo.sh`: state government education spending
+* `stock-placebo-fixed.sh`: stock prices with fixed dimensions
+* `sales-placebo-fixed.sh`: product sales prices with fixed dimensions
 
 Counterfactual predictions
 ------
