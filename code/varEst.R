@@ -20,7 +20,6 @@ varEst <- function(Y,treat_indices, t0, T){
   
   # Fit model on treated units
   
-  test_data <- data[,(treat_indices)]
   var.preds <- predict(var.fit, test_data)
   
   return(t(var.preds))
