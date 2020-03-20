@@ -11,16 +11,16 @@ varEst <- function(Y,treat_indices, t0, T){
   data <- data.frame(t(Y)) # T x N
   rownames(data) <- 1: nrow(data)
   
-  train_data <- data.frame(data[,(-treat_indices)]) # train on control units 
+  train_data <- data.frame(data[,(-treat_indices)]) # train on control units
   
   test_data <- data.frame(data[,(treat_indices)])
   
   # Fit the model
-  var.fit <- lassovar(dat=train_data, exo=NULL, lags = 1, horizon = 1, mc=TRUE, ncores=2)
+  var.fit <- lassovar(dat=data.frame(train_data), exo=NULL, lags = 1, horizon = 1)
   
   # Fit model on treated units
   
-  var.preds <- predict(var.fit, test_data)
+  var.preds <- predict(var.fit, data.frame(test_data))
   
   return(t(var.preds))
 }

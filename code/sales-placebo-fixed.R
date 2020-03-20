@@ -23,7 +23,7 @@ SalesSim <- function(Y,T,sim){
   Nbig <- nrow(Y)
   Tbig <- ncol(Y)
   
-  N <- 5000/T
+  N <- 10000/T
   T <- T
   
   number_T <- 4
@@ -211,6 +211,7 @@ SalesSim <- function(Y,T,sim){
 # Load data
 Y <- read.csv('data/sales_train_validation.csv',header=T, stringsAsFactors = F) # N X T
 Y <- as.matrix(Y[,7:ncol(Y)])
+
 print(dim(Y))
 
 for(T in c(50,100,250,500,1000)){
