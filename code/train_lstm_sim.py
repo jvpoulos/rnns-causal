@@ -67,7 +67,7 @@ def train_model(model, dataX, dataY, weights, epoch_count, batches):
 
     # Prepare model checkpoints and callbacks
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0.001, patience=int(patience), verbose=1, mode='min', restore_best_weights=True)
+    stopping = EarlyStopping(monitor='val_loss', patience=int(patience), verbose=1, mode='min', restore_best_weights=True)
 
     terminate = TerminateOnNaN()
 

@@ -83,7 +83,7 @@ def train_model(model, dataX, dataY, weights, nb_epoches, nb_batches):
     filepath="results/encoder-decoder/{}".format(dataname) + "/weights-{epoch:02d}-{val_loss:.3f}.hdf5"
     checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=10, save_best_only=True)
 
-    stopping = EarlyStopping(monitor='val_loss', min_delta=0.001, patience=int(patience), verbose=1, mode='min', restore_best_weights=True)
+    stopping = EarlyStopping(monitor='val_loss', patience=int(patience), verbose=1, mode='min', restore_best_weights=True)
 
     csv_logger = CSVLogger('results/encoder-decoder/{}/training_log_{}_{}.csv'.format(dataname,dataname,imp), separator=',', append=False)
 
@@ -156,7 +156,7 @@ def test_model():
 
     print('predictions shape =', preds_test.shape)
 
-    preds_test = np.squeeze(preds_test[::,(preds_test.shape[1]-1)])
+    preds_test = np.squeeze(preds_test)
 
     print('predictions shape (squeezed)=', preds_test.shape)
 
