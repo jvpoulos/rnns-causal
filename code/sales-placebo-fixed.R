@@ -78,7 +78,7 @@ SalesSim <- function(Y,T,sim){
     print("LSTM Started")
     source("code/lstm.R")
     est_model_LSTM <- lstm(Y=Y_sub, p.weights, treat_indices, d, t0, T)
-    est_model_LSTM_msk_err <- (est_model_LSTM[,t0:T] - Y_sub[treat_indices,][,t0:T])
+    est_model_LSTM_msk_err <- (est_model_LSTM - Y_sub[treat_indices,][,t0:T])
     est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
     LSTM_RMSE_test[i,j] <- est_model_LSTM_test_RMSE
     print(paste("LSTM RMSE:", round(est_model_LSTM_test_RMSE,3),"run",i))
