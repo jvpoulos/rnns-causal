@@ -210,7 +210,7 @@ SalesSim <- function(Y,T,sim){
 
 # Load data
 Y <- read.csv('data/sales_train_validation.csv',header=T, stringsAsFactors = F) # N X T
-Y <- Y[,7:ncol(Y)]
+Y <- as.matrix(Y[,7:ncol(Y)])
 
 for(T in c(50,100,250,500,1000)){
   SalesSim(Y,T,sim=1)

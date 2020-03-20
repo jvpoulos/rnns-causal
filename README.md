@@ -55,7 +55,7 @@ Experiments
 Uncompress sales data:
 
 ```
-$ tar xf sales_train_validation.tar.xz
+$ tar xf data/sales_train_validation.tar.xz
 ```
 
 To run placebo experiments, for each DATANAME={basque,california,germany,sales_fixed,stock_fixed,educ.pc} and each MODEL={encoder-decoder,lstm}:
