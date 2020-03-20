@@ -23,7 +23,7 @@ SalesSim <- function(Y,T,sim){
   Nbig <- nrow(Y)
   Tbig <- ncol(Y)
   
-  N <- 10000/T
+  N <- 5000/T
   T <- T
   
   number_T <- 5
