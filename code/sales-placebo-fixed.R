@@ -1,5 +1,5 @@
 ###################################################
-# Product Sales Data Simulations: Fixed N #
+# Product Sales Data Simulations: Fixed T, Varying N#
 ###################################################
 
 ## Loading Source files
@@ -18,13 +18,13 @@ doParallel::registerDoParallel(cores) # register cores (<p)
 
 RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
-SalesSim <- function(Y,T,sim){
+SalesSim <- function(Y,N,sim){
   ## Setting up the configuration
   Nbig <- nrow(Y)
   Tbig <- ncol(Y)
   
-  N <- 1000
-  T <- T
+  N <- N
+  T <- Tbig
   
   t0 <- ceiling(T/2) # time of intiial treatment
   N_t <- ceiling(N/2)
@@ -208,7 +208,7 @@ SalesSim <- function(Y,T,sim){
                ADH_avg_RMSE + 1.96*ADH_std_error,
                ENT_avg_RMSE + 1.96*ENT_std_error,
                VAR_avg_RMSE + 1.96*VAR_std_error),
-      "x" = c(T, T, T, T, T, T, T),
+      "x" = c(N, N, N, N, N, N, N),
       "Method" = c("DID", 
                    "Encoder-decoder",
                    "LSTM", 
@@ -227,6 +227,6 @@ Y <- as.matrix(Y[,7:ncol(Y)])
 
 print(dim(Y))
 
-for(T in c(100,500,1000,dim(Y)[2])){
-  SalesSim(Y,T,sim=1)
+for(N in c(100,500,1000,dim(Y)[1])){
+  SalesSim(Y,N=N,sim=1)
 }

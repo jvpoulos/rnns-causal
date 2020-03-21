@@ -17,6 +17,7 @@ from keras.layers import LSTM, Input, Dense, RepeatVector, TimeDistributed
 from keras.callbacks import EarlyStopping, TerminateOnNaN
 from keras import regularizers
 from keras.optimizers import Adam
+from keras_self_attention import SeqSelfAttention
 
 from sklearn.preprocessing import StandardScaler
 scaler = StandardScaler()
@@ -56,7 +57,8 @@ def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr):
     lstm_2 = LSTM(encoder_hidden, dropout=dr, return_sequences=False, name='LSTM_2')(lstm_1) # Encoder
     repeat = RepeatVector(n_post, name='Repeat')(lstm_2) # get the last output of the LSTM and repeats it
     lstm_3 = LSTM(decoder_hidden, return_sequences=True, name='Decoder')(repeat)  # Decoder
-    output= TimeDistributed(Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense'), name='Outputs')(lstm_3)
+    attn = SeqSelfAttention(attention_activation='sigmoid')(lstm_3)
+    output= TimeDistributed(Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense'), name='Outputs')(attn)
 
     model = Model([inputs, weights_tensor], output)
 

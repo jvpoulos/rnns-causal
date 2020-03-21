@@ -14,6 +14,7 @@ from keras.layers import LSTM, Input, Dense
 from keras.callbacks import ModelCheckpoint, CSVLogger, EarlyStopping, TerminateOnNaN
 from keras import regularizers
 from keras.optimizers import Adam
+from keras_self_attention import SeqSelfAttention
 
 from sklearn.preprocessing import StandardScaler
 scaler = StandardScaler()
@@ -60,7 +61,8 @@ def create_model(n_pre, nb_features, output_dim, lr, penalty, dr):
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
     weights_tensor = Input(shape=(nb_features,), name="Weights")
     lstm_1 = LSTM(n_hidden, dropout=dr, name="LSTM_1")(inputs) 
-    output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(lstm_1)
+    attn = SeqSelfAttention(attention_activation='sigmoid')(lstm_1)
+    output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(attn)
 
     model = Model([inputs,weights_tensor],output) 
 

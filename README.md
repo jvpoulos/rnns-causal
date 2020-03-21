@@ -26,10 +26,10 @@ Prerequsites
 ------
 
 * Python 2.7
-
+  * keras-self-attention, scikit-learn, numpy, pandas
 * Tensorflow 2.1.0
-
-* **R** version 3.6.1
+* Keras 2.2.5
+* **R** 3.6.1
 
 Set up
 ------
