@@ -60,7 +60,7 @@ def create_model(n_pre, nb_features, output_dim, lr, penalty, dr):
 
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
     weights_tensor = Input(shape=(nb_features,), name="Weights")
-    lstm_1 = LSTM(n_hidden, dropout=dr, name="LSTM_1")(inputs) 
+    lstm_1 = LSTM(n_hidden, dropout=dr, return_sequences=True, name="LSTM_1")(inputs) 
     attn = SeqSelfAttention(attention_activation='sigmoid')(lstm_1)
     output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(attn)
 
