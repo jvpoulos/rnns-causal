@@ -1,5 +1,5 @@
 ###################################################
-# Product Sales Data Simulations: Fixed dimensions #
+# Product Sales Data Simulations: Fixed N #
 ###################################################
 
 ## Loading Source files
@@ -23,7 +23,7 @@ SalesSim <- function(Y,T,sim){
   Nbig <- nrow(Y)
   Tbig <- ncol(Y)
   
-  N <- 1500
+  N <- 1000
   T <- T
   
   t0 <- ceiling(T/2) # time of intiial treatment
@@ -227,6 +227,6 @@ Y <- as.matrix(Y[,7:ncol(Y)])
 
 print(dim(Y))
 
-for(T in c(100,500,1000,1500)){
+for(T in c(100,500,1000,dim(Y)[2])){
   SalesSim(Y,T,sim=1)
 }
