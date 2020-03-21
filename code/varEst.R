@@ -15,10 +15,10 @@ varEst <- function(Y,treat_indices, t0, T){
   zero_var_cols <- colnames(train_data[,which(apply(train_data, 2, var) == 0)])
   for(x in zero_var_cols)
   {
-    random_value <- sample(train_data[train_data>0],1) # select random value from training data
-    train_data[,x][sample(T, 1)] <- random_value # replace random element
+    random_values <- sample(train_data[train_data>0],T) # select random value from training data
+    train_data[,x][sample(T, T)] <- random_values # replace random elements
   }
-    
+
   test_data <- data[,(treat_indices)]
   
   # Fit the model

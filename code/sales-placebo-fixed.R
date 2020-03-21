@@ -23,7 +23,7 @@ SalesSim <- function(Y,T,sim){
   Nbig <- nrow(Y)
   Tbig <- ncol(Y)
   
-  N <- ceiling(30000/T)
+  N <- 1500
   T <- T
   
   t0 <- ceiling(T/2) # time of intiial treatment
@@ -227,6 +227,6 @@ Y <- as.matrix(Y[,7:ncol(Y)])
 
 print(dim(Y))
 
-for(T in c(50,250,500,1500)){
+for(T in c(100,500,1000,1500)){
   SalesSim(Y,T,sim=1)
 }
