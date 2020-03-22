@@ -38,7 +38,6 @@ SalesSim <- function(Y,N,sim){
   VAR_RMSE_test <- matrix(0L,num_runs)
   LSTM_RMSE_test <- matrix(0L,num_runs)
   ED_RMSE_test <- matrix(0L,num_runs)
-  ENT_RMSE_test <- matrix(0L,num_runs)
   DID_RMSE_test <- matrix(0L,num_runs)
   ADH_RMSE_test <- matrix(0L,num_runs)
   
@@ -69,19 +68,6 @@ SalesSim <- function(Y,N,sim){
     p.weights.z <- as.vector(predict(logitMod.z, t(Y_obs), type="response", s = "lambda.min"))
     
     p.weights <- outer(p.weights.x,p.weights.z)   # outer product of fitted values on response scale
-    
-    ## -----
-    ## VT-EN 
-    ## -----
-    
-    print("VT-EN Started")
-    est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_folds = 3))
-    est_model_ENT[est_model_ENT <0] <- 0
-    est_model_ENT <- round(est_model_ENT)
-    est_model_ENT_msk_err <- (est_model_ENT - Y_sub)*(1-treat_mat)
-    est_model_ENT_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ENT_msk_err^2, na.rm = TRUE))
-    ENT_RMSE_test[i] <- est_model_ENT_test_RMSE
-    print(paste("VT-EN RMSE:", round(est_model_ENT_test_RMSE,3),"run",i))
     
     ## -----
     ## ADH
@@ -180,9 +166,6 @@ SalesSim <- function(Y,N,sim){
   ED_avg_RMSE <- apply(ED_RMSE_test,2,mean)
   ED_std_error <- apply(ED_RMSE_test,2,sd)/sqrt(num_runs)
   
-  ENT_avg_RMSE <- apply(ENT_RMSE_test,2,mean)
-  ENT_std_error <- apply(ENT_RMSE_test,2,sd)/sqrt(num_runs)
-  
   DID_avg_RMSE <- apply(DID_RMSE_test,2,mean)
   DID_std_error <- apply(DID_RMSE_test,2,sd)/sqrt(num_runs)
   
@@ -193,28 +176,25 @@ SalesSim <- function(Y,N,sim){
   
   df1 <-
     data.frame(
-      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,ADH_avg_RMSE,ENT_avg_RMSE,VAR_avg_RMSE),
+      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,ADH_avg_RMSE,VAR_avg_RMSE),
       "lb" = c(DID_avg_RMSE - 1.96*DID_std_error,
                ED_avg_RMSE - 1.96*ED_std_error,
                LSTM_avg_RMSE - 1.96*LSTM_std_error,
                MCPanel_avg_RMSE - 1.96*MCPanel_std_error, 
                ADH_avg_RMSE - 1.96*ADH_std_error,
-               ENT_avg_RMSE - 1.96*ENT_std_error,
                VAR_avg_RMSE - 1.96*VAR_std_error),
       "ub" = c(DID_avg_RMSE + 1.96*DID_std_error, 
                ED_avg_RMSE + 1.96*ED_std_error,
                LSTM_avg_RMSE + 1.96*LSTM_std_error,
                MCPanel_avg_RMSE + 1.96*MCPanel_std_error, 
                ADH_avg_RMSE + 1.96*ADH_std_error,
-               ENT_avg_RMSE + 1.96*ENT_std_error,
                VAR_avg_RMSE + 1.96*VAR_std_error),
-      "x" = c(N, N, N, N, N, N, N),
+      "x" = c(N, N, N, N, N, N),
       "Method" = c("DID", 
                    "Encoder-decoder",
                    "LSTM", 
                    "MC-NNM", 
                    "SCM",
-                   "SCM-EN",
                    "VAR"))
   ##
   filename<-paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".rds")
