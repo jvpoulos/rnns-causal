@@ -71,20 +71,6 @@ SalesSim <- function(Y,N,sim){
     p.weights <- outer(p.weights.x,p.weights.z)   # outer product of fitted values on response scale
     
     ## ------
-    ## LSTM
-    ## ------
-    
-    print("LSTM Started")
-    source("code/lstm.R")
-    est_model_LSTM <- lstm(Y=Y_sub, p.weights, treat_indices, d, t0, T)
-    est_model_LSTM[est_model_LSTM <0] <- 0
-    est_model_LSTM <- round(est_model_LSTM)
-    est_model_LSTM_msk_err <- (est_model_LSTM - Y_sub[treat_indices,][,t0:T])
-    est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
-    LSTM_RMSE_test[i] <- est_model_LSTM_test_RMSE
-    print(paste("LSTM RMSE:", round(est_model_LSTM_test_RMSE,3),"run",i))
-    
-    ## ------
     ## ED
     ## ------
     
@@ -98,6 +84,21 @@ SalesSim <- function(Y,N,sim){
     ED_RMSE_test[i] <- est_model_ED_test_RMSE
     print(paste("ED RMSE:", round(est_model_ED_test_RMSE,3),"run",i))
     
+    
+    ## ------
+    ## LSTM
+    ## ------
+    
+    print("LSTM Started")
+    source("code/lstm.R")
+    est_model_LSTM <- lstm(Y=Y_sub, p.weights, treat_indices, d, t0, T)
+    est_model_LSTM[est_model_LSTM <0] <- 0
+    est_model_LSTM <- round(est_model_LSTM)
+    est_model_LSTM_msk_err <- (est_model_LSTM - Y_sub[treat_indices,][,t0:T])
+    est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
+    LSTM_RMSE_test[i] <- est_model_LSTM_test_RMSE
+    print(paste("LSTM RMSE:", round(est_model_LSTM_test_RMSE,3),"run",i))
+  
     ## ------
     ## VAR
     ## ------
