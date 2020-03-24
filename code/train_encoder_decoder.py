@@ -144,7 +144,7 @@ def test_model():
     model = create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr)
 
     # Load pre-trained weights
-    weights_path = 'results/encoder-decoder/{}'.format(dataname) +'/weights-placebo.h5'
+    weights_path = 'results/encoder-decoder/{}'.format(dataname) +'/weights-placebo-{}.h5'.format(str(nb_features))
     if path.exists(weights_path):
         print("loading weights from", weights_path)
         model.load_weights(weights_path)

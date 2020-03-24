@@ -26,7 +26,7 @@ SalesSim <- function(Y,N,sim){
   N <- N
   T <- Tbig
   
-  t0 <- ceiling(T/2) # time of intiial treatment
+  t0 <- ceiling(T/2) # time of initial treatment
   N_t <- ceiling(N/2)
   num_runs <- 25
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
@@ -97,20 +97,6 @@ SalesSim <- function(Y,N,sim){
     print(paste("ED RMSE:", round(est_model_ED_test_RMSE,3),"run",i))
     
     ## ------
-    ## VAR
-    ## ------
-    
-    print("VAR Started")
-    source("code/varEst.R")
-    est_model_VAR <- varEst(Y=Y_sub, treat_indices, t0, T)
-    est_model_VAR[est_model_VAR <0] <- 0
-    est_model_VAR <- round(est_model_VAR)
-    est_model_VAR_msk_err <- (est_model_VAR - Y_sub[treat_indices,])
-    est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
-    VAR_RMSE_test[i] <- est_model_VAR_test_RMSE
-    print(paste("VAR RMSE:", round(est_model_VAR_test_RMSE,3),"run",i))
-    
-    ## ------
     ## LSTM
     ## ------
     
@@ -124,6 +110,20 @@ SalesSim <- function(Y,N,sim){
     LSTM_RMSE_test[i] <- est_model_LSTM_test_RMSE
     print(paste("LSTM RMSE:", round(est_model_LSTM_test_RMSE,3),"run",i))
     
+    ## ------
+    ## VAR
+    ## ------
+    
+    print("VAR Started")
+    source("code/varEst.R")
+    est_model_VAR <- varEst(Y=Y_sub, treat_indices, t0, T)
+    est_model_VAR[est_model_VAR <0] <- 0
+    est_model_VAR <- round(est_model_VAR)
+    est_model_VAR_msk_err <- (est_model_VAR - Y_sub[treat_indices,])
+    est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
+    VAR_RMSE_test[i] <- est_model_VAR_test_RMSE
+    print(paste("VAR RMSE:", round(est_model_VAR_test_RMSE,3),"run",i))
+
     ## ------
     ## MC-NNM
     ## ------
@@ -205,7 +205,7 @@ SalesSim <- function(Y,N,sim){
 Y <- read.csv('data/sales_train_validation.csv',header=T, stringsAsFactors = F) # N X T
 Y <- as.matrix(Y[,7:ncol(Y)])
 
-print(dim(Y))
+print(paste0("N X T data dimension: ", dim(Y)))
 
 for(N in c(100,500,1000,dim(Y)[1])){
   SalesSim(Y,N=N,sim=1)
