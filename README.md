@@ -60,7 +60,7 @@ $ tar xf data/sales_train_validation.tar.xz
 $ cd ../
 ```
 
-To run placebo experiments, for each DATANAME={basque,california,germany,sales_fixed,stock_fixed,educ.pc} and each MODEL={encoder-decoder,lstm}:
+To run placebo experiments, for each DATANAME={california,educ.pc,sales_fixed,stock_fixed} and each MODEL={encoder-decoder,lstm}:
 
 ```
 $ mkdir data/$$DATANAME$$
@@ -69,7 +69,7 @@ $ mkdir results/$$MODEL$$/$$DATANAME$$
 
 and then execute
 
-* `basque-placebo.sh`, `california-placebo.sh`, `germany-placebo.sh`: synthetic control datasets
+* `california-placebo.sh`: California smoking dataset
 * `educ-placebo.sh`: state government education spending
 * `stock-placebo-fixed.sh`: stock prices with fixed dimensions
 * `sales-placebo-fixed.sh`: product sales prices with fixed dimensions
