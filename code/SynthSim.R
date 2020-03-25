@@ -6,7 +6,7 @@ SynthSim <- function(outcomes,covars.x,covars.z,d,sim){
   ## Setting up the configuration
   N <- nrow(treat)
   T <- ncol(treat)
-  T0 <- ceiling(c(T*0.25, T*0.5, T*0.75, T*0.95))
+  T0 <- ceiling(c(T*0.35, T*0.5, T*0.65, T*0.75))
   N_t <- ceiling(N*0.5) # no. treated units desired <=N
   num_runs <- 25
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
@@ -39,9 +39,9 @@ SynthSim <- function(outcomes,covars.x,covars.z,d,sim){
       
       ## Estimate propensity scores
       
-      logitMod.x <- cv.glmnet(x=covars.x, y=as.factor((1-treat_mat)[,t0]), family="binomial", nfolds= nrow(covars.x), parallel = TRUE) # LOO
+      logitMod.x <- cv.glmnet(x=covars.x, y=as.factor((1-treat_mat)[,t0]), family="binomial", nfolds= nrow(covars.x), parallel = TRUE, nlambda=400) # LOO
       
-      logitMod.z <- cv.glmnet(x=covars.z, y=as.factor((1-treat_mat)[treat_indices[1],]), family="binomial", nfolds=nrow(covars.z), parallel = TRUE)
+      logitMod.z <- cv.glmnet(x=covars.z, y=as.factor((1-treat_mat)[treat_indices[1],]), family="binomial", nfolds=nrow(covars.z), parallel = TRUE, nlambda=400)
       
       p.weights.x <- as.vector(predict(logitMod.x, covars.x, type="response", s ="lambda.min"))
       p.weights.z <- as.vector(predict(logitMod.z, covars.z, type="response", s ="lambda.min"))
