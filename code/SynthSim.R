@@ -6,8 +6,7 @@ SynthSim <- function(outcomes,covars.x,covars.z,d,sim){
   ## Setting up the configuration
   N <- nrow(treat)
   T <- ncol(treat)
-  number_T0 <- 5
-  T0 <- ceiling(T*((1:number_T0)*2-1)/(2*number_T0))
+  T0 <- ceiling(c(T*0.25, T*0.5, T*0.75, T*0.95))
   N_t <- ceiling(N*0.5) # no. treated units desired <=N
   num_runs <- 25
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
@@ -18,7 +17,6 @@ SynthSim <- function(outcomes,covars.x,covars.z,d,sim){
   VAR_RMSE_test <- matrix(0L,num_runs,length(T0))
   LSTM_RMSE_test <- matrix(0L,num_runs,length(T0))
   ED_RMSE_test <- matrix(0L,num_runs,length(T0))
-  ENT_RMSE_test <- matrix(0L,num_runs,length(T0))
   DID_RMSE_test <- matrix(0L,num_runs,length(T0))
   ADH_RMSE_test <- matrix(0L,num_runs,length(T0))
   
@@ -50,16 +48,14 @@ SynthSim <- function(outcomes,covars.x,covars.z,d,sim){
       
       p.weights <- outer(p.weights.x,p.weights.z)   # outer product of fitted values on response scale
       
-      ## ------
-      ## LSTM
-      ## ------
-      
-      source("code/lstm.R")
-      est_model_LSTM <- lstm(Y, p.weights, treat_indices, d, t0, T)
-      est_model_LSTM_msk_err <- (est_model_LSTM - Y[treat_indices,][,t0:T])
-      est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
-      LSTM_RMSE_test[i,j] <- est_model_LSTM_test_RMSE
-      print(paste("LSTM RMSE:", round(est_model_LSTM_test_RMSE,3),"run",i))
+      ## -----
+      ## ADH
+      ## -----
+      est_model_ADH <- adh_mp_rows(Y_obs, treat_mat, niter=200)
+      est_model_ADH_msk_err <- (est_model_ADH - Y)*(1-treat_mat)
+      est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
+      ADH_RMSE_test[i,j] <- est_model_ADH_test_RMSE
+      print(paste("ADH RMSE:", round(est_model_ADH_test_RMSE,3),"run",i))
       
       ## ------
       ## ED
@@ -72,14 +68,24 @@ SynthSim <- function(outcomes,covars.x,covars.z,d,sim){
       ED_RMSE_test[i,j] <- est_model_ED_test_RMSE
       print(paste("ED RMSE:", round(est_model_ED_test_RMSE,3),"run",i))
       
+      ## ------
+      ## LSTM
+      ## ------
       
+      source("code/lstm.R")
+      est_model_LSTM <- lstm(Y, p.weights, treat_indices, d, t0, T)
+      est_model_LSTM_msk_err <- (est_model_LSTM - Y[treat_indices,][,t0:T])
+      est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
+      LSTM_RMSE_test[i,j] <- est_model_LSTM_test_RMSE
+      print(paste("LSTM RMSE:", round(est_model_LSTM_test_RMSE,3),"run",i))
+    
       ## ------
       ## VAR
       ## ------
       
       source("code/varEst.R")
       est_model_VAR <- varEst(Y, treat_indices, t0, T)
-      est_model_VAR_msk_err <- (est_model_VAR[,t0:T] - Y[treat_indices,][,t0:T])
+      est_model_VAR_msk_err <- (est_model_VAR[,t0:T] - Y[treat_indices,])
       est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
       VAR_RMSE_test[i,j] <- est_model_VAR_test_RMSE
       print(paste("VAR RMSE:", round(est_model_VAR_test_RMSE,3),"run",i))
@@ -88,23 +94,12 @@ SynthSim <- function(outcomes,covars.x,covars.z,d,sim){
       ## MC-NNM
       ## ------
       
-      est_model_MCPanel <- mcnnm_cv(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, num_folds = 2)
+      est_model_MCPanel <- mcnnm_cv(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, num_folds = 3)
       est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
       est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y)*(1-treat_mat)
       est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
       MCPanel_RMSE_test[i,j] <- est_model_MCPanel$test_RMSE
       print(paste("MC-NNM RMSE:", round(est_model_MCPanel$test_RMSE,3),"run",i))
-      
-      ## -----
-      ## VT-EN 
-      ## -----
-      
-      est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat)))
-      est_model_ENT_msk_err <- (est_model_ENT - Y)*(1-treat_mat)
-      est_model_ENT_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ENT_msk_err^2, na.rm = TRUE))
-      ENT_RMSE_test[i,j] <- est_model_ENT_test_RMSE
-      print(paste("VT-EN RMSE:", round(est_model_ENT_test_RMSE,3),"run",i))
-      
       
       ## -----
       ## DID
@@ -115,15 +110,6 @@ SynthSim <- function(outcomes,covars.x,covars.z,d,sim){
       est_model_DID_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_DID_msk_err^2, na.rm = TRUE))
       DID_RMSE_test[i,j] <- est_model_DID_test_RMSE
       print(paste("DID RMSE:", round(est_model_DID_test_RMSE,3),"run",i))
-      
-      ## -----
-      ## ADH
-      ## -----
-      est_model_ADH <- adh_mp_rows(Y_obs, treat_mat)
-      est_model_ADH_msk_err <- (est_model_ADH - Y)*(1-treat_mat)
-      est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
-      ADH_RMSE_test[i,j] <- est_model_ADH_test_RMSE
-      print(paste("ADH RMSE:", round(est_model_ADH_test_RMSE,3),"run",i))
     }
   }
   
@@ -141,9 +127,6 @@ SynthSim <- function(outcomes,covars.x,covars.z,d,sim){
   ED_avg_RMSE <- apply(ED_RMSE_test,2,mean)
   ED_std_error <- apply(ED_RMSE_test,2,sd)/sqrt(num_runs)
   
-  ENT_avg_RMSE <- apply(ENT_RMSE_test,2,mean)
-  ENT_std_error <- apply(ENT_RMSE_test,2,sd)/sqrt(num_runs)
-  
   DID_avg_RMSE <- apply(DID_RMSE_test,2,mean)
   DID_std_error <- apply(DID_RMSE_test,2,sd)/sqrt(num_runs)
   
@@ -154,28 +137,25 @@ SynthSim <- function(outcomes,covars.x,covars.z,d,sim){
   
   df1 <-
     data.frame(
-      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,ADH_avg_RMSE,ENT_avg_RMSE,VAR_avg_RMSE),
+      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,ADH_avg_RMSE,VAR_avg_RMSE),
       "lb" = c(DID_avg_RMSE - 1.96*DID_std_error,
                ED_avg_RMSE - 1.96*ED_std_error,
                LSTM_avg_RMSE - 1.96*LSTM_std_error,
                MCPanel_avg_RMSE - 1.96*MCPanel_std_error, 
                ADH_avg_RMSE - 1.96*ADH_std_error,
-               ENT_avg_RMSE - 1.96*ENT_std_error,
                VAR_avg_RMSE - 1.96*VAR_std_error),
       "ub" = c(DID_avg_RMSE + 1.96*DID_std_error, 
                ED_avg_RMSE + 1.96*ED_std_error,
                LSTM_avg_RMSE + 1.96*LSTM_std_error,
                MCPanel_avg_RMSE + 1.96*MCPanel_std_error, 
                ADH_avg_RMSE + 1.96*ADH_std_error,
-               ENT_avg_RMSE + 1.96*ENT_std_error,
                VAR_avg_RMSE + 1.96*VAR_std_error),
-      "x" = c(T0/T, T0/T ,T0/T, T0/T, T0/T, T0/T, T0/T),
+      "x" = c(T0/T, T0/T ,T0/T, T0/T, T0/T, T0/T),
       "Method" = c(replicate(length(T0),"DID"), 
                    replicate(length(T0),"Encoder-decoder"),
                    replicate(length(T0),"LSTM"), 
                    replicate(length(T0),"MC-NNM"), 
                    replicate(length(T0),"SCM"),
-                   replicate(length(T0),"SCM-EN"),
                    replicate(length(T0),"VAR")))
   
   filename<-paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".rds")
