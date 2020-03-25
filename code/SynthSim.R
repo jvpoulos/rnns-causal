@@ -85,7 +85,7 @@ SynthSim <- function(outcomes,covars.x,covars.z,d,sim){
       
       source("code/varEst.R")
       est_model_VAR <- varEst(Y, treat_indices, t0, T)
-      est_model_VAR_msk_err <- (est_model_VAR[,t0:T] - Y[treat_indices,])
+      est_model_VAR_msk_err <- (est_model_VAR - Y[treat_indices,])
       est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
       VAR_RMSE_test[i,j] <- est_model_VAR_test_RMSE
       print(paste("VAR RMSE:", round(est_model_VAR_test_RMSE,3),"run",i))

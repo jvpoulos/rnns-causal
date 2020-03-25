@@ -5,8 +5,8 @@
 library(keras)
 library(reticulate)
 library(readr)
-use_python("/usr/local/bin/python")
-#use_python("~/venv/bin/python")
+# use_python("/usr/local/bin/python")
+use_python("~/venv/bin/python") # comet
 
 ed <- function(Y,p.weights,treat_indices,d, t0, T){
   # Converting the data to a floating point matrix
