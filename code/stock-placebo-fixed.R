@@ -60,9 +60,9 @@ StockSim <- function(Y,N,sim){
     
     ## Estimate propensity scores
     
-    logitMod.x <- cv.glmnet(x=Y_obs, y=as.factor((1-treat_mat)[,t0]), family="binomial", nfolds=nrow(Y_obs), parallel = TRUE) # LOO
+    logitMod.x <- cv.glmnet(x=Y_obs, y=as.factor((1-treat_mat)[,t0]), family="binomial", nfolds=nrow(Y_obs), parallel = TRUE, nlambda=400) # LOO
     
-    logitMod.z <- cv.glmnet(x=t(Y_obs), y=as.factor((1-treat_mat)[treat_indices[1],]), family="binomial", nfolds=nrow(t(Y_obs)), parallel = TRUE)
+    logitMod.z <- cv.glmnet(x=t(Y_obs), y=as.factor((1-treat_mat)[treat_indices[1],]), family="binomial", nfolds=nrow(t(Y_obs)), parallel = TRUE, nlambda=400)
     
     p.weights.x <- as.vector(predict(logitMod.x, Y_obs, type="response", s = "lambda.min"))
     p.weights.z <- as.vector(predict(logitMod.z, t(Y_obs), type="response", s = "lambda.min"))
@@ -194,6 +194,6 @@ Y <- t(read.csv('data/returns_no_missing.csv',header=F)) # N X T
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-for(N in c(100,500,1000,dim(Y)[1])){
+for(N in c(20,50,100,200)){
   StockSim(Y,N=N,sim=1)
 }
