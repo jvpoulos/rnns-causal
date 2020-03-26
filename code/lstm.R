@@ -42,7 +42,7 @@ lstm <- function(Y,p.weights,treat_indices,d, t0, T){
   } 
   if(d=='stock_fixed'){
     py$nb_batches <- 32
-    py$lr <- 0.005
+    py$lr <- 0.01
     py$penalty <- 0.01
     py$dr <- 0.5
   } 
@@ -52,19 +52,7 @@ lstm <- function(Y,p.weights,treat_indices,d, t0, T){
     py$penalty <- 0.01
     py$dr <- 0.5
   } 
-  if(d=='basque'){
-    py$nb_batches <- 8
-    py$lr <- 0.0005
-    py$penalty <- 0.001
-    py$dr <- 0.5
-  } 
   if(d=='california'){
-    py$nb_batches <- 8
-    py$lr <- 0.0005
-    py$penalty <- 0.001
-    py$dr <- 0.5
-  } 
-  if(d=='germany'){
     py$nb_batches <- 8
     py$lr <- 0.0005
     py$penalty <- 0.001
