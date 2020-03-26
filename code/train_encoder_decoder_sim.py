@@ -10,7 +10,6 @@ import pandas as pd
 
 import keras
 import tensorflow as tf
-run_opts = tf.RunOptions(report_tensor_allocations_upon_oom = True)
 
 from keras import backend as K
 from keras.models import Model
@@ -66,7 +65,7 @@ def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr):
 
     # Compile
     cl = wrapped_partial(weighted_mse, weights=weights_tensor)
-    model.compile(optimizer=Adam(lr=lr), loss=cl, options = run_opts)
+    model.compile(optimizer=Adam(lr=lr), loss=cl)
 
     return model
 

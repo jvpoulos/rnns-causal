@@ -41,7 +41,7 @@ lstm <- function(Y,p.weights,treat_indices,d, t0, T){
     py$dr <- 0.5
   } 
   if(d=='stock_fixed'){
-    py$nb_batches <- 32
+    py$nb_batches <- 8
     py$lr <- 0.01
     py$penalty <- 0.01
     py$dr <- 0.5
