@@ -3,18 +3,17 @@ library(latex2exp)
 library(dplyr)
 
 # Fixed T
-n20 <- readRDS("results/plots/stock_fixed_N_20_T_3082_numruns_25_num_treated_10_simultaneuous_1.rds")
-n50 <- readRDS("results/plots/stock_fixed_N_50_T_3082_numruns_25_num_treated_50_simultaneuous_1.rds")
-n100 <- readRDS("results/plots/stock_fixed_N_100_T_3082_numruns_25_num_treated_50_simultaneuous_1.rds")
-n200 <- readRDS("results/plots/stock_fixed_N_200_T_3082_numruns_25_num_treated_50_simultaneuous_1.rds")
+n20 <- readRDS("results/plots/sales_fixed_N_20_T_1913_numruns_25_num_treated_10_simultaneuous_1.rds")
+n50 <- readRDS("results/plots/sales_fixed_N_50_T_1913_numruns_25_num_treated_50_simultaneuous_1.rds")
+n100 <- readRDS("results/plots/sales_fixed_N_100_T_1913_numruns_25_num_treated_50_simultaneuous_1.rds")
+n200 <- readRDS("results/plots/sales_fixed_N_200_T_1913_numruns_25_num_treated_50_simultaneuous_1.rds")
 
-df1 <-rbind(n10,n50,n100,n200)
+df1 <-rbind(n20,n50,n100,n200)
 
 df1 <- df1 %>% group_by(x) %>% mutate(y = y,
                                       lb= lb,
                                       ub = ub)
-
-stock <- ggplot(data = df1, aes(x, y, color = Method, shape = Method)) +
+sales <- ggplot(data = df1, aes(x, y, color = Method, shape = Method)) +
   geom_point(size = 5, position=position_dodge(width=0.3)) +
   geom_line(position=position_dodge(width=0.3)) +
   geom_errorbar(
@@ -39,5 +38,5 @@ stock <- ggplot(data = df1, aes(x, y, color = Method, shape = Method)) +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"))  # rm background
 
-ggsave("results/plots/stock-sim-fixed.png", stock + theme( legend.position = "none"), width=8.5, height=11)
-ggsave("results/plots/stock-sim-fixed-slides.png", stock + ggtitle("Stock market, fixed T") + theme(plot.title = element_text(family="serif", size=16, hjust = 0.5)))
+ggsave("results/plots/sales-sim-fixed.png", sales + theme( legend.position = "none"), width=8.5, height=11)
+ggsave("results/plots/sales-sim-fixed-slides.png", sales + ggtitle("sales market, T") + theme(plot.title = element_text(family="serif", size=16, hjust = 0.5)))

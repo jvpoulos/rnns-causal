@@ -1,5 +1,5 @@
 ######################################################################
-# Education Spending Simulations: Discarding treated units #
+# Education Spending Simulations: Discarding treated periods #
 ######################################################################
 
 ## Loading Source files
@@ -27,15 +27,12 @@ CapacitySim <- function(outcomes,covars.x,covars.z,d,sim,treated.indices){
   Y.missing <- outcomes[[d]]$M.missing # NxT 
   treat <- outcomes[[d]]$mask # NxT masked matrix 
   
-  ## Treated 
-  treat_y <- Y[rownames(Y)%in%treated.indices,] 
-  
-  ## Working with the rest of matrix
-  treat <- treat[!rownames(treat)%in%c(rownames(treat_y),"TN"),] # (randomly) drop TN for parity
-  Y <- Y[!rownames(Y)%in%c(rownames(treat_y),"TN"),] 
-  Y.missing <- Y.missing[!rownames(Y.missing)%in%c(rownames(treat_y),"TN"),] 
-  covars.x <- covars.x[!rownames(covars.x)%in%c(rownames(treat_y),"TN","GA"),] # GA not in outcomes
-  covars.z <- covars.z
+  ## Discard treated periods
+  Y <- Y[,-c(which(colnames(Y)=="1869"):ncol(Y))][!rownames(Y)%in%c("TN"),]  # randomly drop TN for parity
+  Y.missing <- Y.missing[,-c(which(colnames(Y.missing)=="1869"):ncol(Y.missing))][!rownames(Y.missing)%in%c("TN"),] 
+  treat <- treat[,-c(which(colnames(treat)=="1869"):ncol(treat))][!rownames(treat)%in%c("TN"),] 
+  covars.x <- covars.x[!rownames(covars.x)%in%c("TN","GA"),] # GA not in outcomes
+  covars.z <- covars.z[-c(which(rownames(covars.z)=="1869"):nrow(covars.z)),]
   
   ## Setting up the configuration
   N <- nrow(treat)
@@ -44,7 +41,7 @@ CapacitySim <- function(outcomes,covars.x,covars.z,d,sim,treated.indices){
   N_t <- ceiling(N*0.5) # no. treated units desired <=N
   num_runs <- 25
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
-
+  
   ## Matrices for saving RMSE values
   
   MCPanel_RMSE_test <- matrix(0L,num_runs,length(T0))
@@ -68,10 +65,10 @@ CapacitySim <- function(outcomes,covars.x,covars.z,d,sim,treated.indices){
       }else{
         treat_mat <- stag_adapt(Y, N_t, (t0-1), treat_indices)
       }
-
+      
       Y_obs <- Y * treat_mat
       Y_imp <- Y * Y.missing
-  
+      
       ## Estimate propensity scores
       
       logitMod.x <- cv.glmnet(x=covars.x, y=as.factor((1-treat_mat)[,t0]), family="binomial", nfolds= nrow(covars.x), parallel = TRUE, nlambda=400) # LOO
@@ -82,7 +79,7 @@ CapacitySim <- function(outcomes,covars.x,covars.z,d,sim,treated.indices){
       p.weights.z <- as.vector(predict(logitMod.z, covars.z, type="response", s ="lambda.min"))
       
       p.weights <- outer(p.weights.x,p.weights.z)   # outer product of fitted values on response scale
-  
+      
       ## -----
       ## ADH
       ## -----
@@ -195,7 +192,7 @@ CapacitySim <- function(outcomes,covars.x,covars.z,d,sim,treated.indices){
   
   filename<-paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".rds")
   save(df1, file = paste0("results/plots/",filename))
-
+  
 }
 
 # Read data
@@ -244,4 +241,4 @@ rownames(capacity.covars.z) <- colnames(capacity.outcomes$educ.pc$M)
 
 treat_indices_order <- c("CA", "IA", "KS", "MI", "MN", "MO", "OH", "OR", "WI", "IL", "NV", "AL", "MS", "FL", "LA", "IN")
 
-CapacitySim(outcomes=capacity.outcomes,covars.x=capacity.covars.x, covars.z= capacity.covars.z, d="educ.pc",sim=1,treated.indices = treat_indices_order)
+CapacitySim(outcomes=capacity.outcomes,covars.x=capacity.covars.x, covars.z= capacity.covars.z, d="educ.pc_alt",sim=1,treated.indices = treat_indices_order)
