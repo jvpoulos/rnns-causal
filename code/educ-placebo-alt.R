@@ -190,7 +190,7 @@ CapacitySim <- function(outcomes,covars.x,covars.z,d,sim,treated.indices){
                    replicate(length(T0),"SCM"),
                    replicate(length(T0),"VAR")))
   
-  filename<-paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".rds")
+  filename<-paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_alt_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".rds")
   save(df1, file = paste0("results/plots/",filename))
   
 }
@@ -241,4 +241,4 @@ rownames(capacity.covars.z) <- colnames(capacity.outcomes$educ.pc$M)
 
 treat_indices_order <- c("CA", "IA", "KS", "MI", "MN", "MO", "OH", "OR", "WI", "IL", "NV", "AL", "MS", "FL", "LA", "IN")
 
-CapacitySim(outcomes=capacity.outcomes,covars.x=capacity.covars.x, covars.z= capacity.covars.z, d="educ.pc_alt",sim=1,treated.indices = treat_indices_order)
+CapacitySim(outcomes=capacity.outcomes,covars.x=capacity.covars.x, covars.z= capacity.covars.z, d="educ.pc",sim=1,treated.indices = treat_indices_order)

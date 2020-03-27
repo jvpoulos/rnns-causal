@@ -60,14 +60,14 @@ $ tar xf data/sales_train_validation.tar.xz
 $ cd ../
 ```
 
-To run placebo experiments, for each DATANAME={educ.pc,educ.pc_alt,sales_fixed,stock_fixed} and each MODEL={encoder-decoder,lstm}:
+To run placebo experiments, for each DATANAME={educ.pc,sales_fixed,stock_fixed} and each MODEL={encoder-decoder,lstm}:
 
 ```
 $ mkdir data/$$DATANAME$$
 $ mkdir results/$$MODEL$$/$$DATANAME$$
 ```
 
-and then execute
+Make each file below executable, then execute
 
 * `educ-placebo.sh`: state government education spending, discarding treated units
 * `educ-placebo-alt.sh`: state government education spending, discarding treated periods
