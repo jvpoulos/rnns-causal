@@ -61,7 +61,7 @@ def create_model(n_post, nb_features, output_dim, lr, penalty, dr):
     encoder_hidden = 128
     decoder_hidden = 128
 
-    inputs = Input(shape=(None, nb_features), name="Inputs")
+    inputs = Input(shape=(, nb_features), name="Inputs")
     weights_tensor = Input(shape=(nb_features,), name="Weights")
     lstm_1 = LSTM(encoder_hidden, dropout=dr, return_sequences=True, name='LSTM_1')(inputs) # Encoder
     lstm_2 = LSTM(encoder_hidden, dropout=dr, return_sequences=False, name='LSTM_2')(lstm_1) # Encoder

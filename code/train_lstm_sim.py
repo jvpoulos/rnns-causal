@@ -60,7 +60,7 @@ def create_model(nb_features, output_dim, lr, penalty, dr):
 
     n_hidden = 128
 
-    inputs = Input(shape=(None, nb_features), name="Inputs")
+    inputs = Input(shape=(, nb_features), name="Inputs")
     weights_tensor = Input(shape=(nb_features,), name="Weights")
     lstm_1 = LSTM(n_hidden, dropout=dr, return_sequences=True, name="LSTM_1")(inputs) 
     attn = SeqSelfAttention(attention_activation='sigmoid')(lstm_1)
