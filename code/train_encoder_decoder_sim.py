@@ -13,7 +13,7 @@ import tensorflow as tf
 
 from keras import backend as K
 from keras.models import Model
-from keras.layers import LSTM, Input, Dense, RepeatVector, Flatten
+from keras.layers import LSTM, Input, Dense, RepeatVector
 from keras.callbacks import EarlyStopping, TerminateOnNaN
 from keras import regularizers
 from keras.optimizers import Adam
@@ -51,7 +51,7 @@ if not os.path.exists(results_directory):
 if not os.path.exists(data_directory):
     os.makedirs(data_directory)
 
-def create_model(n_post, nb_features, output_dim, lr, penalty, dr):
+def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr):
     """ 
         creates, compiles and returns a RNN model 
         @param nb_features: the number of features in the model
@@ -61,14 +61,13 @@ def create_model(n_post, nb_features, output_dim, lr, penalty, dr):
     encoder_hidden = 128
     decoder_hidden = 128
 
-    inputs = Input(shape=(, nb_features), name="Inputs")
+    inputs = Input(shape=(n_pre, nb_features), name="Inputs")
     weights_tensor = Input(shape=(nb_features,), name="Weights")
     lstm_1 = LSTM(encoder_hidden, dropout=dr, return_sequences=True, name='LSTM_1')(inputs) # Encoder
     lstm_2 = LSTM(encoder_hidden, dropout=dr, return_sequences=False, name='LSTM_2')(lstm_1) # Encoder
     repeat = RepeatVector(n_post, name='Repeat')(lstm_2) # get the last output of the LSTM and repeats it
     lstm_3 = LSTM(decoder_hidden, return_sequences=True, name='Decoder')(repeat)  # Decoder
     attn = SeqSelfAttention(attention_activation='sigmoid')(lstm_3)
-    # attn = Flatten()(attn)
     output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(attn)
 
     model = Model([inputs, weights_tensor], output)
@@ -136,10 +135,10 @@ def test_model():
 
     # create and fit the LSTM network
     print('creating model...')
-    model = create_model(n_post, nb_features, output_dim, lr, penalty, dr)
+    model = create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr)
 
     # Load pre-trained weights
-    weights_path = 'results/encoder-decoder/{}'.format(dataname) +'/weights-placebo-{}.h5'.format(str(nb_features))
+    weights_path = 'results/encoder-decoder/{}'.format(dataname) +'/weights-placebo-{}-{}.h5'.format(str(n_pre), str(nb_features))
     if path.exists(weights_path):
         print("loading weights from", weights_path)
         model.load_weights(weights_path)
@@ -147,7 +146,7 @@ def test_model():
     train_model(model, dataXC, dataYC, wXC, int(epochs), int(nb_batches))
 
     # save weights
-    model.save_weights('results/encoder-decoder/{}'.format(dataname) +'/weights-placebo-{}.h5'.format(str(nb_features)))
+    model.save_weights('results/encoder-decoder/{}'.format(dataname) +'/weights-placebo-{}-{}.h5'.format(str(n_pre),str(nb_features)))
 
     # now test
 

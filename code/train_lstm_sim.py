@@ -13,7 +13,7 @@ import tensorflow as tf
 
 from keras import backend as K
 from keras.models import Model
-from keras.layers import LSTM, Input, Dense, Flatten
+from keras.layers import LSTM, Input, Dense
 from keras.callbacks import EarlyStopping, TerminateOnNaN
 from keras import regularizers
 from keras.optimizers import Adam
@@ -51,7 +51,7 @@ if not os.path.exists(results_directory):
 if not os.path.exists(data_directory):
     os.makedirs(data_directory)
 
-def create_model(nb_features, output_dim, lr, penalty, dr):
+def create_model(n_pre, nb_features, output_dim, lr, penalty, dr):
     """ 
         creates, compiles and returns a RNN model 
         @param nb_features: the number of features in the model
@@ -60,11 +60,10 @@ def create_model(nb_features, output_dim, lr, penalty, dr):
 
     n_hidden = 128
 
-    inputs = Input(shape=(, nb_features), name="Inputs")
+    inputs = Input(shape=(n_pre, nb_features), name="Inputs")
     weights_tensor = Input(shape=(nb_features,), name="Weights")
     lstm_1 = LSTM(n_hidden, dropout=dr, return_sequences=True, name="LSTM_1")(inputs) 
     attn = SeqSelfAttention(attention_activation='sigmoid')(lstm_1)
-    # attn = Flatten()(attn)
     output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(attn)
 
     model = Model([inputs,weights_tensor],output) 
@@ -132,10 +131,10 @@ def test_model():
   
     # create and fit the LSTM network
     print('creating model...')
-    model = create_model(nb_features, output_dim, lr, penalty, dr)
+    model = create_model(n_pre, nb_features, output_dim, lr, penalty, dr)
 
     # load pre-trained weights
-    weights_path = 'results/lstm/{}'.format(dataname) +'/weights-placebo-{}.h5'.format(str(nb_features))
+    weights_path = 'results/lstm/{}'.format(dataname) +'/weights-placebo-{}-{}.h5'.format(str(n_pre), str(nb_features))
     if path.exists(weights_path):
         print("loading weights from", weights_path)
         model.load_weights(weights_path)
@@ -143,7 +142,7 @@ def test_model():
     train_model(model, dataXC, dataYC, wXC, int(epochs), int(nb_batches))
 
     # save weights
-    model.save_weights('results/lstm/{}'.format(dataname) +'/weights-placebo-{}.h5'.format(str(nb_features)))
+    model.save_weights('results/lstm/{}'.format(dataname) +'/weights-placebo-{}-{}.h5'.format(str(n_pre),str(nb_features)))
 
     # now test
 
