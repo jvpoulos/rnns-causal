@@ -13,7 +13,7 @@ import tensorflow as tf
 
 from keras import backend as K
 from keras.models import Model
-from keras.layers import LSTM, Input, Dense
+from keras.layers import LSTM, Input, Dense, Flatten
 from keras.callbacks import EarlyStopping, TerminateOnNaN
 from keras import regularizers
 from keras.optimizers import Adam
@@ -64,6 +64,7 @@ def create_model(n_pre, nb_features, output_dim, lr, penalty, dr):
     weights_tensor = Input(shape=(nb_features,), name="Weights")
     lstm_1 = LSTM(n_hidden, dropout=dr, return_sequences=True, name="LSTM_1")(inputs) 
     attn = SeqSelfAttention(attention_activation='sigmoid')(lstm_1)
+    attn = Flatten()(attn)
     output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(attn)
 
     model = Model([inputs,weights_tensor],output) 
