@@ -64,7 +64,7 @@ def create_model(nb_features, output_dim, lr, penalty, dr):
     weights_tensor = Input(shape=(nb_features,), name="Weights")
     lstm_1 = LSTM(n_hidden, dropout=dr, return_sequences=True, name="LSTM_1")(inputs) 
     attn = SeqSelfAttention(attention_activation='sigmoid')(lstm_1)
-    attn = Flatten()(attn)
+    # attn = Flatten()(attn)
     output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(attn)
 
     model = Model([inputs,weights_tensor],output) 
