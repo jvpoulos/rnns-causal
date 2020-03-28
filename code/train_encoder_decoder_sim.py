@@ -51,7 +51,7 @@ if not os.path.exists(results_directory):
 if not os.path.exists(data_directory):
     os.makedirs(data_directory)
 
-def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr):
+def create_model(n_post, nb_features, output_dim, lr, penalty, dr):
     """ 
         creates, compiles and returns a RNN model 
         @param nb_features: the number of features in the model
@@ -61,7 +61,7 @@ def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr):
     encoder_hidden = 128
     decoder_hidden = 128
 
-    inputs = Input(shape=(n_pre, nb_features), name="Inputs")
+    inputs = Input(shape=(None, nb_features), name="Inputs")
     weights_tensor = Input(shape=(nb_features,), name="Weights")
     lstm_1 = LSTM(encoder_hidden, dropout=dr, return_sequences=True, name='LSTM_1')(inputs) # Encoder
     lstm_2 = LSTM(encoder_hidden, dropout=dr, return_sequences=False, name='LSTM_2')(lstm_1) # Encoder
@@ -136,7 +136,7 @@ def test_model():
 
     # create and fit the LSTM network
     print('creating model...')
-    model = create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr)
+    model = create_model(n_post, nb_features, output_dim, lr, penalty, dr)
 
     # Load pre-trained weights
     weights_path = 'results/encoder-decoder/{}'.format(dataname) +'/weights-placebo-{}.h5'.format(str(nb_features))

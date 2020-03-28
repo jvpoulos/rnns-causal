@@ -207,5 +207,6 @@ Y <- as.matrix(Y[,7:ncol(Y)])
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-# for(N in c(20,50,100,200)){
-SalesSim(Y,N=200,sim=1)
+for(N in c(20,50,100,200)){
+  SalesSim(Y,N=N,sim=1)
+}

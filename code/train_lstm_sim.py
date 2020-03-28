@@ -51,7 +51,7 @@ if not os.path.exists(results_directory):
 if not os.path.exists(data_directory):
     os.makedirs(data_directory)
 
-def create_model(n_pre, nb_features, output_dim, lr, penalty, dr):
+def create_model(nb_features, output_dim, lr, penalty, dr):
     """ 
         creates, compiles and returns a RNN model 
         @param nb_features: the number of features in the model
@@ -60,7 +60,7 @@ def create_model(n_pre, nb_features, output_dim, lr, penalty, dr):
 
     n_hidden = 128
 
-    inputs = Input(shape=(n_pre, nb_features), name="Inputs")
+    inputs = Input(shape=(None, nb_features), name="Inputs")
     weights_tensor = Input(shape=(nb_features,), name="Weights")
     lstm_1 = LSTM(n_hidden, dropout=dr, return_sequences=True, name="LSTM_1")(inputs) 
     attn = SeqSelfAttention(attention_activation='sigmoid')(lstm_1)
@@ -132,7 +132,7 @@ def test_model():
   
     # create and fit the LSTM network
     print('creating model...')
-    model = create_model(n_pre, nb_features, output_dim, lr, penalty, dr)
+    model = create_model(nb_features, output_dim, lr, penalty, dr)
 
     # load pre-trained weights
     weights_path = 'results/lstm/{}'.format(dataname) +'/weights-placebo-{}.h5'.format(str(nb_features))

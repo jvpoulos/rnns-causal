@@ -32,10 +32,10 @@ lstm <- function(Y,p.weights,treat_indices,d, t0, T){
   py$T <- T
   py$gpu <- 3
   py$epochs <- 10000
-  py$patience <- 25
+  py$patience <- 10
   py$nb_batches <- 8
   py$lr <- 0.01
-  py$penalty <- 0.01
+  py$penalty <- 0.1
   py$dr <- 0.5
   
   source_python("code/train_lstm_sim.py")
