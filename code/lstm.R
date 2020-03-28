@@ -33,32 +33,11 @@ lstm <- function(Y,p.weights,treat_indices,d, t0, T){
   py$gpu <- 3
   py$epochs <- 10000
   py$patience <- 25
+  py$nb_batches <- 8
+  py$lr <- 0.01
+  py$penalty <- 0.01
+  py$dr <- 0.5
   
-  if(d=='sales_fixed'){
-    py$nb_batches <- 32
-    py$lr <- 0.005
-    py$penalty <- 0.01
-    py$dr <- 0.5
-  } 
-  if(d=='stock_fixed'){
-    py$nb_batches <- 8
-    py$lr <- 0.01
-    py$penalty <- 0.01
-    py$dr <- 0.5
-  } 
-  if(d=='educ.pc'){
-    py$nb_batches <- 16
-    py$lr <- 0.001
-    py$penalty <- 0.01
-    py$dr <- 0.5
-  } 
-  if(d=='california'){
-    py$nb_batches <- 8
-    py$lr <- 0.0005
-    py$penalty <- 0.001
-    py$dr <- 0.5
-  } 
-
   source_python("code/train_lstm_sim.py")
   
   lstm.pred.test <- as.matrix(read_csv(paste0("results/lstm/",d,"/lstm-",d,"-test.csv"), col_names = FALSE))

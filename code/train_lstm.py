@@ -32,11 +32,22 @@ def weighted_mse(y_true, y_pred, weights):
 # Select gpu
 import os
 gpu = sys.argv[-11]
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
-os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
+if gpu < 3:
+    os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
+    os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
 
-from tensorflow.python.client import device_lib
-print(device_lib.list_local_devices())
+    from tensorflow.python.client import device_lib
+    print(device_lib.list_local_devices())
+
+# Create directories
+results_directory = 'results/lstm/{}'.format(dataname)
+data_directory = 'data/{}'.format(dataname)
+
+if not os.path.exists(results_directory):
+    os.makedirs(results_directory)
+
+if not os.path.exists(data_directory):
+    os.makedirs(data_directory)
 
 imp = sys.argv[-1]
 T = sys.argv[-2] 
@@ -145,6 +156,9 @@ def test_model():
         model.load_weights(weights_path)
 
     train_model(model, dataXC, dataYC, wXC, int(nb_epochs), int(nb_batches))
+
+    # save weights
+    model.save_weights('results/lstm/{}'.format(dataname) +'/weights-placebo-{}.h5'.format(str(nb_features)))
 
     # now test
 

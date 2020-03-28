@@ -14,7 +14,7 @@ library(imputeTS)
 library(parallel)
 library(doParallel)
 
-cores <- 2
+cores <- 3
 
 cl <- parallel::makeForkCluster(cores)
 
@@ -39,7 +39,7 @@ CapacitySim <- function(outcomes,covars.x,covars.z,d,sim,treated.indices){
   T <- ncol(treat)
   T0 <- ceiling(c(T*0.35, T*0.5, T*0.65, T*0.75))
   N_t <- ceiling(N*0.5) # no. treated units desired <=N
-  num_runs <- 25
+  num_runs <- 100
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   
   ## Matrices for saving RMSE values
@@ -83,7 +83,7 @@ CapacitySim <- function(outcomes,covars.x,covars.z,d,sim,treated.indices){
       ## -----
       ## ADH
       ## -----
-      est_model_ADH <- adh_mp_rows(Y_obs, treat_mat, niter=200)
+      est_model_ADH <- adh_mp_rows(Y_obs, treat_mat, rel_tol = 0.001)
       est_model_ADH_msk_err <- (est_model_ADH - Y_imp)*(1-treat_mat)
       est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
       ADH_RMSE_test[i,j] <- est_model_ADH_test_RMSE

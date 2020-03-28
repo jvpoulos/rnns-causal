@@ -55,16 +55,7 @@ Experiments
 Uncompress sales data:
 
 ```
-$ cd data
-$ tar xf data/sales_train_validation.tar.xz
-$ cd ../
-```
-
-To run placebo experiments, for each DATANAME={educ.pc,sales_fixed,stock_fixed} and each MODEL={encoder-decoder,lstm}:
-
-```
-$ mkdir data/$$DATANAME$$
-$ mkdir results/$$MODEL$$/$$DATANAME$$
+$ tar xf data/sales_train_validation.tar.xz --directory data/
 ```
 
 Make each file below executable, then execute

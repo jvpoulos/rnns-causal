@@ -41,6 +41,16 @@ if gpu < 3:
     from tensorflow.python.client import device_lib
     print(device_lib.list_local_devices())
 
+# Create directories
+results_directory = 'results/encoder-decoder/{}'.format(dataname)
+data_directory = 'data/{}'.format(dataname)
+
+if not os.path.exists(results_directory):
+    os.makedirs(results_directory)
+
+if not os.path.exists(data_directory):
+    os.makedirs(data_directory)
+
 def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr):
     """ 
         creates, compiles and returns a RNN model 
@@ -137,7 +147,7 @@ def test_model():
     train_model(model, dataXC, dataYC, wXC, int(epochs), int(nb_batches))
 
     # save weights
-    model.save_weights('results/encoder-decoder/{}'.format(dataname) +'/weights-placebo.h5')
+    model.save_weights('results/encoder-decoder/{}'.format(dataname) +'/weights-placebo-{}.h5'.format(str(nb_features)))
 
     # now test
 
