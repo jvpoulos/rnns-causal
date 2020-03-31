@@ -49,7 +49,7 @@ $ chmod +x main.sh
 $ ./main.sh > main.txt
 ```
 
-Experiments
+Placebo test experiments
 ------
 
 Uncompress sales data:
@@ -60,12 +60,13 @@ $ tar xf data/sales_train_validation.tar.xz --directory data/
 
 Make each file below executable, then execute
 
-* `educ-placebo.sh`: state government education spending, discarding treated units
-* `educ-placebo-alt.sh`: state government education spending, discarding treated periods
-* `stock-placebo-fixed.sh`: stock prices with fixed T
-* `sales-placebo-fixed.sh`: product sales prices with fixed T
+* `educ-placebo.sh`: U.S. state government education spending, varying T_0/T, discarding treated units
+* `educ-placebo-alt.sh`: U.S. state government education spending, varying T_0/T, discarding treated periods
+* `covid-placebo-fixed.sh`: U.S. counties COVID-19 cumularive cases with fixed T_0 and T, varying N
+* `stock-placebo-fixed.sh`: U.S. stock prices with fixed T_0 and T, varying N
+* `sales-placebo-fixed.sh`: U.S. product sales prices with fixed T_0 and T, varying N
 
-Counterfactual predictions
+Application: counterfactual predictions
 ------
 
 To get encoder-decoder estimates run `train_encoder_decoder.py <GPU_ID> <patience> <epochs> <batches> <data name> <t_0> <T> <imputation_method>`; e.g., 

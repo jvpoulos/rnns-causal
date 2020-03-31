@@ -1,5 +1,5 @@
 ###################################################
-# Stock Market Data Simulations: Fixed T, Varying N #
+# U.S. County Covid Cases: Fixed T, Varying N #
 ###################################################
 
 ## Loading Source files
@@ -19,7 +19,7 @@ doParallel::registerDoParallel(cores) # register cores (<p)
 
 RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
-StockSim <- function(Y,N,sim){
+CovidSim <- function(Y,N,sim){
   ## Setting up the configuration
   Nbig <- nrow(Y)
   Tbig <- ncol(Y)
@@ -27,11 +27,11 @@ StockSim <- function(Y,N,sim){
   N <- N
   T <- Tbig
   
-  t0 <- ceiling(T/2) # time of initial treatment
+  t0 <- ceiling(T*0.75) # time of initial treatment # not much variance early on
   N_t <- ceiling(N/2)
   num_runs <- 25
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
-  d <- 'stock_fixed'
+  d <- 'covid_fixed'
 
   ## Matrices for saving RMSE values
   
@@ -75,7 +75,7 @@ StockSim <- function(Y,N,sim){
     ## -----
     
     print("ADH Started")
-    est_model_ADH <- adh_mp_rows(Y_obs, treat_mat, niter=200)
+    est_model_ADH <- adh_mp_rows(Y_obs, treat_mat)
     est_model_ADH_msk_err <- (est_model_ADH - Y_sub)*(1-treat_mat)
     est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
     ADH_RMSE_test[i] <- est_model_ADH_test_RMSE
@@ -191,10 +191,10 @@ StockSim <- function(Y,N,sim){
 }
 
 # Load data
-Y <- t(read.csv('data/returns_no_missing.csv',header=F)) # N X T
+Y <- t(read.csv('data/covid-us-counties.csv',header=T)) # N X T
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
 for(N in c(20,50,100,200)){
-  StockSim(Y,N=N,sim=1)
+  CovidSim(Y,N=N,sim=1)
 }
