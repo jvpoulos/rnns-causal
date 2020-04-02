@@ -90,7 +90,7 @@ StockSim <- function(Y,N,T,sim){
     est_model_RVAE <- rvae(Y=Y_sub, p.weights, treat_indices, d, t0, T)
     est_model_RVAE_msk_err <- (est_model_RVAE - Y_sub[treat_indices,][,t0:T])
     est_model_RVAE_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_RVAE_msk_err^2, na.rm = TRUE))
-    RVAE_RMSE_test[i,j] <- est_model_RVAE_test_RMSE
+    RVAE_RMSE_test[i] <- est_model_RVAE_test_RMSE
     print(paste("RVAE RMSE:", round(est_model_RVAE_test_RMSE,3),"run",i))
     
     ## ------
