@@ -209,7 +209,7 @@ SalesSim <- function(Y,N,T,sim){
                RVAE_avg_RMSE + 1.96*RVAE_std_error,  
                ADH_avg_RMSE + 1.96*ADH_std_error,
                VAR_avg_RMSE + 1.96*VAR_std_error),
-      "x" = replicate(length(T0),N*T),
+      "x" = replicate(length(t0),N*T),
       "Method" = c("DID", 
                    "Encoder-decoder",
                    "LSTM", 
