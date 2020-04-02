@@ -41,7 +41,7 @@ CovidSim <- function(Y,N,sim){
   ED_RMSE_test <- matrix(0L,num_runs)
   DID_RMSE_test <- matrix(0L,num_runs)
   ADH_RMSE_test <- matrix(0L,num_runs)
-  RVAE_RMSE_test <- matrix(0L,num_runs,length(T0))
+  RVAE_RMSE_test <- matrix(0L,num_runs)
   
   ## Run different methods
   
