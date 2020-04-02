@@ -1,14 +1,10 @@
-######################################################################
-# Education Spending Simulations #
-######################################################################
+###################################
+# Elections Simulations #
+###################################
 
 ## Loading Source files
 library(MCPanel)
 library(glmnet)
-library(dplyr)
-library(glmnet)
-library(caret)
-library(imputeTS)
 
 # Setup parallel processing 
 library(parallel)
@@ -21,21 +17,14 @@ cl <- makePSOCKcluster(cores)
 
 doParallel::registerDoParallel(cores) # register cores (<p)
 
-CapacitySim <- function(outcomes,covars.x,covars.z,d,sim,treated.indices){
-  Y <- outcomes[[d]]$M # NxT 
-  Y.missing <- outcomes[[d]]$M.missing # NxT 
+RNGkind("L'Ecuyer-CMRG") # ensure random number generation
+
+## Reading data
+ElectionsSim <- function(outcomes,d,sim){
+  Y <- outcomes[[d]]$M # NxT outcomes
+  Y.missing <- outcomes[[d]]$M.missing # NxT
   treat <- outcomes[[d]]$mask # NxT masked matrix 
-  
-  ## Treated 
-  treat_y <- Y[rownames(Y)%in%treated.indices,] 
-  
-  ## Working with the rest of matrix
-  treat <- treat[!rownames(treat)%in%c(rownames(treat_y),"TN"),] # (randomly) drop TN for parity
-  Y <- Y[!rownames(Y)%in%c(rownames(treat_y),"TN"),] 
-  Y.missing <- Y.missing[!rownames(Y.missing)%in%c(rownames(treat_y),"TN"),] 
-  covars.x <- covars.x[!rownames(covars.x)%in%c(rownames(treat_y),"TN","GA"),] # GA not in outcomes
-  covars.z <- covars.z
-  
+
   ## Setting up the configuration
   N <- nrow(treat)
   T <- ncol(treat)
@@ -43,7 +32,7 @@ CapacitySim <- function(outcomes,covars.x,covars.z,d,sim,treated.indices){
   N_t <- ceiling(N*0.5) # no. treated units desired <=N
   num_runs <- 100
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
-
+  
   ## Matrices for saving RMSE values
   
   MCPanel_RMSE_test <- matrix(0L,num_runs,length(T0))
@@ -68,25 +57,25 @@ CapacitySim <- function(outcomes,covars.x,covars.z,d,sim,treated.indices){
       }else{
         treat_mat <- stag_adapt(Y, N_t, (t0-1), treat_indices)
       }
-
+      
       Y_obs <- Y * treat_mat
       Y_imp <- Y * Y.missing
-  
+    
       ## Estimate propensity scores
       
-      logitMod.x <- cv.glmnet(x=covars.x, y=as.factor((1-treat_mat)[,t0]), family="binomial", nfolds= nrow(covars.x), parallel = TRUE, nlambda=400) # LOO
+      logitMod.x <- cv.glmnet(x=Y_obs, y=as.factor((1-treat_mat)[,t0]), family="binomial", nfolds=nrow(Y_obs), parallel = TRUE, nlambda=400) # LOO
       
-      logitMod.z <- cv.glmnet(x=covars.z, y=as.factor((1-treat_mat)[treat_indices[1],]), family="binomial", nfolds=nrow(covars.z), parallel = TRUE, nlambda=400)
+      logitMod.z <- cv.glmnet(x=t(Y_obs), y=as.factor((1-treat_mat)[treat_indices[1],]), family="binomial", nfolds=nrow(t(Y_obs)), parallel = TRUE, nlambda=400)
       
-      p.weights.x <- as.vector(predict(logitMod.x, covars.x, type="response", s ="lambda.min"))
-      p.weights.z <- as.vector(predict(logitMod.z, covars.z, type="response", s ="lambda.min"))
+      p.weights.x <- as.vector(predict(logitMod.x, Y_obs, type="response", s = "lambda.min"))
+      p.weights.z <- as.vector(predict(logitMod.z, t(Y_obs), type="response", s = "lambda.min"))
       
       p.weights <- outer(p.weights.x,p.weights.z)   # outer product of fitted values on response scale
-  
+      
       ## -----
       ## ADH
       ## -----
-      est_model_ADH <- adh_mp_rows(Y_obs, treat_mat, rel_tol = 0.001)
+      est_model_ADH <- adh_mp_rows(Y_obs, treat_mat, rel_tol = 0.001, niter = 200)
       est_model_ADH_msk_err <- (est_model_ADH - Y_imp)*(1-treat_mat)
       est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
       ADH_RMSE_test[i,j] <- est_model_ADH_test_RMSE
@@ -178,7 +167,7 @@ CapacitySim <- function(outcomes,covars.x,covars.z,d,sim,treated.indices){
   
   ADH_avg_RMSE <- apply(ADH_RMSE_test,2,mean)
   ADH_std_error <- apply(ADH_RMSE_test,2,sd)/sqrt(num_runs)
-  
+
   RVAE_avg_RMSE <- apply(RVAE_RMSE_test,2,mean)
   RVAE_std_error <- apply(RVAE_RMSE_test,2,sd)/sqrt(num_runs)
   
@@ -206,59 +195,15 @@ CapacitySim <- function(outcomes,covars.x,covars.z,d,sim,treated.indices){
                    replicate(length(T0),"Encoder-decoder"),
                    replicate(length(T0),"LSTM"), 
                    replicate(length(T0),"MC-NNM"), 
-                   replicate(length(T0),"RVAE"), 
+                   replicate(length(T0),"RVAE"),
                    replicate(length(T0),"SCM"),
                    replicate(length(T0),"VAR")))
   
   filename<-paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".rds")
   save(df1, file = paste0("results/plots/",filename))
-
 }
 
-# Read data
-capacity.outcomes <- readRDS("data/capacity-outcomes-locf.rds")
-capacity.covariates <- readRDS("data/capacity-covariates.rds")
+# Load data
+elections.control.outcomes <- readRDS("data/elections-outcomes.rds")
 
-# Transform covars to unit and time-specific inputs
-capacity.covars.x <- as.matrix(bind_rows(lapply(capacity.covariates,rowMeans))) # N x # predictors
-rownames(capacity.covars.x) <- rownames(capacity.covariates$faval)
-
-# matrix of same time dimension as outcomes
-capacity.covars.z <- list("faval"=matrix(NA, nrow = nrow(capacity.outcomes$educ.pc$M), ncol = ncol(capacity.outcomes$educ.pc$M)),
-                          "farmsize"=matrix(NA, nrow = nrow(capacity.outcomes$educ.pc$M), ncol = ncol(capacity.outcomes$educ.pc$M)),
-                          "access"=matrix(NA, nrow = nrow(capacity.outcomes$educ.pc$M), ncol = ncol(capacity.outcomes$educ.pc$M)))
-
-for(i in c("faval","farmsize","access")){
-  colnames(capacity.covars.z[[i]]) <- colnames(capacity.outcomes$educ.pc$M)
-  rownames(capacity.covars.z[[i]]) <- rownames(capacity.outcomes$educ.pc$M)
-}
-
-colnames(capacity.covariates$faval) <- sub('faval.', '', colnames(capacity.covariates$faval))
-colnames(capacity.covariates$farmsize) <- sub('farmsize.', '', colnames(capacity.covariates$farmsize))
-colnames(capacity.covariates$access) <- sub('track2.', '', colnames(capacity.covariates$access))
-
-# fill in observed data and impute missing 
-
-for(i in c("faval","farmsize","access")){
-  for(n in rownames(capacity.outcomes$educ.pc$M)){
-    for(t in colnames(capacity.outcomes$educ.pc$M)){
-      capacity.covars.z[[i]][n,][t] <- capacity.covariates[[i]][n,][t]
-    }
-  }
-  
-  capacity.covars.z[[i]] <- t(capacity.covars.z[[i]])
-  preProcValues <- preProcess(capacity.covars.z[[i]], method = c("medianImpute"), verbose=TRUE) # use training set median
-  
-  capacity.covars.z[[i]] <- na_locf(capacity.covars.z[[i]], option = "locf", na_remaining = "keep") 
-  
-  capacity.covars.z[[i]] <- predict(preProcValues, capacity.covars.z[[i]])
-  
-  capacity.covars.z[[i]] <- t(capacity.covars.z[[i]])
-}
-
-capacity.covars.z <- as.matrix(bind_rows(lapply(capacity.covars.z,colMeans))) # T x # predictors
-rownames(capacity.covars.z) <- colnames(capacity.outcomes$educ.pc$M)
-
-treat_indices_order <- c("CA", "IA", "KS", "MI", "MN", "MO", "OH", "OR", "WI", "IL", "NV", "AL", "MS", "FL", "LA", "IN")
-
-CapacitySim(outcomes=capacity.outcomes,covars.x=capacity.covars.x, covars.z= capacity.covars.z, d="educ.pc",sim=1,treated.indices = treat_indices_order)
+ElectionsSim(outcomes=elections.control.outcomes, d="votediff", sim=1)

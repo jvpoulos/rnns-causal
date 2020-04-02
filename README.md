@@ -60,11 +60,14 @@ $ tar xf data/sales_train_validation.tar.xz --directory data/
 
 Make each file below executable, then execute
 
-* `educ-placebo.sh`: U.S. state government education spending, varying T_0/T, discarding treated units
-* `educ-placebo-alt.sh`: U.S. state government education spending, varying T_0/T, discarding treated periods
-* `covid-placebo-fixed.sh`: U.S. counties COVID-19 cumularive cases with fixed T_0 and T, varying N
-* `stock-placebo-fixed.sh`: U.S. stock prices with fixed T_0 and T, varying N
-* `sales-placebo-fixed.sh`: U.S. product sales prices with fixed T_0 and T, varying N
+* `basque-placebo.sh`: Basque Country dataset
+* `germany-placebo.sh`: W. German reunification dataset
+* `california-placebo.sh`: California smoking dataset
+* `educ-placebo.sh`: U.S. state government education spending
+* `elections-placebo.sh`: U.S. mayoral elections vote margin
+* `covid-placebo.sh`: U.S. counties COVID-19 cases
+* `stock-placebo.sh`: U.S. stock prices
+* `sales-placebo.sh`: U.S. product sales prices
 
 Application: counterfactual predictions
 ------

@@ -1,5 +1,5 @@
 ###################################################
-# Stock Market Data Simulations: Fixed T, Varying N #
+# Product Sales Data Simulations #
 ###################################################
 
 ## Loading Source files
@@ -19,19 +19,18 @@ doParallel::registerDoParallel(cores) # register cores (<p)
 
 RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
-StockSim <- function(Y,N,sim){
+SalesSim <- function(Y,N,T,sim){
   ## Setting up the configuration
   Nbig <- nrow(Y)
-  Tbig <- ncol(Y)
-  
+
   N <- N
-  T <- Tbig
+  T <- T
   
   t0 <- ceiling(T/2) # time of initial treatment
   N_t <- ceiling(N/2)
-  num_runs <- 25
+  num_runs <- 100
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
-  d <- 'stock_fixed'
+  d <- 'sales'
 
   ## Matrices for saving RMSE values
   
@@ -41,6 +40,7 @@ StockSim <- function(Y,N,sim){
   ED_RMSE_test <- matrix(0L,num_runs)
   DID_RMSE_test <- matrix(0L,num_runs)
   ADH_RMSE_test <- matrix(0L,num_runs)
+  RVAE_RMSE_test <- matrix(0L,num_runs,length(T0))
   
   ## Run different methods
   
@@ -75,11 +75,27 @@ StockSim <- function(Y,N,sim){
     ## -----
     
     print("ADH Started")
-    est_model_ADH <- adh_mp_rows(Y_obs, treat_mat, niter=200)
+    est_model_ADH <- adh_mp_rows(Y_obs, treat_mat, niter=200, rel_tol = 0.001)
+    est_model_ADH[est_model_ADH <0] <- 0
+    est_model_ADH <- round(est_model_ADH)
     est_model_ADH_msk_err <- (est_model_ADH - Y_sub)*(1-treat_mat)
     est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
     ADH_RMSE_test[i] <- est_model_ADH_test_RMSE
     print(paste("ADH RMSE:", round(est_model_ADH_test_RMSE,3),"run",i))
+    
+    ## ------
+    ## RVAE
+    ## ------
+    
+    print("RVAE Started")
+    source("code/rvae.R")
+    est_model_RVAE <- rvae(Y=Y_sub, p.weights, treat_indices, d, t0, T)
+    est_model_RVAE[est_model_RVAE <0] <- 0
+    est_model_RVAE <- round(est_model_RVAE)
+    est_model_RVAE_msk_err <- (est_model_RVAE - Y_sub[treat_indices,][,t0:T])
+    est_model_RVAE_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_RVAE_msk_err^2, na.rm = TRUE))
+    RVAE_RMSE_test[i,j] <- est_model_RVAE_test_RMSE
+    print(paste("RVAE RMSE:", round(est_model_RVAE_test_RMSE,3),"run",i))
     
     ## ------
     ## ED
@@ -88,6 +104,8 @@ StockSim <- function(Y,N,sim){
     print("ED Started")
     source("code/ed.R")
     est_model_ED <- ed(Y=Y_sub, p.weights, treat_indices, d, t0, T)
+    est_model_ED[est_model_ED <0] <- 0
+    est_model_ED <- round(est_model_ED)
     est_model_ED_msk_err <- (est_model_ED - Y_sub[treat_indices,][,t0:T])
     est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
     ED_RMSE_test[i] <- est_model_ED_test_RMSE
@@ -100,6 +118,8 @@ StockSim <- function(Y,N,sim){
     print("LSTM Started")
     source("code/lstm.R")
     est_model_LSTM <- lstm(Y=Y_sub, p.weights, treat_indices, d, t0, T)
+    est_model_LSTM[est_model_LSTM <0] <- 0
+    est_model_LSTM <- round(est_model_LSTM)
     est_model_LSTM_msk_err <- (est_model_LSTM - Y_sub[treat_indices,][,t0:T])
     est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
     LSTM_RMSE_test[i] <- est_model_LSTM_test_RMSE
@@ -112,11 +132,13 @@ StockSim <- function(Y,N,sim){
     print("VAR Started")
     source("code/varEst.R")
     est_model_VAR <- varEst(Y=Y_sub, treat_indices, t0, T)
+    est_model_VAR[est_model_VAR <0] <- 0
+    est_model_VAR <- round(est_model_VAR)
     est_model_VAR_msk_err <- (est_model_VAR - Y_sub[treat_indices,])
     est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
     VAR_RMSE_test[i] <- est_model_VAR_test_RMSE
     print(paste("VAR RMSE:", round(est_model_VAR_test_RMSE,3),"run",i))
-    
+
     ## ------
     ## MC-NNM
     ## ------
@@ -124,6 +146,8 @@ StockSim <- function(Y,N,sim){
     print("MC-NNM Started")
     est_model_MCPanel <- mcnnm_cv(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, num_folds = 3)
     est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
+    est_model_MCPanel$Mhat[est_model_MCPanel$Mhat <0] <- 0
+    est_model_MCPanel$Mhat <- round(est_model_MCPanel$Mhat)
     est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y_sub)*(1-treat_mat)
     est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
     MCPanel_RMSE_test[i] <- est_model_MCPanel$test_RMSE
@@ -135,6 +159,8 @@ StockSim <- function(Y,N,sim){
     
     print("DID Started")
     est_model_DID <- t(DID(t(Y_obs), t(treat_mat)))
+    est_model_DID[est_model_DID <0] <- 0
+    est_model_DID <- round(est_model_DID)
     est_model_DID_msk_err <- (est_model_DID - Y_sub)*(1-treat_mat)
     est_model_DID_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_DID_msk_err^2, na.rm = TRUE))
     DID_RMSE_test[i] <- est_model_DID_test_RMSE
@@ -161,28 +187,34 @@ StockSim <- function(Y,N,sim){
   ADH_avg_RMSE <- apply(ADH_RMSE_test,2,mean)
   ADH_std_error <- apply(ADH_RMSE_test,2,sd)/sqrt(num_runs)
   
+  RVAE_avg_RMSE <- apply(RVAE_RMSE_test,2,mean)
+  RVAE_std_error <- apply(RVAE_RMSE_test,2,sd)/sqrt(num_runs)
+  
   ## Creating plots
   
   df1 <-
     data.frame(
-      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,ADH_avg_RMSE,VAR_avg_RMSE),
+      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,RVAE_avg_RMSE,ADH_avg_RMSE,VAR_avg_RMSE),
       "lb" = c(DID_avg_RMSE - 1.96*DID_std_error,
                ED_avg_RMSE - 1.96*ED_std_error,
                LSTM_avg_RMSE - 1.96*LSTM_std_error,
                MCPanel_avg_RMSE - 1.96*MCPanel_std_error, 
+               RVAE_avg_RMSE - 1.96*RVAE_std_error,    
                ADH_avg_RMSE - 1.96*ADH_std_error,
                VAR_avg_RMSE - 1.96*VAR_std_error),
       "ub" = c(DID_avg_RMSE + 1.96*DID_std_error, 
                ED_avg_RMSE + 1.96*ED_std_error,
                LSTM_avg_RMSE + 1.96*LSTM_std_error,
                MCPanel_avg_RMSE + 1.96*MCPanel_std_error, 
+               RVAE_avg_RMSE + 1.96*RVAE_std_error,  
                ADH_avg_RMSE + 1.96*ADH_std_error,
                VAR_avg_RMSE + 1.96*VAR_std_error),
-      "x" = c(N, N, N, N, N, N),
+      "x" = replicate(length(T0),N*T),
       "Method" = c("DID", 
                    "Encoder-decoder",
                    "LSTM", 
                    "MC-NNM", 
+                   "RVAE",
                    "SCM",
                    "VAR"))
   ##
@@ -191,10 +223,9 @@ StockSim <- function(Y,N,sim){
 }
 
 # Load data
-Y <- t(read.csv('data/returns_no_missing.csv',header=F)) # N X T
+Y <- read.csv('data/sales_train_validation.csv',header=T, stringsAsFactors = F) # N X T
+Y <- as.matrix(Y[,7:ncol(Y)])
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-for(N in c(20,50,100,200)){
-  StockSim(Y,N=N,sim=1)
-}
+SalesSim(Y,N=1000,T=1000,sim=1)

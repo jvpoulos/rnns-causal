@@ -27,11 +27,11 @@ CovidSim <- function(Y,N,sim){
   N <- N
   T <- Tbig
   
-  t0 <- ceiling(T*0.75) # time of initial treatment # not much variance early on
+  t0 <- ceiling(T*0.5) # time of initial treatment
   N_t <- ceiling(N/2)
-  num_runs <- 25
+  num_runs <- 100
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
-  d <- 'covid_fixed'
+  d <- 'covid'
 
   ## Matrices for saving RMSE values
   
@@ -41,6 +41,7 @@ CovidSim <- function(Y,N,sim){
   ED_RMSE_test <- matrix(0L,num_runs)
   DID_RMSE_test <- matrix(0L,num_runs)
   ADH_RMSE_test <- matrix(0L,num_runs)
+  RVAE_RMSE_test <- matrix(0L,num_runs,length(T0))
   
   ## Run different methods
   
@@ -75,11 +76,23 @@ CovidSim <- function(Y,N,sim){
     ## -----
     
     print("ADH Started")
-    est_model_ADH <- adh_mp_rows(Y_obs, treat_mat)
+    est_model_ADH <- adh_mp_rows(Y_obs, treat_mat, niter = 200, rel_tol = 0.001)
     est_model_ADH_msk_err <- (est_model_ADH - Y_sub)*(1-treat_mat)
     est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
     ADH_RMSE_test[i] <- est_model_ADH_test_RMSE
     print(paste("ADH RMSE:", round(est_model_ADH_test_RMSE,3),"run",i))
+    
+    ## ------
+    ## RVAE
+    ## ------
+    
+    print("RVAE Started")
+    source("code/rvae.R")
+    est_model_RVAE <- rvae(Y=Y_sub, p.weights, treat_indices, d, t0, T)
+    est_model_RVAE_msk_err <- (est_model_RVAE - Y_sub[treat_indices,][,t0:T])
+    est_model_RVAE_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_RVAE_msk_err^2, na.rm = TRUE))
+    RVAE_RMSE_test[i,j] <- est_model_RVAE_test_RMSE
+    print(paste("RVAE RMSE:", round(est_model_RVAE_test_RMSE,3),"run",i))
     
     ## ------
     ## ED
@@ -161,28 +174,34 @@ CovidSim <- function(Y,N,sim){
   ADH_avg_RMSE <- apply(ADH_RMSE_test,2,mean)
   ADH_std_error <- apply(ADH_RMSE_test,2,sd)/sqrt(num_runs)
   
+  RVAE_avg_RMSE <- apply(RVAE_RMSE_test,2,mean)
+  RVAE_std_error <- apply(RVAE_RMSE_test,2,sd)/sqrt(num_runs)
+  
   ## Creating plots
   
   df1 <-
     data.frame(
-      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,ADH_avg_RMSE,VAR_avg_RMSE),
+      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,RVAE_avg_RMSE,ADH_avg_RMSE,VAR_avg_RMSE),
       "lb" = c(DID_avg_RMSE - 1.96*DID_std_error,
                ED_avg_RMSE - 1.96*ED_std_error,
                LSTM_avg_RMSE - 1.96*LSTM_std_error,
                MCPanel_avg_RMSE - 1.96*MCPanel_std_error, 
+               RVAE_avg_RMSE - 1.96*RVAE_std_error,    
                ADH_avg_RMSE - 1.96*ADH_std_error,
                VAR_avg_RMSE - 1.96*VAR_std_error),
       "ub" = c(DID_avg_RMSE + 1.96*DID_std_error, 
                ED_avg_RMSE + 1.96*ED_std_error,
                LSTM_avg_RMSE + 1.96*LSTM_std_error,
                MCPanel_avg_RMSE + 1.96*MCPanel_std_error, 
+               RVAE_avg_RMSE + 1.96*RVAE_std_error,  
                ADH_avg_RMSE + 1.96*ADH_std_error,
                VAR_avg_RMSE + 1.96*VAR_std_error),
-      "x" = c(N, N, N, N, N, N),
+      "x" = replicate(length(T0),N*T),
       "Method" = c("DID", 
                    "Encoder-decoder",
                    "LSTM", 
                    "MC-NNM", 
+                   "RVAE",
                    "SCM",
                    "VAR"))
   ##
@@ -195,6 +214,4 @@ Y <- t(read.csv('data/covid-us-counties.csv',header=T)) # N X T
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-for(N in c(20,50,100,200)){
-  CovidSim(Y,N=N,sim=1)
-}
+CovidSim(Y,N=1000,sim=1)

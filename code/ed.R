@@ -33,11 +33,15 @@ ed <- function(Y,p.weights,treat_indices,d, t0, T){
   py$gpu <- 3
   py$epochs <- 10000
   py$patience <- 10
-  py$nb_batches <- 8
   py$lr <- 0.01
-  py$penalty <- 0.1
+  py$penalty <- 0.2
   py$dr <- 0.5
-
+  if(d %in% c("stock","sales")){
+    py$nb_batches <- 32
+  } else{
+    py$nb_batches <- 16
+  }
+  
   source_python("code/train_encoder_decoder_sim.py")
   
   ed.pred <- as.matrix(read_csv(paste0("results/encoder-decoder/",d,"/encoder-decoder-",d,"-test.csv"), col_names = FALSE))

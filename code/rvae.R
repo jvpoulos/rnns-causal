@@ -1,5 +1,5 @@
 ###################################
-# LSTM for Simulations #
+# RVAE for Simulations #
 ###################################
 
 library(keras)
@@ -8,7 +8,7 @@ library(readr)
 # use_python("/usr/local/bin/python")
 use_python("~/venv/bin/python") # comet
 
-lstm <- function(Y,p.weights,treat_indices,d, t0, T){
+rvae <- function(Y,p.weights,treat_indices,d, t0, T){
   # Converting the data to a floating point matrix
   data <- data.matrix(t(Y)) # T x N
   data_w <- data.matrix(t(p.weights)) # T x N
@@ -36,15 +36,11 @@ lstm <- function(Y,p.weights,treat_indices,d, t0, T){
   py$lr <- 0.01
   py$penalty <- 0.2
   py$dr <- 0.5
-  if(d %in% c("stock","sales")){
-    py$nb_batches <- 32
-  } else{
-    py$nb_batches <- 16
-  }
+  py$nb_batches <- 1
   
-  source_python("code/train_lstm_sim.py")
+  source_python("code/train_rvae_sim.py")
   
-  lstm.pred.test <- as.matrix(read_csv(paste0("results/lstm/",d,"/lstm-",d,"-test.csv"), col_names = FALSE))
+  rvae.pred.test <- as.matrix(read_csv(paste0("results/rvae/",d,"/rvae-",d,"-test.csv"), col_names = FALSE))
   
-  return(t(lstm.pred.test))
+  return(t(rvae.pred.test))
 }
