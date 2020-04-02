@@ -64,6 +64,7 @@ Make each file below executable, then execute
 * `germany-placebo.sh`: W. German reunification dataset
 * `california-placebo.sh`: California smoking dataset
 * `educ-placebo.sh`: U.S. state government education spending
+* `elections-placebo.sh`: U.S. mayoral elections vote margin
 * `covid-placebo.sh`: U.S. counties COVID-19 cases
 * `stock-placebo.sh`: U.S. stock prices
 * `sales-placebo.sh`: U.S. product sales prices

@@ -47,8 +47,8 @@ StockSim <- function(Y,N,T,sim){
   for(i in c(1:num_runs)){
     print(paste0(paste0("Run number ", i)," started"))
     ## Fix the treated units in the whole run for a better comparison
-    all_indices <- sample(1:Nbig, N)
-    treat_indices <- sample(1:N, N_t)
+    all_indices <- sort(sample(1:Nbig, N))
+    treat_indices <- sort(sample(1:N, N_t))
     Y_sub <- Y[all_indices,1:T]
     ## Simultaneuous (simul_adapt) or Staggered adoption (stag_adapt)
     if(is_simul == 1){

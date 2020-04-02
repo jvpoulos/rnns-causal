@@ -26,7 +26,7 @@ SynthSim <- function(outcomes,covars.x,covars.z,d,sim){
   for(i in c(1:num_runs)){
     print(paste0(paste0("Run number ", i)," started"))
     ## Fix the treated units in the whole run for a better comparison
-    treat_indices <- sample(1:N, N_t)
+    treat_indices <- sort(sample(1:N, N_t))
     for(j in c(1:length(T0))){
       t0 <- T0[j]
       ## Simultaneuous (simul_adapt) or Staggered adoption (stag_adapt)
