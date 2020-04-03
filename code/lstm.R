@@ -34,12 +34,13 @@ lstm <- function(Y,p.weights,treat_indices,d, t0, T){
   py$epochs <- 10000
   py$patience <- 10
   py$lr <- 0.01
-  py$penalty <- 0.2
   py$dr <- 0.5
   if(d %in% c("stock","sales")){
-    py$nb_batches <- 32
+    py$nb_batches <- 64
+    py$penalty <- 0.5
   } else{
     py$nb_batches <- 16
+    py$penalty <- 0.2
   }
   
   source_python("code/train_lstm_sim.py")

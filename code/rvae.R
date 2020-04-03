@@ -34,9 +34,13 @@ rvae <- function(Y,p.weights,treat_indices,d, t0, T){
   py$epochs <- 10000
   py$patience <- 10
   py$lr <- 0.01
-  py$penalty <- 0.2
   py$dr <- 0.5
   py$nb_batches <- 1
+  if(d %in% c("stock","sales")){
+    py$penalty <- 0.5
+  } else{
+    py$penalty <- 0.2
+  }
   
   source_python("code/train_rvae_sim.py")
   

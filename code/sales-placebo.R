@@ -144,7 +144,7 @@ SalesSim <- function(Y,N,T,sim){
     ## ------
     
     print("MC-NNM Started")
-    est_model_MCPanel <- mcnnm_cv(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, num_folds = 3)
+    est_model_MCPanel <- mcnnm(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, lambda_L = c(0.2), niter = 200) # no CV to save computational time
     est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
     est_model_MCPanel$Mhat[est_model_MCPanel$Mhat <0] <- 0
     est_model_MCPanel$Mhat <- round(est_model_MCPanel$Mhat)
@@ -219,7 +219,7 @@ SalesSim <- function(Y,N,T,sim){
                    "VAR"))
   ##
   filename<-paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".rds")
-  saveRDS(df1, file = paste0("results/plots/",filename))
+  saveRDS(df1, file = paste0("results/",filename))
 }
 
 # Load data
