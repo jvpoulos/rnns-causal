@@ -27,7 +27,7 @@ CovidSim <- function(Y,N,sim){
   N <- N
   T <- Tbig
   
-  t0 <- ceiling(T*0.75) # time of initial treatment # >0.5 due to nature of the data
+  t0 <- ceiling(T*0.5) # time of initial treatment
   N_t <- ceiling(N/2)
   num_runs <- 100
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
