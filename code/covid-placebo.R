@@ -214,4 +214,4 @@ Y <- t(read.csv('data/covid-us-counties.csv',header=T)) # N X T
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-CovidSim(Y,N=1000,sim=1)
+CovidSim(Y,N=1200,sim=1)

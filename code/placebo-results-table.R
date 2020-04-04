@@ -47,4 +47,4 @@ covid19 <- readRDS("results/table-results/covid_N_1000_T_60_numruns_100_num_trea
 
 covid19$stderror <- (covid19$y -covid19$lb)/1.96
 
-print(covid19*1000, digits=2)
+print(covid19, digits=2)
