@@ -36,7 +36,7 @@ ed <- function(Y,p.weights,treat_indices,d, t0, T){
   py$lr <- 0.01
   py$dr <- 0.5
   if(d %in% c("stock","sales")){
-    py$nb_batches <- 64
+    py$nb_batches <- 32
     py$penalty <- 0.5
   } else{
     py$nb_batches <- 16

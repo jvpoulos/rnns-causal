@@ -228,4 +228,4 @@ Y <- as.matrix(Y[,7:ncol(Y)])
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-SalesSim(Y,N=500,T=1000,sim=1)
+SalesSim(Y,N=300,T=dim(Y)[2],sim=1)
