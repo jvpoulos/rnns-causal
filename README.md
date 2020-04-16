@@ -26,7 +26,7 @@ Prerequsites
 ------
 
 * Python 2.7
-  * keras-self-attention, scikit-learn, numpy, pandas
+  * keras-self-attention, scikit-learn, numpy, pandas,h5py
 * Tensorflow 2.1.0
 * Keras 2.2.5
 * **R** 3.6.1
@@ -52,20 +52,14 @@ $ ./main.sh > main.txt
 Placebo test experiments
 ------
 
-Uncompress sales data:
-
-```
-$ tar xf data/sales_train_validation.tar.xz --directory data/
-```
-
 Make each file below executable, then execute
 
 * `basque-placebo.sh`: Basque Country dataset
 * `germany-placebo.sh`: W. German reunification dataset
 * `california-placebo.sh`: California smoking dataset
 * `educ-placebo.sh`: U.S. state government education spending
+* `covid-placebo.sh`: U.S. counties COVID-19 cases
 * `stock-placebo.sh`: U.S. stock prices
-* `sales-placebo.sh`: U.S. product sales prices
 
 Application: counterfactual predictions
 ------

@@ -14,7 +14,7 @@ california_N_38_T_31_numruns_100_num_treated_19_simultaneuous_1 <-
 
 df1$stderror <- (df1$y -df1$lb)/1.96
 
-print(df1, digits=4)
+print(df1, digits=2)
 
 # W. German reunification
 germany_N_16_T_44_numruns_100_num_treated_8_simultaneuous_1 <- 
@@ -22,7 +22,7 @@ germany_N_16_T_44_numruns_100_num_treated_8_simultaneuous_1 <-
 
 df1$stderror <- (df1$y -df1$lb)/1.96
 
-print(df1, digits=4)
+print(df1, digits=2)
 
 # Education spending
 
@@ -33,18 +33,20 @@ df1$stderror <- (df1$y -df1$lb)/1.96
 
 print(df1, digits=2)
 
+# Stock
+
+stock <- readRDS("results/table-results/stock_N_100_T_1000_numruns_100_num_treated_50_simultaneuous_1.rds")
+
+stock$stderror <- (stock$y -stock$lb)/1.96
+
+print(stock, digits=2)
+
 # Sales
+
+# sales <- readRDS("results/table-results/sales_N_100_T_1913_numruns_100_num_treated_50_simultaneuous_1.rds")
 
 sales <- readRDS("results/table-results/sales_N_500_T_1000_numruns_100_num_treated_250_simultaneuous_1.rds")
 
 sales$stderror <- (sales$y -sales$lb)/1.96
 
 print(sales, digits=3)
-
-# Stock
-
-stock <- readRDS("/media/jason/Dropbox/github/rnns-causal/results/table-results/stock_N_100_T_1000_numruns_100_num_treated_50_simultaneuous_1.rds")
-
-stock$stderror <- (stock$y -stock$lb)/1.96
-
-print(stock, digits=1)

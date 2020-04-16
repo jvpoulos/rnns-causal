@@ -10,7 +10,7 @@ library(glmnet)
 library(parallel)
 library(doParallel)
 
-cores <- parallel::detectCores()/2
+cores <- parallel::detectCores()
 print(paste0('cores registered: ', cores))
 
 cl <- makePSOCKcluster(cores)
@@ -195,7 +195,7 @@ StockSim <- function(Y,N,T,sim){
                RVAE_avg_RMSE + 1.96*RVAE_std_error,  
                ADH_avg_RMSE + 1.96*ADH_std_error,
                VAR_avg_RMSE + 1.96*VAR_std_error),
-      "x" = replicate(length(t0),N*T),
+      "x" = replicate(length(t0),N),
       "Method" = c("DID", 
                    "Encoder-decoder",
                    "LSTM", 
@@ -213,4 +213,4 @@ Y <- t(read.csv('data/returns_no_missing.csv',header=F)) # N X T
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-StockSim(Y,N=100,T=1500,sim=1)
+StockSim(Y,N=250,T=600,sim=1)

@@ -1,5 +1,5 @@
 ###################################################
-# Product Sales Data Simulations #
+# U.S. County Covid Cases #
 ###################################################
 
 ## Loading Source files
@@ -10,7 +10,7 @@ library(glmnet)
 library(parallel)
 library(doParallel)
 
-cores <- parallel::detectCores()/2
+cores <- parallel::detectCores()
 print(paste0('cores registered: ', cores))
 
 cl <- makePSOCKcluster(cores)
@@ -19,10 +19,10 @@ doParallel::registerDoParallel(cores) # register cores (<p)
 
 RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
-SalesSim <- function(Y,N,T,sim){
+CovidSim <- function(Y,N,T,sim){
   ## Setting up the configuration
   Nbig <- nrow(Y)
-
+  
   N <- N
   T <- T
   
@@ -30,7 +30,7 @@ SalesSim <- function(Y,N,T,sim){
   N_t <- ceiling(N/2)
   num_runs <- 100
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
-  d <- 'sales'
+  d <- 'covid'
 
   ## Matrices for saving RMSE values
   
@@ -70,19 +70,6 @@ SalesSim <- function(Y,N,T,sim){
     
     p.weights <- outer(p.weights.x,p.weights.z)   # outer product of fitted values on response scale
     
-    ## -----
-    ## ADH
-    ## -----
-    
-    print("ADH Started")
-    est_model_ADH <- adh_mp_rows(Y_obs, treat_mat, niter=200, rel_tol = 0.001)
-    est_model_ADH[est_model_ADH <0] <- 0
-    est_model_ADH <- round(est_model_ADH)
-    est_model_ADH_msk_err <- (est_model_ADH - Y_sub)*(1-treat_mat)
-    est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
-    ADH_RMSE_test[i] <- est_model_ADH_test_RMSE
-    print(paste("ADH RMSE:", round(est_model_ADH_test_RMSE,3),"run",i))
-    
     ## ------
     ## RVAE
     ## ------
@@ -90,12 +77,21 @@ SalesSim <- function(Y,N,T,sim){
     print("RVAE Started")
     source("code/rvae.R")
     est_model_RVAE <- rvae(Y=Y_sub, p.weights, treat_indices, d, t0, T)
-    est_model_RVAE[est_model_RVAE <0] <- 0
-    est_model_RVAE <- round(est_model_RVAE)
     est_model_RVAE_msk_err <- (est_model_RVAE - Y_sub[treat_indices,][,t0:T])
     est_model_RVAE_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_RVAE_msk_err^2, na.rm = TRUE))
     RVAE_RMSE_test[i] <- est_model_RVAE_test_RMSE
     print(paste("RVAE RMSE:", round(est_model_RVAE_test_RMSE,3),"run",i))
+    
+    ## -----
+    ## ADH
+    ## -----
+    
+    print("ADH Started")
+    est_model_ADH <- adh_mp_rows(Y_obs, treat_mat)
+    est_model_ADH_msk_err <- (est_model_ADH - Y_sub)*(1-treat_mat)
+    est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
+    ADH_RMSE_test[i] <- est_model_ADH_test_RMSE
+    print(paste("ADH RMSE:", round(est_model_ADH_test_RMSE,3),"run",i))
     
     ## ------
     ## ED
@@ -104,8 +100,6 @@ SalesSim <- function(Y,N,T,sim){
     print("ED Started")
     source("code/ed.R")
     est_model_ED <- ed(Y=Y_sub, p.weights, treat_indices, d, t0, T)
-    est_model_ED[est_model_ED <0] <- 0
-    est_model_ED <- round(est_model_ED)
     est_model_ED_msk_err <- (est_model_ED - Y_sub[treat_indices,][,t0:T])
     est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
     ED_RMSE_test[i] <- est_model_ED_test_RMSE
@@ -118,8 +112,6 @@ SalesSim <- function(Y,N,T,sim){
     print("LSTM Started")
     source("code/lstm.R")
     est_model_LSTM <- lstm(Y=Y_sub, p.weights, treat_indices, d, t0, T)
-    est_model_LSTM[est_model_LSTM <0] <- 0
-    est_model_LSTM <- round(est_model_LSTM)
     est_model_LSTM_msk_err <- (est_model_LSTM - Y_sub[treat_indices,][,t0:T])
     est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
     LSTM_RMSE_test[i] <- est_model_LSTM_test_RMSE
@@ -132,13 +124,11 @@ SalesSim <- function(Y,N,T,sim){
     print("VAR Started")
     source("code/varEst.R")
     est_model_VAR <- varEst(Y=Y_sub, treat_indices, t0, T)
-    est_model_VAR[est_model_VAR <0] <- 0
-    est_model_VAR <- round(est_model_VAR)
     est_model_VAR_msk_err <- (est_model_VAR - Y_sub[treat_indices,])
     est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
     VAR_RMSE_test[i] <- est_model_VAR_test_RMSE
     print(paste("VAR RMSE:", round(est_model_VAR_test_RMSE,3),"run",i))
-
+    
     ## ------
     ## MC-NNM
     ## ------
@@ -146,8 +136,6 @@ SalesSim <- function(Y,N,T,sim){
     print("MC-NNM Started")
     est_model_MCPanel <- mcnnm(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, lambda_L = c(0.2), niter = 200)[[1]] # no CV to save computational time
     est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
-    est_model_MCPanel$Mhat[est_model_MCPanel$Mhat <0] <- 0
-    est_model_MCPanel$Mhat <- round(est_model_MCPanel$Mhat)
     est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y_sub)*(1-treat_mat)
     est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
     MCPanel_RMSE_test[i] <- est_model_MCPanel$test_RMSE
@@ -159,8 +147,6 @@ SalesSim <- function(Y,N,T,sim){
     
     print("DID Started")
     est_model_DID <- t(DID(t(Y_obs), t(treat_mat)))
-    est_model_DID[est_model_DID <0] <- 0
-    est_model_DID <- round(est_model_DID)
     est_model_DID_msk_err <- (est_model_DID - Y_sub)*(1-treat_mat)
     est_model_DID_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_DID_msk_err^2, na.rm = TRUE))
     DID_RMSE_test[i] <- est_model_DID_test_RMSE
@@ -209,7 +195,7 @@ SalesSim <- function(Y,N,T,sim){
                RVAE_avg_RMSE + 1.96*RVAE_std_error,  
                ADH_avg_RMSE + 1.96*ADH_std_error,
                VAR_avg_RMSE + 1.96*VAR_std_error),
-      "x" = replicate(length(t0),N*T),
+      "x" = replicate(length(t0),N),
       "Method" = c("DID", 
                    "Encoder-decoder",
                    "LSTM", 
@@ -223,9 +209,8 @@ SalesSim <- function(Y,N,T,sim){
 }
 
 # Load data
-Y <- read.csv('data/sales_train_validation.csv',header=T, stringsAsFactors = F) # N X T
-Y <- as.matrix(Y[,7:ncol(Y)])
+Y <- t(read.csv('data/covid-us-counties.csv',header=T)) # N X T
 
-print(paste0("N X T data dimension: ", dim(Y)))
+print(paste0("N X T data dimension: ", dim(Y))) # 2710 x 60
 
-SalesSim(Y,N=100,T=dim(Y)[2],sim=1)
+CovidSim(Y,N=1200,T=dim(Y)[2],sim=1)
