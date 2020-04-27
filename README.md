@@ -64,9 +64,11 @@ Make each file below executable, then execute
 Application: counterfactual predictions
 ------
 
-To get encoder-decoder estimates run `code/train_encoder_decoder.py  <GPU_ID>  <patience> <penalty> <learning_rate> <epochs> <batches> <data_name> <t_0> <T> <imputation_method>`; e.g., 
+Run with command line arguments `<GPU_ID>  <penalty> <learning_rate> <epochs> <batches> <data_name> <t_0> <T> <imputation_method>`; e.g., 
 ```
-python code/train_encoder_decoder.py 0 50 0.2 0.5 10000 16 'educ' 87 156 'locf'
+python code/train_encoder_decoder.py 3 100 0.2 0.5 10000 16 'educ' 87 156 'locf'
+python code/train_lstm.py 3 100 0.2 0.5 10000 16 'educ' 87 156 'locf'
+python code/train_rvae.py 3 100 0.2 0.5 10000 1 'educ' 87 156 'locf'
 ```
 
 To plot the training and validation error, run `code/plot_history.py <file location of training log>`; e.g., 

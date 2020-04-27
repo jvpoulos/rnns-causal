@@ -40,15 +40,15 @@ if gpu < 3:
     print(device_lib.list_local_devices())
 
 imp = sys.argv[-1]
-T = int(sys.argv[-2])
-t0 = int(sys.argv[-3])
+T = sys.argv[-2]
+t0 = sys.argv[-3]
 dataname = sys.argv[-4] 
-nb_batches = int(sys.argv[-5])
-nb_epochs = int(sys.argv[-6])
+nb_batches = sys.argv[-5]
+nb_epochs = sys.argv[-6]
 lr = float(sys.argv[-7])
 penalty = float(sys.argv[-8])
 dr = float(sys.argv[-9])
-patience = int(sys.argv[-10])
+patience = sys.argv[-10]
 
 # Create directories
 results_directory = 'results/encoder-decoder/{}'.format(dataname)
