@@ -100,7 +100,7 @@ def create_lstm_vae(nb_features,
     def sampling(args):
         z_mean, z_log_sigma = args
         epsilon = K.random_normal(shape=(batch_size, latent_dim),
-                                  mean=0., stddev=float(epsilon_std))
+                                  mean=0., stddev=epsilon_std)
         return z_mean + K.exp(z_log_sigma) * epsilon
 
     # note that "output_shape" isn't necessary with the TensorFlow backend
@@ -176,7 +176,7 @@ def get_data():
 if __name__ == "__main__":
     x, wx, y, wy, n_pre, n_post = get_data() 
     nb_features = x.shape[2]
-    batch_size = nb_batches
+    batch_size = int(nb_batches)
 
     vae, enc, gen = create_lstm_vae(nb_features, 
         n_pre=n_pre, 
