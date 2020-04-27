@@ -21,14 +21,14 @@ breaks <- round(log(unique(df1$x)),1)
 print(breaks)
 
 stock <- ggplot(data = df1, aes(log(x), y, color = Method, shape = Method)) +
-  geom_point(size = 2, position=position_dodge(width=0.3)) +
-  geom_line(position=position_dodge(width=0.3)) +
+  geom_point(size = 5, position=position_dodge(width=0.8)) +
+  geom_line(position=position_dodge(width=0.8)) +
   geom_errorbar(
     aes(ymin = lb, ymax = ub),
-    width = 0.3,
+    width = 0.8,
     linetype = "solid",
-    position=position_dodge(width=0.3)) +
-  scale_shape_manual(values=c(1:7)) +
+    position=position_dodge(width=0.8)) +
+  scale_shape_manual(values=c(1:6,8)) +
   scale_x_continuous(breaks=c(breaks[1],
                               breaks[2],
                               breaks[3],

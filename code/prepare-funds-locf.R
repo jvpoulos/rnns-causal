@@ -2,11 +2,60 @@
 # Prepare education spending data for RNNs #
 ###################################
 
-funds <- readRDS("data/capacity-outcomes-locf.rds")[['educ.pc']]
+library(caret)
+library(imputeTS)
+library(glmnet)
 
-Y <- funds$M # NxT 
+# Read data
+capacity.outcomes <- readRDS("data/capacity-outcomes-locf.rds")
+capacity.covariates <- readRDS("data/capacity-covariates.rds")
 
-treat <- funds$mask # NxT masked matrix 
+# Transform covars to unit and time-specific inputs
+capacity.covars.x <- as.matrix(bind_rows(lapply(capacity.covariates,rowMeans))) # N x # predictors
+rownames(capacity.covars.x) <- rownames(capacity.covariates$faval)
+
+# matrix of same time dimension as outcomes
+capacity.covars.z <- list("faval"=matrix(NA, nrow = nrow(capacity.outcomes$educ.pc$M), ncol = ncol(capacity.outcomes$educ.pc$M)),
+                          "farmsize"=matrix(NA, nrow = nrow(capacity.outcomes$educ.pc$M), ncol = ncol(capacity.outcomes$educ.pc$M)),
+                          "access"=matrix(NA, nrow = nrow(capacity.outcomes$educ.pc$M), ncol = ncol(capacity.outcomes$educ.pc$M)))
+
+for(i in c("faval","farmsize","access")){
+  colnames(capacity.covars.z[[i]]) <- colnames(capacity.outcomes$educ.pc$M)
+  rownames(capacity.covars.z[[i]]) <- rownames(capacity.outcomes$educ.pc$M)
+}
+
+colnames(capacity.covariates$faval) <- sub('faval.', '', colnames(capacity.covariates$faval))
+colnames(capacity.covariates$farmsize) <- sub('farmsize.', '', colnames(capacity.covariates$farmsize))
+colnames(capacity.covariates$access) <- sub('track2.', '', colnames(capacity.covariates$access))
+
+# fill in observed data and impute missing 
+
+for(i in c("faval","farmsize","access")){
+  for(n in rownames(capacity.outcomes$educ.pc$M)){
+    for(t in colnames(capacity.outcomes$educ.pc$M)){
+      capacity.covars.z[[i]][n,][t] <- capacity.covariates[[i]][n,][t]
+    }
+  }
+  
+  capacity.covars.z[[i]] <- t(capacity.covars.z[[i]])
+  preProcValues <- preProcess(capacity.covars.z[[i]], method = c("medianImpute"), verbose=TRUE) # use training set median
+  
+  capacity.covars.z[[i]] <- na_locf(capacity.covars.z[[i]], option = "locf", na_remaining = "keep") 
+  
+  capacity.covars.z[[i]] <- predict(preProcValues, capacity.covars.z[[i]])
+  
+  capacity.covars.z[[i]] <- t(capacity.covars.z[[i]])
+}
+
+capacity.covars.z <- as.matrix(bind_rows(lapply(capacity.covars.z,colMeans))) # T x # predictors
+rownames(capacity.covars.z) <- colnames(capacity.outcomes$educ.pc$M)
+
+# Prepare outcomes data
+educ <- capacity.outcomes$educ.pc
+Y.missing <- educ$M.missing # NxT
+Y <- educ$M # NxT 
+
+treat <- educ$mask # NxT masked matrix 
 
 N <- nrow(treat)
 T <- ncol(treat)
@@ -20,56 +69,35 @@ treat[rownames(treat)%in% treated.indices,][,as.numeric(colnames(treat)) >= 1869
 
 treat_mat <- 1-treat
 Y_obs <- Y * treat_mat
+Y_imp <- Y * Y.missing
 
 # converting the data to a floating point matrix
 data <- data.matrix(t(Y_obs)) # T x N
 
-# Splits
-train_data <- data[,!colnames(data)%in% treated.indices] # train on control units
+# # Splits
+train_data <- data[,!colnames(data)%in% c(treated.indices,"TN")] # train on control units
 
 test_data <- data[,colnames(data)%in% treated.indices] # treated units
-set.seed(1280)
-train_data <- train_data[, sample(1:ncol(train_data), ncol(test_data))] # dimensional parity with test set
 
-# importance weight matrix
+## Estimate propensity scores
 
-funds.covars <- readRDS("data/capacity-covariates.rds")
+capacity.covars.x <- capacity.covars.x[!rownames(capacity.covars.x)%in%c("GA"),] # GA not in outcomes, TN for parity
+capacity.covars.z <- capacity.covars.z
 
-X <- data.frame(funds.covars) 
-X$treat <- ifelse(rownames(X) %in% treated.indices, 1, 0)
+logitMod.x <- cv.glmnet(x=capacity.covars.x, y=as.factor((1-treat_mat)[,t0]), family="binomial", nfolds= nrow(capacity.covars.x), parallel = TRUE, nlambda=400) # LOO
 
-set.seed(1280)
-training.indices <- sample(nrow(X), ceiling(nrow(X)*0.75))
+logitMod.z <- cv.glmnet(x=capacity.covars.z, y=as.factor((1-treat_mat)[treated.indices[1],]), family="binomial", nfolds=nrow(capacity.covars.z), parallel = TRUE, nlambda=400)
 
-logitMod <- glm(treat ~ ., data=X[training.indices,], family=binomial(link="logit"))
+p.weights.x <- as.vector(predict(logitMod.x, capacity.covars.x, type="response", s ="lambda.min"))
+p.weights.z <- as.vector(predict(logitMod.z, capacity.covars.z, type="response", s ="lambda.min"))
 
-predicted <- plogis(predict(logitMod, X[-training.indices,][,-ncol(X)]))  # convert it into prediction probability scores that is bound between 0 and 1
+p.weights <- outer(p.weights.x,p.weights.z)   # outer product of fitted values on response scale
+p.weights <- t(p.weights) # T x N
+rownames(p.weights) <-rownames(data)
+colnames(p.weights) <-colnames(data)
 
-library(InformationValue)
-plotROC(X[-training.indices,][,ncol(X)], predicted) 
-
-predicted.all <- plogis(predict(logitMod, X))  # predicted scores on full training set
-predicted.train <- predicted.all[names(predicted.all) %in% colnames(train_data)]
-
-predicted.train <-predicted.train[order(match(names(predicted.train),colnames(train_data)))]
-
-train_w <- matrix(predicted.train ,nrow=nrow(train_data),ncol=length(predicted.train),byrow=TRUE)
-rownames(train_w) <- rownames(train_data)
-colnames(train_w) <- colnames(train_data)
-
-# propensity score increases as t increase (penalize earlier weights)
-train_w <- train_w*(log(1:nrow(train_data))-min(log(1:nrow(train_data))))/(max(log(1:nrow(train_data)))-min(log(1:nrow(train_data)))) # norm log values
-
-predicted.test <- predicted.all[names(predicted.all) %in% colnames(test_data)]
-
-predicted.test <-predicted.test[order(match(names(predicted.test),colnames(test_data)))]
-
-test_w <- matrix(predicted.test ,nrow=nrow(test_data),ncol=length(predicted.test),byrow=TRUE)
-rownames(test_w) <- rownames(test_data)
-colnames(test_w) <- colnames(test_data)
-
-# propensity score increases as t increase (penalize earlier weights)
-test_w <- test_w*(log(1:nrow(test_data))-min(log(1:nrow(test_data))))/(max(log(1:nrow(test_data)))-min(log(1:nrow(test_data)))) # norm log values
+train_w <- p.weights[colnames(p.weights)%in%colnames(train_data),] 
+test_w <- p.weights[!colnames(p.weights)%in%colnames(train_data),] 
   
 write.csv(train_data,"data/educ-x-locf.csv",row.names = FALSE)
 write.csv(test_data,"data/educ-y-locf.csv",row.names = FALSE)

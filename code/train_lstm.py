@@ -39,16 +39,6 @@ if gpu < 3:
     from tensorflow.python.client import device_lib
     print(device_lib.list_local_devices())
 
-# Create directories
-results_directory = 'results/lstm/{}'.format(dataname)
-data_directory = 'data/{}'.format(dataname)
-
-if not os.path.exists(results_directory):
-    os.makedirs(results_directory)
-
-if not os.path.exists(data_directory):
-    os.makedirs(data_directory)
-
 imp = sys.argv[-1]
 T = sys.argv[-2] 
 t0 = sys.argv[-3] 
@@ -59,6 +49,17 @@ lr = sys.argv[-7]
 penalty = sys.argv[-8]
 dr = sys.argv[-9]
 patience = sys.argv[-10]
+
+# Create directories
+results_directory = 'results/lstm/{}'.format(dataname)
+data_directory = 'data/{}'.format(dataname)
+
+if not os.path.exists(results_directory):
+    os.makedirs(results_directory)
+
+if not os.path.exists(data_directory):
+    os.makedirs(data_directory)
+
 
 def create_model(n_pre, nb_features, output_dim, lr, penalty, dr):
     """ 

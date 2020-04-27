@@ -42,11 +42,11 @@ $ git clone https://github.com/jvpoulos/rnns-causal
 
 * Make shell file `main.sh` executable from the Linux/Unix command line:
 ```
-$ chmod +x main.sh
+$ chmod +x code/main.sh
 ```
 * Execute the file:
 ```
-$ ./main.sh > main.txt
+$ ./code/main.sh > main.txt
 ```
 
 Placebo test experiments
@@ -64,12 +64,12 @@ Make each file below executable, then execute
 Application: counterfactual predictions
 ------
 
-To get encoder-decoder estimates run `train_encoder_decoder.py <GPU_ID> <patience> <epochs> <batches> <data name> <t_0> <T> <imputation_method>`; e.g., 
+To get encoder-decoder estimates run `code/train_encoder_decoder.py  <GPU_ID>  <patience> <penalty> <learning_rate> <epochs> <batches> <data_name> <t_0> <T> <imputation_method>`; e.g., 
 ```
-python train_encoder_decoder.py 0 250 000 8 'educ' 87 156 'locf'
+python code/train_encoder_decoder.py 0 50 0.2 0.5 10000 16 'educ' 87 156 'locf'
 ```
 
-To plot the training and validation error, run `plot_history.py <file location of training log>`; e.g., 
+To plot the training and validation error, run `code/plot_history.py <file location of training log>`; e.g., 
 ```
-python plot_history.py '../results/encoder-decoder/educ/training_log_educ.csv'
+python code/plot_history.py '../results/encoder-decoder/educ/training_log_educ.csv'
 ```

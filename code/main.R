@@ -31,10 +31,8 @@ if(figures){
 # Causal impact estimates: public education spending
 
 source("prepare-funds-locf.R")
-source("prepare-funds-linear.R") #imputation sensitivity
-source("prepare-funds-random.R")
-source("prepare-funds-median.R")
 
+# train_lstm.py 
 # train_encoder_decoder.py 
 # train_rvae.py 
 if(figures){

@@ -28,7 +28,7 @@ CovidSim <- function(Y,N,T,sim){
   
   t0 <- ceiling(T/2) # time of initial treatment
   N_t <- ceiling(N/2)
-  num_runs <- 100
+  num_runs <- 18
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   d <- 'covid'
 
@@ -213,4 +213,4 @@ Y <- t(read.csv('data/covid-us-counties.csv',header=T)) # N X T
 
 print(paste0("N X T data dimension: ", dim(Y))) # 2710 x 60
 
-CovidSim(Y,N=1200,T=dim(Y)[2],sim=1)
+CovidSim(Y,N=dim(Y)[1],T=dim(Y)[2],sim=1)
