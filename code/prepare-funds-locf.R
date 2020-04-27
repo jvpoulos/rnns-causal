@@ -104,8 +104,6 @@ write.csv(test_data,"data/educ-y-locf.csv",row.names = FALSE)
 write.csv(train_w,"data/educ-wx-locf.csv",row.names = FALSE)
 write.csv(test_w,"data/educ-wy-locf.csv",row.names = FALSE)
 
-## Plot public education spending (pre) by treatment status
-
 require(ggplot2)
 require(reshape2)
 
@@ -116,9 +114,16 @@ df$id <- rownames(df)
 df.m <- melt(df, "id")
 df.m$status <- factor(ifelse(df.m$variable%in%treated.indices,"Treated","Control"))
 
-df.m <- merge(df.m, t(rbind("weights"=predicted.all,"variable"=(names(predicted.all)))), by="variable", all.x = TRUE)
+df.weights <- data.frame(p.weights[1:(t0-1),][,colnames(p.weights)%in% c(colnames(train_w),colnames(test_w))],check.names = FALSE) #pre-period
+df.weights$id <- rownames(df.weights)
 
-df.m$weights <- as.numeric(levels(df.m$weights))[df.m$weights]
+df.weights.m <- melt(df.weights, "id")
+df.weights.m$status <- factor(ifelse(df.weights.m$variable%in%treated.indices,"Treated","Control"))
+colnames(df.weights.m) <- c("id","variable","weights","status" )
+
+df.m <- cbind(df.m, df.weights.m[c("weights")])
+
+# df.m$weights <- as.numeric(levels(df.m$weights))[df.m$weights]
 df.m$weights[df.m$status=="Control"] <- df.m$weights[df.m$status=="Control"] /sum(df.m$weights[df.m$status=="Control"] ) # normalize weights per group
 df.m$weights[df.m$status=="Treated"] <- df.m$weights[df.m$status=="Treated"] /sum(df.m$weights[df.m$status=="Treated"] ) # 
 

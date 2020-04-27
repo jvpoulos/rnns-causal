@@ -31,7 +31,7 @@ def weighted_mse(y_true, y_pred, weights):
 
 # Select gpu
 import os
-gpu = sys.argv[-11]
+gpu = sys.argv[-10]
 if gpu < 3:
     os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
     os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
@@ -48,7 +48,6 @@ nb_epochs = sys.argv[-6]
 lr = float(sys.argv[-7])
 penalty = float(sys.argv[-8])
 dr = float(sys.argv[-9])
-patience = sys.argv[-10]
 
 # Create directories
 results_directory = 'results/lstm/{}'.format(dataname)
@@ -94,7 +93,7 @@ def train_model(model, dataX, dataY, weights, nb_epoches, nb_batches):
     filepath="results/lstm/{}".format(dataname) + "/weights-{epoch:02d}-{val_loss:.3f}.hdf5"
     checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=10, save_best_only=True)
 
-    stopping = EarlyStopping(monitor='val_loss', patience=int(patience), verbose=1, mode='min', restore_best_weights=True)
+    stopping = EarlyStopping(monitor='val_loss', patience=100, min_delta=0.001, verbose=1, mode='min', restore_best_weights=True)
 
     csv_logger = CSVLogger('results/lstm/{}/training_log_{}_{}.csv'.format(dataname,dataname,imp), separator=',', append=False)
 
