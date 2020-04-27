@@ -18,8 +18,8 @@ RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 # california-placebo.sh ---> california-placebo.R 
 # germany-placebo.sh ---> germany-placebo.R 
 # educ-placebo.sh ---> educ-placebo.R 
+# covid-placebo.sh ---> covid-placebo.R 
 # stock-placebo.sh ---> stock-placebo.R 
-# stock-placebo-fixed.sh ---> stock-placebo-fixed.R 
 
 figures <- FALSE
 if(figures){
