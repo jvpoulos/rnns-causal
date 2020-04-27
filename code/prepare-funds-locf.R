@@ -96,8 +96,8 @@ p.weights <- t(p.weights) # T x N
 rownames(p.weights) <-rownames(data)
 colnames(p.weights) <-colnames(data)
 
-train_w <- p.weights[colnames(p.weights)%in%colnames(train_data),] 
-test_w <- p.weights[!colnames(p.weights)%in%colnames(train_data),] 
+train_w <- p.weights[,colnames(p.weights)%in%colnames(train_data)] 
+test_w <- p.weights[,colnames(p.weights)%in%colnames(test_data)] 
   
 write.csv(train_data,"data/educ-x-locf.csv",row.names = FALSE)
 write.csv(test_data,"data/educ-y-locf.csv",row.names = FALSE)

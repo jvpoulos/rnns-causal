@@ -130,7 +130,7 @@ def test_model():
 
     print('wXC shape:', wXC.shape)
     
-    x = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))
+    x = np.array(pd.read_csv("data/{}-x-{}.csv".format(dataname,imp)))
     x_scaled = scaler.fit_transform(x)
 
     print('raw x shape', x_scaled.shape)   
