@@ -161,13 +161,13 @@ def test_model():
 
     preds_train = model.predict([dataXC,wXC], batch_size=int(nb_batches), verbose=1)
 
-    print('predictions shape =', preds_test.shape)
+    print('predictions shape =', preds_train.shape)
 
-    preds_test = np.squeeze(preds_test)
+    preds_train = np.squeeze(preds_train)
 
-    print('predictions shape (squeezed)=', preds_test.shape)
+    print('predictions shape (squeezed)=', preds_train.shape)
 
-    preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
+    preds_train = scaler.inverse_transform(preds_train) # reverse scaled preds to actual values
 
     print('Saving to results/encoder-decoder/{}/encoder-decoder-{}-train-{}.csv'.format(dataname,dataname,imp))
 

@@ -47,7 +47,7 @@ nb_batches = int(sys.argv[-5])
 nb_epochs = int(sys.argv[-6])
 lr = float(sys.argv[-7])
 penalty = float(sys.argv[-8])
-dropout = float(sys.argv[-9])
+dr = float(sys.argv[-9])
 patience = int(sys.argv[-10])
 
 # Create directories
@@ -216,7 +216,7 @@ if __name__ == "__main__":
     print('predictions shape (squeezed) =', preds_train.shape)
 
     preds_train = scaler.inverse_transform(preds_train) # reverse scaled preds to actual values
-    print('predictions shape (transformed)=', preds_test.shape)
+    print('predictions shape (transformed)=', preds_train.shape)
 
     print('Saving to results/rvae/{}/rvae-{}-train-{}.csv'.format(dataname,dataname,imp))
 
