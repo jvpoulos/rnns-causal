@@ -15,8 +15,8 @@ PlotEduc<- function(estimator,treated.indices,x,y.title,limits,breaks,t0,run.CI,
   ## Create time series data
   
   observed <- t(capacity.outcomes[[x]]$M)[,!colnames(t(capacity.outcomes[[x]]$M)) %in% c("TN")]
-  observed.treated <- as.matrix(observed[,colnames(observed) %in% treated.indices][(t0+1):nrow(observed),])
-  observed.control <- as.matrix(observed[,!colnames(observed) %in% treated.indices][(t0+1):nrow(observed),])
+  observed.treated <- as.matrix(observed[,colnames(observed) %in% treated.indices][t0:nrow(observed),])
+  observed.control <- as.matrix(observed[,!colnames(observed) %in% treated.indices][t0:nrow(observed),])
   
   pred.treated <- read_csv(paste0("results/", estimator,"/educ/",estimator,"-educ-test-",imp,".csv"), col_names = FALSE)
   pred.control <- read_csv(paste0("results/", estimator,"/educ/",estimator,"-educ-train-",imp,".csv"), col_names = FALSE)
@@ -29,7 +29,7 @@ PlotEduc<- function(estimator,treated.indices,x,y.title,limits,breaks,t0,run.CI,
                               t.stat,
                               ncol(observed.control)-1, 
                               np=10000, 
-                              l=1000, 
+                              l=100, 
                               prec=1e-03)
   
     saveRDS(CI.treated, paste0("results/", estimator,"/educ/",estimator,"-CI-treated-",imp,".rds"))
@@ -49,7 +49,7 @@ PlotEduc<- function(estimator,treated.indices,x,y.title,limits,breaks,t0,run.CI,
   pointwise.mean <- aggregate(rbind(t(observed.control),t(observed.treated))-rbind(t(pred.control),t(pred.treated)), 
                               list(treat.status), mean, na.rm=TRUE)[-1]
   
-  ts.means <- cbind(t(observed.mean), rbind(matrix(NA, t0,2), t(predicted.mean)), rbind(matrix(NA, t0,2), t(pointwise.mean))) 
+  ts.means <- cbind(t(observed.mean), rbind(matrix(NA, (t0-1),2), t(predicted.mean)), rbind(matrix(NA, (t0-1),2), t(pointwise.mean))) 
   colnames(ts.means) <- c("observed.pls","observed.sls","predicted.pls","predicted.sls","pointwise.pls","pointwise.sls")
   ts.means <- cbind(ts.means, "year"=as.numeric(rownames(ts.means)))
   ts.means.m <- melt(data.frame(ts.means), id.var=c("year"))
