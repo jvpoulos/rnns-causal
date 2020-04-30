@@ -11,7 +11,7 @@ import pandas as pd
 from keras import backend as K
 from keras.models import Model
 from keras.layers import LSTM, Input, Dense, Flatten
-from keras.callbacks import ModelCheckpoint, CSVLogger, EarlyStopping, TerminateOnNaN
+from keras.callbacks import CSVLogger, EarlyStopping, TerminateOnNaN
 from keras import regularizers
 from keras.optimizers import Adam
 from keras_self_attention import SeqSelfAttention
@@ -90,10 +90,7 @@ def train_model(model, dataX, dataY, weights, nb_epoches, nb_batches):
 
     # Prepare model checkpoints and callbacks
 
-    filepath="results/lstm/{}".format(dataname) + "/weights-{epoch:02d}-{val_loss:.3f}.hdf5"
-    checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=10, save_best_only=True)
-
-    stopping = EarlyStopping(monitor='val_loss', patience=100, min_delta=0.001, verbose=1, mode='min', restore_best_weights=True)
+    stopping = EarlyStopping(monitor='val_loss', patience=500, min_delta=0.001, verbose=1, mode='min', restore_best_weights=True)
 
     csv_logger = CSVLogger('results/lstm/{}/training_log_{}_{}.csv'.format(dataname,dataname,imp), separator=',', append=False)
 
@@ -106,7 +103,7 @@ def train_model(model, dataX, dataY, weights, nb_epoches, nb_batches):
         batch_size=nb_batches, 
         verbose=1,
         epochs=nb_epoches, 
-        callbacks=[checkpointer,stopping,csv_logger,terminate],
+        callbacks=[stopping,csv_logger,terminate],
         validation_split=0.1)
 
 def test_model():
@@ -149,7 +146,16 @@ def test_model():
     print('creating model...')
     model = create_model(n_pre, nb_features, output_dim, lr, penalty, dr)
 
+    # load pre-trained weights
+    weights_path = 'results/lstm/{}'.format(dataname) +'/weights-{}-{}.h5'.format(str(n_pre), str(nb_features))
+    if path.exists(weights_path):
+        print("loading weights from", weights_path)
+        model.load_weights(weights_path)    
+
     train_model(model, dataXC, dataYC, wXC, int(nb_epochs), int(nb_batches))
+
+        # save weights
+    model.save_weights('results/lstm/{}'.format(dataname) +'/weights-{}-{}.h5'.format(str(n_pre),str(nb_features)))
 
     # now test
 

@@ -23,14 +23,12 @@ RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
 figures <- FALSE
 if(figures){
-  source("synth-placebo-plot.R")
-  source("educ-placebo-plot.R")  
   source("stock-placebo-plot.R")
 }
 
 # Causal impact estimates: public education spending
 
-source("prepare-funds-locf.R")
+source("prepare-funds.R")
 
 # train_lstm.py 
 # train_encoder_decoder.py 

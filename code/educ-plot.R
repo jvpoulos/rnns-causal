@@ -29,7 +29,7 @@ PlotEduc<- function(estimator,treated.indices,x,y.title,limits,breaks,t0,run.CI,
                               t.stat,
                               ncol(observed.control)-1, 
                               np=10000, 
-                              l=100, 
+                              l=1000, 
                               prec=1e-03)
   
     saveRDS(CI.treated, paste0("results/", estimator,"/educ/",estimator,"-CI-treated-",imp,".rds"))

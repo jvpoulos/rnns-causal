@@ -14,7 +14,7 @@ from keras.layers import Input, LSTM, RepeatVector
 from keras.layers.core import Flatten, Dense, Lambda
 from keras.optimizers import SGD, RMSprop, Adam
 from keras import regularizers
-from keras.callbacks import ModelCheckpoint, CSVLogger, EarlyStopping, TerminateOnNaN
+from keras.callbacks import CSVLogger, EarlyStopping, TerminateOnNaN
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 scaler = StandardScaler()
@@ -189,10 +189,13 @@ if __name__ == "__main__":
         dr=dr,
         epsilon_std=1.)
 
-    filepath="results/rvae/{}".format(dataname) + "/weights.{epoch:02d}-{val_loss:.3f}.hdf5"
-    checkpointer = ModelCheckpoint(filepath=filepath, monitor='val_loss', verbose=1, period=10, save_best_only=True)
+    # Load pre-trained weights
+    weights_path = 'results/rvae/{}'.format(dataname) +'/weights-{}-{}.h5'.format(str(n_pre), str(nb_features))
+    if path.exists(weights_path):
+        print("loading weights from", weights_path)
+        vae.load_weights(weights_path)    
 
-    stopping = EarlyStopping(monitor='val_loss', patience=100, min_delta=0.001, verbose=1, mode='min', restore_best_weights=True)
+    stopping = EarlyStopping(monitor='val_loss', patience=500, min_delta=0.001, verbose=1, mode='min', restore_best_weights=True)
 
     csv_logger = CSVLogger('results/rvae/{}/training_log_{}_{}.csv'.format(dataname,dataname,imp), separator=',', append=False)
 
@@ -201,8 +204,11 @@ if __name__ == "__main__":
     vae.fit([x,wx], x, 
         epochs=int(nb_epochs),
         verbose=1,
-        callbacks=[checkpointer,csv_logger,stopping,terminate],
+        callbacks=[csv_logger,stopping,terminate],
         validation_split=0.1)
+
+    # save weights
+    vae.save_weights('results/rvae/{}'.format(dataname) +'/weights-{}-{}.h5'.format(str(n_pre),str(nb_features)))
 
     # now test
 
