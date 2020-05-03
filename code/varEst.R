@@ -9,7 +9,7 @@ library(gtools)
 
 varEst <- function(Y,treat_indices, t0, T){
   # Converting the data to a floating point matrix
-  data <- data.frame(t(Y)) # T x N
+  data <- data.frame(diff(t(log(Y)))) # first difference for linear trend and log for non-linear trend (T x N)
   rownames(data) <- 1: nrow(data)
   
   train_data <- data[,(-treat_indices)] # train on control units
@@ -37,6 +37,10 @@ varEst <- function(Y,treat_indices, t0, T){
     var.preds <- cbind(var.preds, removed_columns)
     var.preds <- var.preds[,mixedsort(colnames(var.preds))]
   }
+  
+  var.preds <-   sapply(1:ncol(var.preds), function(i){
+    exp(cumsum(var.preds[,i]) + log(Y[i,1]))
+  }) # revert transformations
 
   return(t(var.preds)) # N X T
 }
