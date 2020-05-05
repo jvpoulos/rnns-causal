@@ -41,6 +41,7 @@ StockSim <- function(Y,N,T,sim){
   DID_RMSE_test <- matrix(0L,num_runs)
   ADH_RMSE_test <- matrix(0L,num_runs)
   RVAE_RMSE_test <- matrix(0L,num_runs)
+  ENT_RMSE_test <- matrix(0L,num_runs)
   
   ## Run different methods
   
@@ -59,17 +60,6 @@ StockSim <- function(Y,N,T,sim){
     
     Y_obs <- Y_sub * treat_mat
     
-    ## Estimate propensity scores
-    
-    logitMod.x <- cv.glmnet(x=Y_obs, y=as.factor((1-treat_mat)[,t0]), family="binomial", nfolds=nrow(Y_obs), parallel = TRUE, nlambda=400) # LOO
-    
-    logitMod.z <- cv.glmnet(x=t(Y_obs), y=as.factor((1-treat_mat)[treat_indices[1],]), family="binomial", nfolds=nrow(t(Y_obs)), parallel = TRUE, nlambda=400)
-    
-    p.weights.x <- as.vector(predict(logitMod.x, Y_obs, type="response", s = "lambda.min"))
-    p.weights.z <- as.vector(predict(logitMod.z, t(Y_obs), type="response", s = "lambda.min"))
-    
-    p.weights <- outer(p.weights.x,p.weights.z)   # outer product of fitted values on response scale
-    
     ## -----
     ## ADH
     ## -----
@@ -87,7 +77,7 @@ StockSim <- function(Y,N,T,sim){
     
     print("RVAE Started")
     source("code/rvae.R")
-    est_model_RVAE <- rvae(Y=Y_sub, p.weights, treat_indices, d, t0, T)
+    est_model_RVAE <- rvae(Y=Y_sub, treat_indices, d, t0, T)
     est_model_RVAE_msk_err <- (est_model_RVAE - Y_sub[treat_indices,][,t0:T])
     est_model_RVAE_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_RVAE_msk_err^2, na.rm = TRUE))
     RVAE_RMSE_test[i] <- est_model_RVAE_test_RMSE
@@ -99,7 +89,7 @@ StockSim <- function(Y,N,T,sim){
     
     print("ED Started")
     source("code/ed.R")
-    est_model_ED <- ed(Y=Y_sub, p.weights, treat_indices, d, t0, T)
+    est_model_ED <- ed(Y=Y_sub, treat_indices, d, t0, T)
     est_model_ED_msk_err <- (est_model_ED - Y_sub[treat_indices,][,t0:T])
     est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
     ED_RMSE_test[i] <- est_model_ED_test_RMSE
@@ -111,7 +101,7 @@ StockSim <- function(Y,N,T,sim){
     
     print("LSTM Started")
     source("code/lstm.R")
-    est_model_LSTM <- lstm(Y=Y_sub, p.weights, treat_indices, d, t0, T)
+    est_model_LSTM <- lstm(Y=Y_sub, treat_indices, d, t0, T)
     est_model_LSTM_msk_err <- (est_model_LSTM - Y_sub[treat_indices,][,t0:T])
     est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
     LSTM_RMSE_test[i] <- est_model_LSTM_test_RMSE
@@ -151,6 +141,16 @@ StockSim <- function(Y,N,T,sim){
     est_model_DID_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_DID_msk_err^2, na.rm = TRUE))
     DID_RMSE_test[i] <- est_model_DID_test_RMSE
     print(paste("DID RMSE:", round(est_model_DID_test_RMSE,3),"run",i))
+    
+    ## -----
+    ## VT-EN 
+    ## -----
+    
+    est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat)))
+    est_model_ENT_msk_err <- (est_model_ENT - Y_sub)*(1-treat_mat)
+    est_model_ENT_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ENT_msk_err^2, na.rm = TRUE))
+    ENT_RMSE_test[i] <- est_model_ENT_test_RMSE
+    print(paste("VT-EN RMSE:", round(est_model_ENT_test_RMSE,3),"run",i))
   }
   
   ## Computing means and standard errors
@@ -176,33 +176,40 @@ StockSim <- function(Y,N,T,sim){
   RVAE_avg_RMSE <- apply(RVAE_RMSE_test,2,mean)
   RVAE_std_error <- apply(RVAE_RMSE_test,2,sd)/sqrt(num_runs)
   
+  ENT_avg_RMSE <- apply(ENT_RMSE_test,2,mean)
+  ENT_std_error <- apply(ENT_RMSE_test,2,sd)/sqrt(num_runs)
+  
   ## Saving data
   
   df1 <-
     data.frame(
-      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,RVAE_avg_RMSE,ADH_avg_RMSE,VAR_avg_RMSE),
+      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,RVAE_avg_RMSE,ADH_avg_RMSE,VAR_avg_RMSE,ENT_avg_RMSE),
       "lb" = c(DID_avg_RMSE - 1.96*DID_std_error,
                ED_avg_RMSE - 1.96*ED_std_error,
                LSTM_avg_RMSE - 1.96*LSTM_std_error,
                MCPanel_avg_RMSE - 1.96*MCPanel_std_error, 
                RVAE_avg_RMSE - 1.96*RVAE_std_error,    
                ADH_avg_RMSE - 1.96*ADH_std_error,
-               VAR_avg_RMSE - 1.96*VAR_std_error),
+               VAR_avg_RMSE - 1.96*VAR_std_error,
+               ENT_avg_RMSE - 1.96*ENT_std_error),
       "ub" = c(DID_avg_RMSE + 1.96*DID_std_error, 
                ED_avg_RMSE + 1.96*ED_std_error,
                LSTM_avg_RMSE + 1.96*LSTM_std_error,
                MCPanel_avg_RMSE + 1.96*MCPanel_std_error, 
                RVAE_avg_RMSE + 1.96*RVAE_std_error,  
                ADH_avg_RMSE + 1.96*ADH_std_error,
-               VAR_avg_RMSE + 1.96*VAR_std_error),
-      "x" = replicate(length(t0),N),
-      "Method" = c("DID", 
-                   "Encoder-decoder",
-                   "LSTM", 
-                   "MC-NNM", 
-                   "RVAE",
-                   "SCM",
-                   "VAR"))
+               VAR_avg_RMSE + 1.96*VAR_std_error,
+               ENT_avg_RMSE + 1.96*ENT_std_error),
+      "x" = replicate(length(t0),N*T),
+      "Method" = c(replicate(length(T0),"DID"), 
+                   replicate(length(T0),"Encoder-decoder"),
+                   replicate(length(T0),"LSTM"), 
+                   replicate(length(T0),"MC-NNM"), 
+                   replicate(length(T0),"RVAE"),
+                   replicate(length(T0),"SCM"),
+                   replicate(length(T0),"VAR"),
+                   replicate(length(T0),"Vertical")))
+  
   ##
   filename<-paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".rds")
   saveRDS(df1, file = paste0("results/",filename))

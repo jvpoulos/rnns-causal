@@ -10,7 +10,7 @@ import pandas as pd
 
 from keras import backend as K
 from keras.models import Sequential, Model
-from keras.layers import Input, LSTM, RepeatVector
+from keras.layers import Masking, LSTM, RepeatVector
 from keras.layers.core import Flatten, Dense, Lambda
 from keras.optimizers import SGD, RMSprop, Adam
 from keras import regularizers
@@ -31,7 +31,7 @@ def weighted_mse(y_true, y_pred, weights):
 
 # Select gpu
 import os
-gpu = sys.argv[-10]
+gpu = sys.argv[-11]
 if gpu < 3:
     os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
     os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
@@ -48,6 +48,7 @@ nb_epochs = sys.argv[-6]
 lr = float(sys.argv[-7])
 penalty = float(sys.argv[-8])
 dr = float(sys.argv[-9])
+patience = sys.argv[-10]
 
 # Create directories
 results_directory = 'results/rvae/{}'.format(dataname)
@@ -87,7 +88,7 @@ def create_lstm_vae(nb_features,
         - [Generating sentences from a continuous space](https://arxiv.org/abs/1511.06349)
     """
 
-    x = Input(shape=(n_pre, nb_features), name='Encoder_inputs')
+    x = Masking(mask_value=0., input_shape=(n_pre, nb_features), name='Encoder_inputs')
     weights_tensor = Input(shape=(n_pre, nb_features), name="Weights")
 
     # LSTM encoding
@@ -153,8 +154,8 @@ def get_data():
 
     wx = np.array(pd.read_csv("data/{}-wx-{}.csv".format(dataname,imp)))  
              
-    x_obs = np.array(pd.read_csv("data/{}-x-{}.csv".format(dataname,imp)))
-    x_scaled = scaler.fit_transform(x_obs)
+    x = np.array(pd.read_csv("data/{}-x-{}.csv".format(dataname,imp)))
+    x_scaled = scaler.fit_transform(x)
 
     print('raw x shape', x_scaled.shape)   
 
@@ -195,7 +196,7 @@ if __name__ == "__main__":
         print("loading weights from", weights_path)
         vae.load_weights(weights_path)    
 
-    stopping = EarlyStopping(monitor='val_loss', patience=500, min_delta=0.001, verbose=1, mode='min', restore_best_weights=True)
+    stopping = EarlyStopping(monitor='val_loss', patience=int(patience), min_delta=0.001, verbose=1, mode='min', restore_best_weights=True)
 
     csv_logger = CSVLogger('results/rvae/{}/training_log_{}_{}.csv'.format(dataname,dataname,imp), separator=',', append=False)
 

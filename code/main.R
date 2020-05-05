@@ -2,16 +2,6 @@
 # Main (rnns-causal)              #
 ###################################
 
-# Setup parallel processing 
-require(parallel)
-require(doParallel)
-
-cores <- detectCores() # specify number of cores to use
-
-registerDoParallel(cores) # register cores
-
-RNGkind("L'Ecuyer-CMRG") # ensure random number generation
-
 ## Placebo tests
 
 # basque-placebo.sh ---> basque-placebo.R 
@@ -24,6 +14,7 @@ RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 figures <- FALSE
 if(figures){
   source("stock-placebo-plot.R")
+  source("educ-placebo-plot.R")
 }
 
 # Causal impact estimates: public education spending
@@ -36,3 +27,5 @@ source("prepare-funds.R")
 if(figures){
   source( "educ-plot.R")
 }
+
+source("educ-comparison.R")

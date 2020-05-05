@@ -81,7 +81,6 @@ PreProcessData <- function(imp){
   
   treat_mat <- 1-treat
   Y_obs <- Y * treat_mat
-  Y_imp <- Y * Y.missing
   
   # converting the data to a floating point matrix
   data <- data.matrix(t(Y_obs)) # T x N

@@ -10,7 +10,7 @@ import pandas as pd
 
 from keras import backend as K
 from keras.models import Model
-from keras.layers import LSTM, Input, Dense, RepeatVector
+from keras.layers import LSTM, Masking, Dense, RepeatVector
 from keras.callbacks import CSVLogger, EarlyStopping, TerminateOnNaN
 from keras import regularizers
 from keras.optimizers import Adam
@@ -31,7 +31,7 @@ def weighted_mse(y_true, y_pred, weights):
 
 # Select gpu
 import os
-gpu = sys.argv[-10]
+gpu = sys.argv[-11]
 if gpu < 3:
     os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
     os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
@@ -48,6 +48,7 @@ nb_epochs = sys.argv[-6]
 lr = float(sys.argv[-7])
 penalty = float(sys.argv[-8])
 dr = float(sys.argv[-9])
+patience = sys.argv[-10]
 
 # Create directories
 results_directory = 'results/encoder-decoder/{}'.format(dataname)
@@ -69,7 +70,7 @@ def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr):
     encoder_hidden = 128
     decoder_hidden = 128
 
-    inputs = Input(shape=(n_pre, nb_features), name="Inputs")
+    inputs = Masking(mask_value=0., input_shape=(n_pre, nb_features))
     weights_tensor = Input(shape=(nb_features,), name="Weights")
     lstm_1 = LSTM(encoder_hidden, dropout=dr, return_sequences=True, name='LSTM_1')(inputs) # Encoder
     lstm_2 = LSTM(encoder_hidden, dropout=dr, return_sequences=False, name='LSTM_2')(lstm_1) # Encoder
@@ -92,7 +93,7 @@ def train_model(model, dataX, dataY, weights, nb_epoches, nb_batches):
 
     # Prepare model checkpoints and callbacks
 
-    stopping = EarlyStopping(monitor='val_loss', patience=500, min_delta=0.001, verbose=1, mode='min', restore_best_weights=True)
+    stopping = EarlyStopping(monitor='val_loss', patience=int(patience), min_delta=0.001, verbose=1, mode='min', restore_best_weights=True)
 
     csv_logger = CSVLogger('results/encoder-decoder/{}/training_log_{}_{}.csv'.format(dataname,dataname,imp), separator=',', append=False)
 
@@ -158,7 +159,7 @@ def test_model():
     train_model(model, dataXC, dataYC, wXC, int(nb_epochs), int(nb_batches))
 
     # save weights
-    model.save_weights('results/encoder-decoder/{}'.format(dataname) +'/weights-placebo-{}-{}.h5'.format(str(n_pre),str(nb_features)))
+    model.save_weights('results/encoder-decoder/{}'.format(dataname) +'/weights-{}-{}.h5'.format(str(n_pre),str(nb_features)))
 
     # now test
 

@@ -9,11 +9,10 @@ library(gtools)
 
 varEst <- function(Y,treat_indices, t0, T){
   # Converting the data to a floating point matrix
-  data <- data.frame(diff(t(log(Y)))) # first difference for linear trend and log for non-linear trend (T x N)
-  rownames(data) <- 1: nrow(data)
+  data <- data.matrix(t(Y)) # (T x N)
   
-  train_data <- data[,(-treat_indices)] # train on control units
-  test_data <- data[,(treat_indices)]
+  train_data <- diff(log(data[,(-treat_indices)])) # first difference for linear trend and log for non-linear trend (T x N)
+  test_data <- diff(log(data[,(treat_indices)]))
   
   # Remove columns with zero variance
   if(sum(apply(train_data, 2, var) == 0)>0){
@@ -39,7 +38,7 @@ varEst <- function(Y,treat_indices, t0, T){
   }
   
   var.preds <-   sapply(1:ncol(var.preds), function(i){
-    exp(cumsum(var.preds[,i]) + log(Y[i,1]))
+      exp(cumsum(c(data[,(treat_indices)][1,i],var.preds[,i])) + log(data[,(treat_indices)][1,i]))
   }) # revert transformations
 
   return(t(var.preds)) # N X T

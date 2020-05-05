@@ -11,24 +11,14 @@ import tensorflow as tf
 
 from keras import backend as K
 from keras.models import Sequential, Model
-from keras.layers import Input, LSTM, RepeatVector
+from keras.layers import Masking, LSTM, RepeatVector
 from keras.layers.core import Flatten, Dense, Lambda
 from keras.optimizers import SGD, RMSprop, Adam
 from keras import regularizers
 from keras.callbacks import EarlyStopping, TerminateOnNaN
 
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.preprocessing import StandardScaler
 scaler = StandardScaler()
-
-from functools import partial, update_wrapper
-
-def wrapped_partial(func, *args, **kwargs):
-    partial_func = partial(func, *args, **kwargs)
-    update_wrapper(partial_func, func)
-    return partial_func
-
-def weighted_mse(y_true, y_pred, weights):
-    return K.mean(K.square(y_true - y_pred) * (weights/(1-weights)), axis=-1)
 
 # Select gpu
 import os
@@ -48,6 +38,9 @@ if not os.path.exists(results_directory):
 
 if not os.path.exists(data_directory):
     os.makedirs(data_directory)
+
+def mean_squared_error(y_true, y_pred):
+        return K.mean(K.square(y_pred - y_true))
 
 def create_lstm_vae(nb_features, 
     n_pre, 
@@ -77,8 +70,7 @@ def create_lstm_vae(nb_features,
         - [Generating sentences from a continuous space](https://arxiv.org/abs/1511.06349)
     """
 
-    x = Input(shape=(n_pre, nb_features), name='Encoder_inputs')
-    weights_tensor = Input(shape=(n_pre, nb_features), name="Weights")
+    x = Masking(mask_value=0., input_shape=(n_pre, nb_features), name='Encoder_inputs')
 
     # LSTM encoding
     h = LSTM(intermediate_dim, dropout=dr, name='Encoder')(x)
@@ -108,7 +100,7 @@ def create_lstm_vae(nb_features,
     x_decoded_mean = decoder_mean(h_decoded)
     
     # end-to-end autoencoder
-    vae = Model([x, weights_tensor], x_decoded_mean)
+    vae = Model(x, x_decoded_mean)
 
     # encoder, from inputs to latent space
     encoder = Model(x, z_mean)
@@ -122,15 +114,13 @@ def create_lstm_vae(nb_features,
     _x_decoded_mean = decoder_mean(_h_decoded)
     generator = Model(decoder_input, _x_decoded_mean)
     
-    def vae_loss(x, x_decoded_mean, weights):
-        xent_loss = weighted_mse(x, x_decoded_mean, weights)
+    def vae_loss(x, x_decoded_mean):
+        xent_loss = mean_squared_error(x, x_decoded_mean)
         kl_loss = - 0.5 * K.mean(1 + z_log_sigma - K.square(z_mean) - K.exp(z_log_sigma))
         loss = xent_loss + kl_loss
         return loss
 
-    cl = wrapped_partial(vae_loss, weights=weights_tensor)
-
-    vae.compile(optimizer=Adam(lr=lr), loss=cl)
+    vae.compile(optimizer=Adam(lr=lr), loss='mse')
     
     return vae, encoder, generator
 
@@ -141,31 +131,25 @@ def get_data():
     n_pre =int(t0)-1
     seq_len = int(T)
 
-    wx = np.array(pd.read_csv("data/{}-wx.csv".format(dataname))) 
+    x = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))
 
-    x_obs = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))
-    x_scaled = scaler.fit_transform(x_obs)
-
-    wy = np.array(pd.read_csv("data/{}-wy.csv".format(dataname)))   
+    x_scaled = scaler.fit_transform(x)
 
     y = np.array(pd.read_csv("data/{}-y.csv".format(dataname)))
+
     y_scaled = scaler.transform(y)
 
-    dXC,  wXC, dXT,  wXT  = [], [], [], []
+    dXC,  dXT = [], []
     for i in range(seq_len-n_pre):
         dXC.append(x_scaled[i:i+n_pre]) # controls
-        wXC.append(wx[i:i+n_pre]) 
         dXT.append(y_scaled[i:i+n_pre]) # treated 
-        wXT.append(wy[i:i+n_pre]) 
-    return np.array(dXC),np.array(wXC),np.array(dXT),np.array(wXT),n_pre,n_post      
+    return np.array(dXC),np.array(dXT),n_pre,n_post      
 
 if __name__ == "__main__":
-    x, wx, y, wy, n_pre, n_post = get_data() 
+    x, y, n_pre, n_post = get_data() 
 
     print('raw x shape', x.shape) 
-    print('raw wx shape', wx.shape) 
     print('raw y shape', y.shape)  
-    print('raw wy shape', wy.shape) 
     print('n_pre', n_pre) 
     print('n_post', n_post) 
 
@@ -193,7 +177,7 @@ if __name__ == "__main__":
 
     terminate = TerminateOnNaN()
 
-    vae.fit([x,wx], x, 
+    vae.fit(x, x, 
         epochs=int(epochs),
         verbose=1,
         callbacks=[stopping,terminate],
@@ -205,13 +189,14 @@ if __name__ == "__main__":
     # now test 
     print('Generate predictions on test set')
 
-    preds_test = vae.predict([wy,y], batch_size=batch_size, verbose=1)
-    print('predictions shape =', preds_test.shape)
+    preds_test = vae.predict(y, batch_size=batch_size, verbose=1)
+
     preds_test = np.squeeze(preds_test)
     print('predictions shape (squeezed) =', preds_test.shape)
 
     preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
-    print('predictions shape (transformed)=', preds_test.shape)
+
+    # Save predictions
 
     print('Saving to results/rvae/{}/rvae-{}-test.csv'.format(dataname,dataname))
 

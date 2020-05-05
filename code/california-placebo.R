@@ -6,13 +6,12 @@
 library(MCPanel)
 library(glmnet)
 library(dplyr)
-library(caret)
 
 # Setup parallel processing 
 library(parallel)
 library(doParallel)
 
-cores <- parallel::detectCores()/2
+cores <- parallel::detectCores()
 print(paste0('cores registered: ', cores))
 
 cl <- makePSOCKcluster(cores)
@@ -23,27 +22,9 @@ RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
 # Load data
 synth.control.outcomes <- readRDS("data/synth-control-outcomes.rds")
-synth.control.covars <- readRDS("data/synth-control-covars.rds")
-
-## Preprocess covariates
-names(synth.control.covars$california.xz) <- 1:length(synth.control.covars$california.xz)
-california.covars.x <- t(as.matrix(bind_rows(lapply(synth.control.covars$california.xz,colMeans)))) # N x # predictors
-colnames(california.covars.x) <- 1:ncol(california.covars.x)
-
-preProcValues <- preProcess(california.covars.x, method = c("nzv","center","scale")) # preprocess
-california.covars.xt <- predict(preProcValues, california.covars.x)
-
-california.covars.z <- Reduce(`+`,synth.control.covars$california.xz)/length(synth.control.covars$california.xz) # T x #predictors
-colnames(california.covars.z) <- gsub('.{2}$', '', colnames(california.covars.z))
-
-preProcValues <- preProcess(california.covars.z, method = c("nzv","center","scale")) # preprocess
-california.covars.zt <- predict(preProcValues, california.covars.z)
-
-colnames(california.covars.xt) <- colnames(california.covars.zt)
-rownames(california.covars.zt) <- 1:nrow(california.covars.zt)
 
 print(paste0("N X T dimensions :", dim(synth.control.outcomes$california$M)))
 
 ## Run simulations
 source("code/SynthSim.R")
-SynthSim(outcomes=synth.control.outcomes,covars.x=california.covars.xt, covars.z=california.covars.zt,d='california',sim=1)
+SynthSim(outcomes=synth.control.outcomes,d='california',sim=1)
