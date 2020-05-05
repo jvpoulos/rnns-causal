@@ -10,7 +10,7 @@ import pandas as pd
 
 from keras import backend as K
 from keras.models import Sequential, Model
-from keras.layers import Masking, LSTM, RepeatVector
+from keras.layers import Input, Masking, LSTM, RepeatVector
 from keras.layers.core import Flatten, Dense, Lambda
 from keras.optimizers import SGD, RMSprop, Adam
 from keras import regularizers
@@ -88,11 +88,14 @@ def create_lstm_vae(nb_features,
         - [Generating sentences from a continuous space](https://arxiv.org/abs/1511.06349)
     """
 
+    x = Input(shape=(n_pre, nb_features), name="Inputs")
+    mask = Masking(mask_value=0.)(x)
+
     x = Masking(mask_value=0., input_shape=(n_pre, nb_features), name='Encoder_inputs')
     weights_tensor = Input(shape=(n_pre, nb_features), name="Weights")
 
     # LSTM encoding
-    h = LSTM(intermediate_dim, dropout=dr, name='Encoder')(x)
+    h = LSTM(intermediate_dim, dropout=dr, name='Encoder')(mask)
 
     # VAE Z layer
     z_mean = Dense(latent_dim, name='z_mean')(h)

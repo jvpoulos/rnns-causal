@@ -13,7 +13,7 @@ import tensorflow as tf
 
 from keras import backend as K
 from keras.models import Model
-from keras.layers import LSTM, Masking, Dense, RepeatVector
+from keras.layers import LSTM, Input, Masking, Dense, RepeatVector
 from keras.callbacks import EarlyStopping, TerminateOnNaN
 from keras import regularizers
 from keras.optimizers import Adam
@@ -51,8 +51,9 @@ def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr):
     encoder_hidden = 128
     decoder_hidden = 128
 
-    inputs = Masking(mask_value=0., input_shape=(n_pre, nb_features))
-    lstm_1 = LSTM(encoder_hidden, dropout=dr, return_sequences=True, name='LSTM_1')(inputs) # Encoder
+    inputs = Input(shape=(n_pre, nb_features), name="Inputs")
+    mask = Masking(mask_value=0.)(inputs)
+    lstm_1 = LSTM(encoder_hidden, dropout=dr, return_sequences=True, name='LSTM_1')(mask) # Encoder
     lstm_2 = LSTM(encoder_hidden, dropout=dr, return_sequences=False, name='LSTM_2')(lstm_1) # Encoder
     repeat = RepeatVector(n_post, name='Repeat')(lstm_2) # get the last output of the LSTM and repeats it
     lstm_3 = LSTM(decoder_hidden, return_sequences=True, name='Decoder')(repeat)  # Decoder
