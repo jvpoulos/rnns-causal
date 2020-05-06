@@ -121,7 +121,7 @@ def create_lstm_vae(nb_features,
         loss = xent_loss + kl_loss
         return loss
 
-    vae.compile(optimizer=Adam(lr=lr), loss='mse')
+    vae.compile(optimizer=Adam(lr=lr), loss=vae_loss)
     
     return vae, encoder, generator
 
