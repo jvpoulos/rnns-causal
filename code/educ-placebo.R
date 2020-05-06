@@ -50,7 +50,6 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
   ED_RMSE_test <- matrix(0L,num_runs,length(T0))
   DID_RMSE_test <- matrix(0L,num_runs,length(T0))
   ADH_RMSE_test <- matrix(0L,num_runs,length(T0))
-  RVAE_RMSE_test <- matrix(0L,num_runs,length(T0))
   ENT_RMSE_test <- matrix(0L,num_runs,length(T0))
   
   ## Run different methods
@@ -79,17 +78,6 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
       est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
       ADH_RMSE_test[i,j] <- est_model_ADH_test_RMSE
       print(paste("ADH RMSE:", round(est_model_ADH_test_RMSE,3),"run",i))
-      
-      ## ------
-      ## RVAE
-      ## ------
-      
-      source("code/rvae.R")
-      est_model_RVAE <- rvae(Y, treat_indices, d, t0, T)
-      est_model_RVAE_msk_err <- (est_model_RVAE - Y_imp[treat_indices,][,t0:T])
-      est_model_RVAE_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_RVAE_msk_err^2, na.rm = TRUE))
-      RVAE_RMSE_test[i,j] <- est_model_RVAE_test_RMSE
-      print(paste("RVAE RMSE:", round(est_model_RVAE_test_RMSE,3),"run",i))
       
       ## ------
       ## ED
@@ -177,9 +165,6 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
   ADH_avg_RMSE <- apply(ADH_RMSE_test,2,mean)
   ADH_std_error <- apply(ADH_RMSE_test,2,sd)/sqrt(num_runs)
   
-  RVAE_avg_RMSE <- apply(RVAE_RMSE_test,2,mean)
-  RVAE_std_error <- apply(RVAE_RMSE_test,2,sd)/sqrt(num_runs)
-  
   ENT_avg_RMSE <- apply(ENT_RMSE_test,2,mean)
   ENT_std_error <- apply(ENT_RMSE_test,2,sd)/sqrt(num_runs)
   
@@ -187,12 +172,11 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
   
   df1 <-
     data.frame(
-      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,RVAE_avg_RMSE,ADH_avg_RMSE,VAR_avg_RMSE,ENT_avg_RMSE),
+      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,ADH_avg_RMSE,VAR_avg_RMSE,ENT_avg_RMSE),
       "lb" = c(DID_avg_RMSE - 1.96*DID_std_error,
                ED_avg_RMSE - 1.96*ED_std_error,
                LSTM_avg_RMSE - 1.96*LSTM_std_error,
                MCPanel_avg_RMSE - 1.96*MCPanel_std_error, 
-               RVAE_avg_RMSE - 1.96*RVAE_std_error,    
                ADH_avg_RMSE - 1.96*ADH_std_error,
                VAR_avg_RMSE - 1.96*VAR_std_error,
                ENT_avg_RMSE - 1.96*ENT_std_error),
@@ -200,16 +184,14 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
                ED_avg_RMSE + 1.96*ED_std_error,
                LSTM_avg_RMSE + 1.96*LSTM_std_error,
                MCPanel_avg_RMSE + 1.96*MCPanel_std_error, 
-               RVAE_avg_RMSE + 1.96*RVAE_std_error,  
                ADH_avg_RMSE + 1.96*ADH_std_error,
                VAR_avg_RMSE + 1.96*VAR_std_error,
                ENT_avg_RMSE + 1.96*ENT_std_error),
-      "x" = replicate(8,T0/T),
+      "x" = replicate(7,T0/T),
       "Method" = c(replicate(length(T0),"DID"), 
                    replicate(length(T0),"Encoder-decoder"),
                    replicate(length(T0),"LSTM"), 
                    replicate(length(T0),"MC-NNM"), 
-                   replicate(length(T0),"RVAE"),
                    replicate(length(T0),"SCM"),
                    replicate(length(T0),"VAR"),
                    replicate(length(T0),"Vertical")))

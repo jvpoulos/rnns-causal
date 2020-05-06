@@ -68,7 +68,6 @@ Run with command line arguments `<GPU_ID> <patience> <dropout rate> <penalty> <l
 ```
 python code/train_encoder_decoder.py 3 100 0.5 0.2 5000 8 'educ' 87 156 'locf'
 python code/train_lstm.py 3 100 0.5 0.2 5000 8 'educ' 87 156 'locf'
-python code/train_rvae.py 3 100 0.5 0.2 5000 1 'educ' 87 156 'locf'
 ```
 
 To plot the training and validation error, run `code/plot_history.py <file location of training log> <title>`; e.g., 

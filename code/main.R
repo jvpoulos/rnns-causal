@@ -23,7 +23,6 @@ source("prepare-funds.R")
 
 # train_lstm.py 
 # train_encoder_decoder.py 
-# train_rvae.py 
 if(figures){
   source( "educ-plot.R")
 }
