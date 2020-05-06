@@ -143,7 +143,7 @@ def test_model():
     
     preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
 
-    print('predictions shape =', preds_test_trans.shape)
+    print('predictions shape =', preds_test.shape)
 
     # Save predictions
 
