@@ -11,8 +11,7 @@ use_python("~/venv/bin/python") # comet
 ed <- function(Y,treat_indices,d, t0, T){
   # Converting the data to a floating point matrix
   data <- data.matrix(t(Y)) # T x N
-  data_w <- data.matrix(t(p.weights)) # T x N
-  
+
   # Splits
   train_data <- data[,(-treat_indices)] # train on control units
 

@@ -8,11 +8,10 @@ library(readr)
 # use_python("/usr/local/bin/python")
 use_python("~/venv/bin/python") # comet
 
-lstm <- function(Y,p.weights,treat_indices,d, t0, T){
+lstm <- function(Y,treat_indices,d, t0, T){
   # Converting the data to a floating point matrix
   data <- data.matrix(t(Y)) # T x N
-  data_w <- data.matrix(t(p.weights)) # T x N
-  
+
   # Splits
   train_data <- data[,(-treat_indices)] # train on control units
 
