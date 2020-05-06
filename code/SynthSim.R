@@ -105,7 +105,7 @@ SynthSim <- function(outcomes,d,sim){
       ## VT-EN 
       ## -----
       
-      est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat)))
+      est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_folds = 3))
       est_model_ENT_msk_err <- (est_model_ENT - Y)*(1-treat_mat)
       est_model_ENT_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ENT_msk_err^2, na.rm = TRUE))
       ENT_RMSE_test[i,j] <- est_model_ENT_test_RMSE
