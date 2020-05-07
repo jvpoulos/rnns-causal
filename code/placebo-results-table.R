@@ -27,11 +27,11 @@ print(df1, digits=3)
 # Education spending
 
 educ_pc_N_16_T_156_numruns_100_num_treated_8_simultaneuous_1 <- 
-  load("results/table-results/educ_pc_N_16_T_156_numruns_100_num_treated_8_simultaneuous_1.rds")
+  load("results/table-results/educ_pc_N_16_T_130_numruns_100_num_treated_8_simultaneuous_1.rds")
 
 df1$stderror <- (df1$y -df1$lb)/1.96
 
-print(df1, digits=2)
+print(df1, digits=3)
 
 # Covid
 

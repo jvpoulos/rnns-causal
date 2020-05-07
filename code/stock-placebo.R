@@ -182,14 +182,14 @@ StockSim <- function(Y,N,T,sim){
                ADH_avg_RMSE + 1.96*ADH_std_error,
                VAR_avg_RMSE + 1.96*VAR_std_error,
                ENT_avg_RMSE + 1.96*ENT_std_error),
-      "x" = replicate(length(t0),N*T),
-      "Method" = c(replicate(length(T0),"DID"), 
-                   replicate(length(T0),"Encoder-decoder"),
-                   replicate(length(T0),"LSTM"), 
-                   replicate(length(T0),"MC-NNM"), 
-                   replicate(length(T0),"SCM"),
-                   replicate(length(T0),"VAR"),
-                   replicate(length(T0),"Vertical")))
+      "x" = replicate(7,N*T),
+      "Method" = c("DID", 
+                   "Encoder-decoder",
+                   "LSTM", 
+                   "MC-NNM", 
+                   "SCM",
+                   "VAR",
+                   "Vertical"))
   
   ##
   filename<-paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".rds")

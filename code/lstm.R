@@ -30,9 +30,15 @@ lstm <- function(Y,treat_indices,d, t0, T){
   py$lr <- 0.001
   py$dr <- 0.5
   py$penalty <- 0.2
+  if(d %in% c("educ","covid")){
+    py$penalty <- 0.5
+  }
   if(d %in% c("stock")){
     py$nb_batches <- 32
-  } else{
+  }
+  if(d %in% c("educ","covid")){
+    py$nb_batches <- 16
+  }else{
     py$nb_batches <- 8
   }
   
