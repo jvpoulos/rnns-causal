@@ -30,14 +30,14 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
   treat_y <- Y[rownames(Y)%in%treated.indices,] 
   
   ## Working with the rest of matrix
-  treat <- treat[!rownames(treat)%in%c(rownames(treat_y),"TN"),] # (randomly) drop TN for parity
-  Y <- Y[!rownames(Y)%in%c(rownames(treat_y),"TN"),] 
-  Y.missing <- Y.missing[!rownames(Y.missing)%in%c(rownames(treat_y),"TN"),] 
+  treat <- treat[!rownames(treat)%in%c(rownames(treat_y),"TN"),][,which(as.numeric(colnames(treat))>= 1809)] # (randomly) drop TN for parity
+  Y <- Y[!rownames(Y)%in%c(rownames(treat_y),"TN"),][,which(as.numeric(colnames(Y))>= 1809)]
+  Y.missing <- Y.missing[!rownames(Y.missing)%in%c(rownames(treat_y),"TN"),][,which(as.numeric(colnames(Y.missing))>= 1809)]
 
   ## Setting up the configuration
   N <- nrow(treat)
   T <- ncol(treat)
-  T0 <- ceiling(c(T*0.35, T*0.5, T*0.65, T*0.75))
+  T0 <- T*0.5
   N_t <- ceiling(N*0.5) # no. treated units desired <=N
   num_runs <- 100
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
@@ -66,10 +66,19 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
       }else{
         treat_mat <- stag_adapt(Y, N_t, (t0-1), treat_indices)
       }
+      
+      treat_NA <- treat_mat
+      treat_NA[treat_NA==0] <- NA
 
-      Y_obs <- Y * treat_mat
-      Y_imp <- Y * Y.missing
-  
+      Y_obs <- Y * treat_NA * Y.missing
+      
+      preProcValues <- preProcess(t(Y_obs), method = c("medianImpute"), verbose=TRUE) # use training set median
+      Y_obs <- t(predict(preProcValues, t(Y_obs)))
+      
+      Y_obs <- Y_obs * treat_mat # treated are 0
+
+      Y_imp <- Y * Y.missing # use for calculating RMSE on non-imputed values
+      
       ## -----
       ## ADH
       ## -----
@@ -84,7 +93,7 @@ CapacitySim <- function(outcomes,d,sim,treated.indices){
       ## ------
       
       source("code/ed.R")
-      est_model_ED <- ed(Y, treat_indices, d, t0, T)
+      est_model_ED <- ed(Y, treat_indices, d, t0, T) 
       est_model_ED_msk_err <- (est_model_ED - Y_imp[treat_indices,][,t0:T])
       est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
       ED_RMSE_test[i,j] <- est_model_ED_test_RMSE

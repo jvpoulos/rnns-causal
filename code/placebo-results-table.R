@@ -14,7 +14,7 @@ california_N_38_T_31_numruns_100_num_treated_19_simultaneuous_1 <-
 
 df1$stderror <- (df1$y -df1$lb)/1.96
 
-print(df1, digits=2)
+print(df1, digits=3)
 
 # W. German reunification
 germany_N_16_T_44_numruns_100_num_treated_8_simultaneuous_1 <- 
@@ -22,7 +22,7 @@ germany_N_16_T_44_numruns_100_num_treated_8_simultaneuous_1 <-
 
 df1$stderror <- (df1$y -df1$lb)/1.96
 
-print(df1, digits=2)
+print(df1, digits=3)
 
 # Education spending
 

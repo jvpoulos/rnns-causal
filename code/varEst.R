@@ -12,7 +12,7 @@ varEst <- function(Y,treat_indices, t0, T){
   data <- data.matrix(t(Y)) # (T x N)
   
   train_data <- data[,(-treat_indices)]
-  train_data_scaled <- scale(train_data)
+  train_data_scaled <- scale(train_data) # https://stackoverflow.com/questions/49260862/trainable-sklearn-standardscaler-for-r
   
   test_data <- data[,(treat_indices)]
   test_data_scaled <- scale(test_data, center=attr(train_data_scaled, "scaled:center"), 
@@ -24,8 +24,6 @@ varEst <- function(Y,treat_indices, t0, T){
   # Fit model on treated units
   
   var.preds <- predict(var.fit, as.matrix(test_data_scaled))
-  
-  var.preds <- t(apply(var.preds, 1, function(r)r*attr(train_data_scaled,'scaled:scale') + attr(train_data_scaled, 'scaled:center'))) # revert transformations
 
   return(t(var.preds)) # N X T
 }
