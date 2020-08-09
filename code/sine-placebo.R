@@ -208,7 +208,7 @@ Y.train <-  read.csv('data/sine_train_real.csv',header=F)
 Y.val <- read.csv('data/sine_val_real.csv',header=F) 
 Y.test <- read.csv('data/sine_test_real.csv',header=F)
 
-Y <- rbind(Y.train,Y.val,Y.test) # N X T
+Y <- data.matrix(rbind(Y.train,Y.val,Y.test)) # N X T
 print(dim(Y))
 
 print(paste0("N X T data dimension: ", dim(Y)))
