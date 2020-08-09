@@ -85,7 +85,7 @@ def train_model(model, dataX, dataY, weights, epoch_count, batches):
 
     # Model fit
 
-    history = model.fit(x=dataX, 
+    history = model.fit(x=[dataX,weights], 
         y=dataY, 
         batch_size=batches, 
         verbose=1,
