@@ -82,7 +82,7 @@ def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr):
 
     return model
 
-def train_model(model, dataX, dataY, epoch_count, batches):
+def train_model(model, dataX, dataY, weights, epoch_count, batches):
 
     # Prepare model checkpoints and callbacks
 
