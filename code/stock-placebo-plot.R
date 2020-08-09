@@ -2,16 +2,15 @@ library(ggplot2)
 library(latex2exp)
 library(dplyr)
 
-# Fixed NT: 150,000
-stockn2000t75 <- readRDS("results/table-results/stock_N_2000_T_75_numruns_100_num_treated_1000_simultaneuous_1.rds") # 32528902
-stockn1500t100 <- readRDS("results/table-results/stock_N_1500_T_100_numruns_100_num_treated_750_simultaneuous_1.rds") # 32496785
-stockn1000t150 <- readRDS("results/table-results/stock_N_1000_T_150_numruns_100_num_treated_500_simultaneuous_1.rds") # 32587423
-stockn500t300 <- readRDS("results/table-results/stock_N_500_T_300_numruns_100_num_treated_250_simultaneuous_1.rds") # 32578816
-stockn250t600 <- readRDS("results/table-results/stock_N_250_T_600_numruns_100_num_treated_125_simultaneuous_1.rds")
-stockn100t1500 <- readRDS("results/table-results/stock_N_100_T_1500_numruns_100_num_treated_50_simultaneuous_1.rds")
+# Fixed NT: 100,000
+stockn1000t100 <- readRDS("results/plots/stock_N_1000_T_100_numruns_100_num_treated_500_simultaneuous_1.rds")
+stockn800t125 <- readRDS("results/plots/stock_N_800_T_125_numruns_100_num_treated_400_simultaneuous_1.rds")
+stockn500t200 <- readRDS("results/plots/stock_N_500_T_200_numruns_100_num_treated_250_simultaneuous_1.rds")
+stockn250t400 <- readRDS("results/plots/stock_N_250_T_400_numruns_100_num_treated_125_simultaneuous_1.rds")
+stockn100t1000 <- readRDS("results/plots/stock_N_100_T_1000_numruns_100_num_treated_50_simultaneuous_1.rds")
 
-df1 <-rbind(stockn100t1500,stockn250t600,stockn500t300,stockn1000t150,stockn1500t100,stockn2000t75)
-df1$x <- c(rep(100, 7), rep(250, 7), rep(500, 7), rep(1000, 7), rep(1500, 7), rep(2000, 7))
+df1 <-rbind(stockn100t1000,stockn250t400,stockn500t200,stockn800t125,stockn1000t100)
+df1$x <- c(rep(100, 7), rep(250, 7), rep(500, 7), rep(800, 7), rep(1000, 7))
 
 df1 <- df1 %>% group_by(x) %>% mutate(y = y,
                                       lb= lb,
@@ -20,7 +19,7 @@ df1 <- df1 %>% group_by(x) %>% mutate(y = y,
 breaks <- round(log(unique(df1$x)),1)
 print(breaks)
 
-stock <- ggplot(data = df1, aes(log(x), y, color = Method, shape = Method)) +
+stock <- ggplot(data = df1[df1$Method!="VAR",], aes(log(x), y, color = Method, shape = Method)) +
   geom_point(size = 5, position=position_dodge(width=0.8)) +
   geom_line(position=position_dodge(width=0.8)) +
   geom_errorbar(
@@ -33,8 +32,7 @@ stock <- ggplot(data = df1, aes(log(x), y, color = Method, shape = Method)) +
                               breaks[2],
                               breaks[3],
                               breaks[4],
-                              breaks[5],
-                              breaks[6]), labels=print(breaks)) +
+                              breaks[5]), labels=print(breaks)) +
   theme_bw() +
   xlab(TeX('log(N)')) +
   ylab("Average RMSE") +

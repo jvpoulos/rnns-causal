@@ -7,7 +7,7 @@ library(imputeTS)
 library(glmnet)
 library(dplyr)
 
-PreProcessData <- function(imp){
+PreProcessData <- function(imp=c('none','median')){
   # Read data
   capacity.outcomes <- readRDS(paste0("data/capacity-outcomes-",imp,".rds"))
   capacity.covariates <- readRDS("data/capacity-covariates.rds")
@@ -42,18 +42,6 @@ PreProcessData <- function(imp){
     capacity.covars.z[[i]] <- t(capacity.covars.z[[i]])
     preProcValues <- preProcess(capacity.covars.z[[i]], method = c("medianImpute"), verbose=TRUE) # use training set median
     
-    if(imp=="locf"){
-      capacity.covars.z[[i]] <- na_locf(capacity.covars.z[[i]], option = "locf", na_remaining = "keep") 
-    }
-    
-    if(imp=="linear"){
-      capacity.covars.z[[i]] <- na_interpolation(capacity.covars.z[[i]], option = "linear", na_remaining = "keep") 
-    }
-    
-    if(imp=="random"){
-      capacity.covars.z[[i]] <- na_random(capacity.covars.z[[i]]) 
-    }
-    
     capacity.covars.z[[i]] <- predict(preProcValues, capacity.covars.z[[i]])
     
     capacity.covars.z[[i]] <- t(capacity.covars.z[[i]])
@@ -79,8 +67,14 @@ PreProcessData <- function(imp){
   
   # Censor post-period treated values
   
-  treat_mat <- 1-treat
+  treat_mat <- 1-treat # treated are 0
   Y_obs <- Y * treat_mat
+  
+  Y_imp <- Y * Y.missing # use for calculating RMSE on non-imputed values
+  
+  # RNN-based methods train on Y (no imputation, no censoring)
+  # benchmark estimators train on Y_obs (treated censored with 0, missing values imputed with predictor training set median)
+  # RMSE calculated on Y_imp (missing values are NA)
   
   # converting the data to a floating point matrix
   data <- data.matrix(t(Y_obs)) # T x N
@@ -88,7 +82,7 @@ PreProcessData <- function(imp){
   # # Splits
   train_data <- data[,!colnames(data)%in% c(treated.indices,"TN")] # train on control units
   
-  test_data <- data[,colnames(data)%in% treated.indices] # treated units
+  test_data <- data[,colnames(data)%in% treated.indices]  # treated units
   
   ## Estimate propensity scores
   
@@ -107,88 +101,18 @@ PreProcessData <- function(imp){
   rownames(p.weights) <-rownames(data)
   colnames(p.weights) <-colnames(data)
   
-  train_w <- p.weights[,colnames(p.weights)%in%colnames(train_data)] 
-  test_w <- p.weights[,colnames(p.weights)%in%colnames(test_data)] 
+  train_w <- p.weights[,colnames(p.weights)%in%colnames(train_data)][rownames(p.weights)%in%rownames(train_data),]
+  test_w <- p.weights[,colnames(p.weights)%in%colnames(test_data)][rownames(p.weights)%in%rownames(test_data),]
   
   write.csv(train_data,paste0("data/educ-x-",imp,".csv"),row.names = FALSE)
   write.csv(test_data,paste0("data/educ-y-",imp,".csv"),row.names = FALSE)
   write.csv(train_w,paste0("data/educ-wx-",imp,".csv"),row.names = FALSE)
   write.csv(test_w,paste0("data/educ-wy-",imp,".csv"),row.names = FALSE)
   
-  return(list("train_data"=train_data,"test_data"=test_data,"train_w"=train_w,"test_w"=test_w,"t0"=t0,"Y"=Y,"treated.indices"=treated.indices,"p.weights"=p.weights))
+  return(list("train_data"=train_data,"test_data"=test_data,"train_w"=train_w,"test_w"=test_w,"t0"=t0,
+              "Y"=Y,"Y_imp"=Y_imp,"Y_obs"=Y_obs,"treated.indices"=treated.indices,"p.weights"=p.weights))
 }
 
-locf <- PreProcessData(imp="locf")
-train_data <- locf$train_data
-test_data <- locf$test_data
-train_w <- locf$train_w
-test_w <- locf$test_w
-Y <- locf$Y
-treated.indices <- locf$treated.indices
-t0 <- locf$t0
-p.weights <- locf$p.weights
-
-require(ggplot2)
-require(reshape2)
-
-df <- data.frame(t(Y)[1:(t0-1),][,colnames(t(Y))%in% c(colnames(train_data),colnames(test_data))],check.names = FALSE) #pre-period
-
-df$id <- rownames(df)
-
-df.m <- melt(df, "id")
-df.m$status <- factor(ifelse(df.m$variable%in%treated.indices,"Treated","Control"))
-
-df.weights <- data.frame(p.weights[1:(t0-1),][,colnames(p.weights)%in% c(colnames(train_w),colnames(test_w))],check.names = FALSE) #pre-period
-df.weights$id <- rownames(df.weights)
-
-df.weights.m <- melt(df.weights, "id")
-df.weights.m$status <- factor(ifelse(df.weights.m$variable%in%treated.indices,"Treated","Control"))
-colnames(df.weights.m) <- c("id","variable","weights","status" )
-
-df.m <- cbind(df.m, df.weights.m[c("weights")])
-
-# df.m$weights <- as.numeric(levels(df.m$weights))[df.m$weights]
-df.m$weights[df.m$status=="Control"] <- df.m$weights[df.m$status=="Control"] /sum(df.m$weights[df.m$status=="Control"] ) # normalize weights per group
-df.m$weights[df.m$status=="Treated"] <- df.m$weights[df.m$status=="Treated"] /sum(df.m$weights[df.m$status=="Treated"] ) # 
-
-p <- ggplot(data = df.m, aes(x=value)) + geom_density(aes(fill=status), alpha = 0.4) +
-  scale_fill_brewer(palette = "Set1") +
-  ylab("Density") + 
-  xlab("Per-capita education spending") +
-  scale_fill_manual(values = c("white","blue"), labels= c("Control", "Treated"), name="Treatment status") +
-  theme(legend.position = "none"
-        , axis.text=element_text(size=14)
-        , axis.title.x=element_text(size = 16)
-        , axis.title.y=element_text(size = 16)) +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black")) 
-
-ggsave("results/plots/educ-dens.png", p, width=8.5, height=11)
-
-pw <- ggplot(data = df.m, aes(x=value)) + geom_density(aes(fill=status, weights=weights), alpha = 0.4) +
-  scale_fill_brewer(palette = "Set1") +
-  ylab("Density") + 
-  xlab("Per-capita education spending") +
-  scale_fill_manual(values = c("white","blue"), labels= c("Control", "Treated"), name="Treatment status") +
-  theme(legend.position = "none"
-         , axis.text=element_text(size=14)
-         , axis.title.x=element_text(size = 16)
-         , axis.title.y=element_text(size = 16)) +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black")) 
-
-ggsave("results/plots/educ-dens-w.png", pw, width=8.5, height=11)
-
-# two-sample t-test
-X.c <- train_data[as.numeric(rownames(train_data))<1869,]
-X.t <-test_data[as.numeric(rownames(train_data))<1869,]
-
-t.test(X.t,X.c,alternative="two.sided", conf.level = 0.95)
-
-library(weights)
-
-wtd.t.test(X.c, X.t, weight=train_w[1:(t0-1),], weighty=test_w[1:(t0-1),], samedata = FALSE, bootse=TRUE) 
-
-PreProcessData(imp="linear")
-PreProcessData(imp="random")
 PreProcessData(imp="median")
+ 
+PreProcessData(imp="none")

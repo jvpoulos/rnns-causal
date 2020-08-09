@@ -58,6 +58,12 @@ StockSim <- function(Y,N,T,sim){
     }
     
     Y_obs <- Y_sub * treat_mat
+
+    ## Estimate propensity scores
+
+    p.mod <- cv.glmnet(x=Y_obs, y=(1-treat_mat), family="mgaussian", parallel = TRUE) # LOO
+    
+    p.weights <- predict(p.mod, Y_obs, type="response", s = "lambda.min")[,,1]
     
     ## -----
     ## ADH
@@ -76,7 +82,7 @@ StockSim <- function(Y,N,T,sim){
     
     print("ED Started")
     source("code/ed.R")
-    est_model_ED <- ed(Y=Y_sub, treat_indices, d, t0, T)
+    est_model_ED <- ed(Y=Y_obs, treat_indices, d, t0, T)
     est_model_ED_msk_err <- (est_model_ED - Y_sub[treat_indices,][,t0:T])
     est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
     ED_RMSE_test[i] <- est_model_ED_test_RMSE
@@ -88,7 +94,7 @@ StockSim <- function(Y,N,T,sim){
     
     print("LSTM Started")
     source("code/lstm.R")
-    est_model_LSTM <- lstm(Y=Y_sub, treat_indices, d, t0, T)
+    est_model_LSTM <- lstm(Y=Y_obs, treat_indices, d, t0, T)
     est_model_LSTM_msk_err <- (est_model_LSTM - Y_sub[treat_indices,][,t0:T])
     est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
     LSTM_RMSE_test[i] <- est_model_LSTM_test_RMSE
@@ -100,7 +106,7 @@ StockSim <- function(Y,N,T,sim){
     
     print("VAR Started")
     source("code/varEst.R")
-    est_model_VAR <- varEst(Y=Y_sub, treat_indices, t0, T)
+    est_model_VAR <- varEst(Y=Y_obs, treat_indices, t0, T)
     est_model_VAR_msk_err <- (est_model_VAR - Y_sub[treat_indices,])
     est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
     VAR_RMSE_test[i] <- est_model_VAR_test_RMSE
@@ -201,4 +207,11 @@ Y <- t(read.csv('data/returns_no_missing.csv',header=F)) # N X T
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-StockSim(Y,N=250,T=600,sim=1)
+for(i in c(0,1)){
+  # Fixed NT: 20,000
+  StockSim(Y,N=1000,T=20,sim=i) 
+  StockSim(Y,N=200,T=100,sim=i) 
+  StockSim(Y,N=125,T=160,sim=i) 
+  StockSim(Y,N=100,T=200,sim=i) 
+  StockSim(Y,N=20,T=1000,sim=i) 
+}

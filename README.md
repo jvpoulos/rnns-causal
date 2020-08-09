@@ -40,37 +40,33 @@ $ git clone https://github.com/jvpoulos/rnns-causal
 * Open `package-list.R` in a script editor
   * Verify that all required packages in `package-list.R` are installed in your **R** library
 
-* Make shell file `main.sh` executable from the Linux/Unix command line:
-```
-$ chmod +x code/main.sh
-```
-* Execute the file:
-```
-$ ./code/main.sh > main.txt
-```
-
 Placebo test experiments
 ------
 
-Make each file below executable, then execute
+Make each file below executable, execute in shell:
 
-* `basque-placebo.sh`: Basque Country dataset
-* `germany-placebo.sh`: W. German reunification dataset
-* `california-placebo.sh`: California smoking dataset
 * `educ-placebo.sh`: U.S. state government education spending
 * `covid-placebo.sh`: U.S. counties COVID-19 cases
 * `stock-placebo.sh`: U.S. stock prices
 
+To plot RMSEs, run in **R** `stock-placebo-plot.R` and `educ-placebo-plot.R`
+
+
 Application: counterfactual predictions
 ------
 
-Run with command line arguments `<GPU_ID> <patience> <dropout rate> <penalty> <learning_rate> <epochs> <batches> <data_name> <t_0> <T> <imputation_method>`; e.g., 
+First, prepare public education spending data by running in **R** `prepare-funds.R`
+
+Second, run in shell with command line arguments `<GPU_ID> <patience> <dropout rate> <penalty> <learning_rate> <epochs> <batches> <data_name> <t_0> <T> <imputation_method>`; e.g., 
 ```
-python code/train_encoder_decoder.py 3 100 0.5 0.2 5000 8 'educ' 87 156 'locf'
-python code/train_lstm.py 3 100 0.5 0.2 5000 8 'educ' 87 156 'locf'
+python code/train_encoder_decoder.py 3 100 0.5 0.7 0.001 5000 16 'educ' 87 156 'none'
+python code/train_lstm.py 3 100 0.5 0.7 0.001 5000 16 'educ' 87 156 'none'
 ```
 
 To plot the training and validation error, run `code/plot_history.py <file location of training log> <title>`; e.g., 
 ```
 python code/plot_history.py './results/encoder-decoder/educ/training_log_educ_locf.csv' 'Training vs. validation loss'
 ```
+To plot causal estimates: `educ-plot.R`
+
+To compare estimates with alternative estimators, execute in shell `educ-comparison.R` # TODO: bootstrap CIs

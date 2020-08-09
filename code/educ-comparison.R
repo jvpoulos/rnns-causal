@@ -21,8 +21,6 @@ cl <- makePSOCKcluster(cores)
 
 doParallel::registerDoParallel(cores) # register cores (<p)
 
-source("code/utils.R")
-
 CapacityCompare <- function(imp, run.CI=TRUE){
   
   # Read data
@@ -32,6 +30,7 @@ CapacityCompare <- function(imp, run.CI=TRUE){
   educ <- capacity.outcomes$educ.pc
   Y <- educ$M # NxT 
   Y <- Y[!rownames(Y)%in%c("TN"),] #rm TN from control group for train/test parity
+  Y.missing <- educ$M.missing[!rownames(educ$M.missing)%in%c("TN"),] # NxT
   
   treat <- educ$mask[!rownames(educ$mask)%in%c("TN"),] # NxT masked matrix 
   
@@ -45,85 +44,76 @@ CapacityCompare <- function(imp, run.CI=TRUE){
   
   # Censor post-period treated values
   
-  treat_mat <- 1-treat
-  Y_obs <- Y*treat_mat
-
+  treat_mat <- 1-treat # treated are 0
+  
+  # RNN-based methods train on Y (no imputation, no censoring)
+  # benchmark estimators train on Y_obs (treated censored with 0, missing values imputed with predictor training set median)
+  # RMSE calculated on Y_imp (missing values are NA)
+  
+  Y_obs <- Y * treat_mat # treated are 0
+  
+  Y_imp <- Y * Y.missing # use for calculating RMSE on non-imputed values
+  
   ## Compare different methods
   
-  ## -----
-  ## ADH
-  ## -----
-  est_model_ADH <- adh_mp_rows(Y_obs, treat_mat)
-  est_model_ADH_test_att <- (1/sum(1-treat_mat)) * sum((Y-est_model_ADH)*(1-treat_mat))
-  est_model_ADH_test_att
+  if(imp %in% c("none","median")){
+    
+    ## ------
+    ## ED
+    ## ------
+    
+    source("code/ed.R")
+    est_model_ED <- ed(Y, treat_indices, d, t0, T) 
+    est_model_ED_test_att <- (1/sum(1-treat_mat)) * sum(Y[rownames(Y) %in% treated.indices,][,t0:T] -est_model_ED)
+    est_model_ED_test_att
+    
+    ## ------
+    ## LSTM
+    ## ------
+    
+    source("code/lstm.R")
+    est_model_LSTM <- lstm(Y, treat_indices, d, t0, T)
+    est_model_LSTM_test_att <- (1/sum(1-treat_mat)) * sum(Y[rownames(Y) %in% treated.indices,][,t0:T] -est_model_LSTM)
+    est_model_LSTM_test_att
+  } 
   
-  # t.stat.adh <- rowMeans(t(Y[!rownames(Y)%in%treated.indices,][,t0:T])- t(est_model_ADH[!rownames(est_model_ADH)%in%treated.indices,][,t0:T]))
-  # 
-  # if(run.CI){
-  #   estimator <- "adh"
-  #   CI.treated <- PermutationCI(forecast=t(est_model_ADH[!rownames(est_model_ADH)%in%treated.indices,][,t0:T]), 
-  #                               true=t(Y[!rownames(Y)%in%treated.indices,][,t0:T]), 
-  #                               t.stat=est_model_ADH_test_att,
-  #                               n.placebo=(nrow(Y[!rownames(Y)%in%treated.indices,])-1), 
-  #                               np=10000, 
-  #                               l=10, 
-  #                               prec=1e-03)
-  #   
-  #   saveRDS(CI.treated, paste0("results/", estimator,"/educ/",estimator,"-CI-treated-",imp,".rds"))
-  # } else{
-  #   CI.treated <- readRDS(paste0("results/", estimator,"/educ/",estimator,"-CI-treated-",imp,".rds"))
-  # }
-
-  # ## ------
-  # ## RVAE
-  # ## ------
-  # 
-  # est_model_RVAE <-  read.csv(paste0("results/rvae/educ/rvae-educ-test-",imp,".csv"), header=FALSE)
-  # est_model_RVAE_test_att <- (1/sum(1-treat_mat)) * sum(Y[rownames(Y) %in% treated.indices,][,t0:T] -est_model_RVAE)
-  # est_model_RVAE_test_att
-  # 
-  # ## ------
-  # ## ED
-  # ## ------
-  # 
-  # est_model_ED <- read.csv(paste0("results/encoder-decoder/educ/encoder-decoder-educ-test-",imp,".csv"), header=FALSE)
-  # est_model_ED_test_att <- (1/sum(1-treat_mat)) * sum(Y[rownames(Y) %in% treated.indices,][,t0:T] -est_model_ED)
-  # est_model_ED_test_att
-  # 
-  # ## ------
-  # ## LSTM
-  # ## ------
-  # 
-  # est_model_LSTM <- read.csv(paste0("results/lstm/educ/lstm-educ-test-",imp,".csv"), header=FALSE)
-  # est_model_LSTM_test_att <- (1/sum(1-treat_mat)) * sum(Y[rownames(Y) %in% treated.indices,][,t0:T] -est_model_LSTM)
-  # est_model_LSTM_test_att
-
-  ## ------
-  ## VAR
-  ## ------
+  if(imp=="median"){
+    
+    ## -----
+    ## ADH
+    ## -----
+    est_model_ADH <- adh_mp_rows(Y_obs, treat_mat)
+    est_model_ADH_test_att <- (1/sum(1-treat_mat)) * sum((Y-est_model_ADH)*(1-treat_mat))
+    est_model_ADH_test_att
+    
+    ## ------
+    ## VAR
+    ## ------
+    
+    source("code/varEst.R")
+    est_model_VAR <- varEst(Y, treat_indices=c(which(rownames(Y) %in% treated.indices)), t0, T)
+    est_model_VAR_test_att <-  (1/sum(1-treat_mat)) * sum(Y[rownames(Y) %in% treated.indices,][,t0:T] - est_model_VAR[,t0:T]) 
+    est_model_VAR_test_att
+    
+    ## ------
+    ## MC-NNM
+    ## ------
+    
+    est_model_MCPanel <- mcnnm_cv(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, num_folds = 3)
+    est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
+    est_model_MCPanel$test_att <- (1/sum(1-treat_mat)) * sum((Y-est_model_MCPanel$Mhat)*(1-treat_mat))
+    est_model_MCPanel$test_att
+    
+    ## -----
+    ## DID
+    ## -----
+    
+    est_model_DID <- t(DID(t(Y_obs), t(treat_mat)))
+    est_model_DID_test_att <- (1/sum(1-treat_mat)) * sum((Y-est_model_DID)*(1-treat_mat))
+    est_model_DID_test_att
+  }
   
-  source("code/varEst.R")
-  est_model_VAR <- varEst(Y, treat_indices=c(which(rownames(Y) %in% treated.indices)), t0, T)
-  est_model_VAR_test_att <-  (1/sum(1-treat_mat)) * sum(Y[rownames(Y) %in% treated.indices,][,t0:T] - est_model_VAR[,t0:T]) 
-  est_model_VAR_test_att
-
-  ## ------
-  ## MC-NNM
-  ## ------
-  
-  est_model_MCPanel <- mcnnm_cv(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, num_folds = 3)
-  est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
-  est_model_MCPanel$test_att <- (1/sum(1-treat_mat)) * sum((Y-est_model_MCPanel$Mhat)*(1-treat_mat))
-  est_model_MCPanel$test_att
-  
-  ## -----
-  ## DID
-  ## -----
-  
-  est_model_DID <- t(DID(t(Y_obs), t(treat_mat)))
-  est_model_DID_test_att <- (1/sum(1-treat_mat)) * sum((Y-est_model_DID)*(1-treat_mat))
-  est_model_DID_test_att
-
 }
 
-CapacityCompare(imp="locf")
+CapacityCompare(imp="none")
+CapacityCompare(imp="median")

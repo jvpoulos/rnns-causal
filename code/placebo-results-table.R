@@ -36,7 +36,8 @@ print(df1, digits=3)
 # Covid
 
 #covid  <- readRDS("results/table-results/covid_N_2710_T_60_numruns_18_num_treated_1355_simultaneuous_1.rds")
-covid  <- readRDS("results/table-results/covid_N_1200_T_60_numruns_100_num_treated_600_simultaneuous_1.rds")
+#covid  <- readRDS("results/table-results/covid_N_1200_T_60_numruns_100_num_treated_600_simultaneuous_1.rds")
+covid  <- readRDS("results/table-results/covid_N_1000_T_105_numruns_100_num_treated_500_simultaneuous_1.rds")
 
 covid$stderror <- (covid$y -covid$lb)/1.96
 
@@ -44,8 +45,10 @@ print(covid, digits=4)
 
 # Stock
 
-stock <- readRDS("results/table-results/stock_N_1500_T_100_numruns_100_num_treated_750_simultaneuous_1.rds")
+# stock <- readRDS("results/table-results/stock_N_1500_T_100_numruns_100_num_treated_750_simultaneuous_1.rds")
+#stock <- readRDS("results/plots/stock_N_100_T_1500_numruns_100_num_treated_50_simultaneuous_1.rds") 
+stock <- readRDS("results/plots/stock_N_800_T_125_numruns_100_num_treated_400_simultaneuous_1.rds") 
 
 stock$stderror <- (stock$y -stock$lb)/1.96
 
-print(stock, digits=4)
+print(stock, digits=2)
