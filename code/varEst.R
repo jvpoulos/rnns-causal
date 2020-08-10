@@ -1,5 +1,5 @@
 ###################################
-# VAR for Synth Simulations #
+# VAR for Simulations #
 ###################################
 
 #library(devtools)
@@ -7,19 +7,24 @@
 library(lassovar)
 library(gtools)
 
-varEst <- function(Y,treat_indices, t0, T){
+varEst <- function(Y,treat_indices, t0, T, scale=TRUE, initial="none"){
   # Converting the data to a floating point matrix
   data <- data.matrix(t(Y)) # (T x N)
   
   train_data <- data[,(-treat_indices)]
-  train_data_scaled <- scale(train_data) # https://stackoverflow.com/questions/49260862/trainable-sklearn-standardscaler-for-r
-  
   test_data <- data[,(treat_indices)]
-  test_data_scaled <- scale(test_data, center=attr(train_data_scaled, "scaled:center"), 
+  
+  if(scale){
+    train_data_scaled <- scale(train_data) # https://stackoverflow.com/questions/49260862/trainable-sklearn-standardscaler-for-r
+    test_data_scaled <- scale(test_data, center=attr(train_data_scaled, "scaled:center"), 
                         scale=attr(train_data_scaled, "scaled:scale"))
+  }else{
+    train_data_scaled <- train_data
+    test_data_scaled <- test_data
+  }
 
   # Fit the model
-  var.fit <- lassovar(dat=data.frame(train_data_scaled), exo=NULL, lags = 1, horizon = 1)
+  var.fit <- lassovar(dat=data.frame(train_data_scaled), exo=NULL, lags = 1, horizon = 1, adaptive=initial)
   
   # Fit model on treated units
   
