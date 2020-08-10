@@ -106,7 +106,7 @@ CovidSim <- function(Y,N,T,sim){
     
     print("VAR Started")
     source("code/varEst.R")
-    est_model_VAR <- varEst(Y=Y_obs, treat_indices, t0, T, scale=FALSE, initial="ridge")
+    est_model_VAR <- varEst(Y=Y_obs, treat_indices, t0, T, scale=FALSE)
     est_model_VAR_msk_err <- (est_model_VAR - Y_sub[treat_indices,])
     est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
     VAR_RMSE_test[i] <- est_model_VAR_test_RMSE

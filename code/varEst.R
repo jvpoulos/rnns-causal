@@ -7,7 +7,7 @@
 library(lassovar)
 library(gtools)
 
-varEst <- function(Y,treat_indices, t0, T, scale=TRUE, initial="none"){
+varEst <- function(Y,treat_indices, t0, T, scale=TRUE){
   # Converting the data to a floating point matrix
   data <- data.matrix(t(Y)) # (T x N)
   
@@ -15,7 +15,7 @@ varEst <- function(Y,treat_indices, t0, T, scale=TRUE, initial="none"){
   test_data <- data[,(treat_indices)]
   
   if(scale){
-    train_data_scaled <- scale(train_data) # https://stackoverflow.com/questions/49260862/trainable-sklearn-standardscaler-for-r
+    train_data_scaled <- scale(train_data)
     test_data_scaled <- scale(test_data, center=attr(train_data_scaled, "scaled:center"), 
                         scale=attr(train_data_scaled, "scaled:scale"))
   }else{
@@ -24,7 +24,7 @@ varEst <- function(Y,treat_indices, t0, T, scale=TRUE, initial="none"){
   }
 
   # Fit the model
-  var.fit <- lassovar(dat=data.frame(train_data_scaled), exo=NULL, lags = 1, horizon = 1, adaptive=initial)
+  var.fit <- lassovar(dat=data.frame(train_data_scaled), exo=NULL, lags = 1, horizon = 1)
   
   # Fit model on treated units
   

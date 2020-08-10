@@ -211,7 +211,7 @@ for(i in c(0,1)){
   # Fixed NT: 20,000
   StockSim(Y,N=1000,T=20,sim=i) 
   StockSim(Y,N=200,T=100,sim=i) 
-  StockSim(Y,N=125,T=160,sim=i) 
+  StockSim(Y,N=160,T=125,sim=i) 
   StockSim(Y,N=100,T=200,sim=i) 
   StockSim(Y,N=20,T=1000,sim=i) 
 }
