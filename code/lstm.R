@@ -36,12 +36,7 @@ lstm <- function(Y,p.weights,treat_indices,d, t0, T){
   py$lr <- 0.001
   py$dr <- 0.5
   py$penalty <- 0.001
-  if(d %in% c("stock")){
-    py$nb_batches <- 32
-  }
-  if(d %in% c("educ","covid","sine")){
-    py$nb_batches <- 16
-  }
+  py$nb_batches <- 16
   
   source_python("code/train_lstm_sim.py")
   

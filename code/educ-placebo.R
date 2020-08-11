@@ -39,7 +39,7 @@ CapacitySim <- function(outcomes,covars.x,covars.z,d,sim,treated.indices){
   ## Setting up the configuration
   N <- nrow(treat)
   T <- ncol(treat)
-  T0 <- ceiling(c(T*0.25, T*0.5, T*0.65,T*0.75,T*0.85))
+  T0 <- ceiling(c(T*0.25, T*0.5, T*0.75,T*0.95))
   N_t <- ceiling(N*0.5) # no. treated units desired <=N
   num_runs <- 100
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
