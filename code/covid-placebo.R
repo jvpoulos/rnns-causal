@@ -70,7 +70,7 @@ CovidSim <- function(Y,N,T,sim){
     ## -----
     
     print("ADH Started")
-    est_model_ADH <- adh_mp_rows(Y_obs, treat_mat)
+    est_model_ADH <- adh_mp_rows(Y_obs, treat_mat, niter=200, rel_tol = 0.001)
     est_model_ADH_msk_err <- (est_model_ADH - Y_sub)*(1-treat_mat)
     est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
     ADH_RMSE_test[i] <- est_model_ADH_test_RMSE
