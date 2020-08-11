@@ -31,7 +31,7 @@ lstm <- function(Y,p.weights,treat_indices,d, t0, T){
   py$t0 <- t0
   py$T <- T
   py$gpu <- 3
-  py$epochs <- 500
+  py$epochs <- 1000
   py$patience <- 10
   py$lr <- 0.001
   py$dr <- 0.5
