@@ -61,7 +61,7 @@ SineSim <- function(Y,N,T,sim){
 
     ## Estimate propensity scores
 
-    p.mod <- cv.glmnet(x=Y_obs, y=(1-treat_mat), family="mgaussian", parallel = TRUE) # LOO
+    p.mod <- cv.glmnet(x=Y_obs, y=(1-treat_mat), family="mgaussian", parallel = TRUE)
     
     p.weights <- predict(p.mod, Y_obs, type="response", s = "lambda.min")[,,1]
     
@@ -213,10 +213,8 @@ print(dim(Y))
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-for(i in c(0,1)){
-  SineSim(Y,N=500,T=140,sim=i) 
-  SineSim(Y,N=400,T=140,sim=i) 
-  SineSim(Y,N=300,T=140,sim=i) 
-  SineSim(Y,N=200,T=140,sim=i) 
-  SineSim(Y,N=100,T=140,sim=i) 
-}
+#SineSim(Y,N=500,T=140,sim=0) 
+SineSim(Y,N=400,T=140,sim=0) 
+SineSim(Y,N=300,T=140,sim=0) 
+SineSim(Y,N=200,T=140,sim=0) 
+SineSim(Y,N=100,T=140,sim=0) 

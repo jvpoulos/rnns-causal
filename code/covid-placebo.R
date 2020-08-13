@@ -207,10 +207,9 @@ Y <- t(read.csv('data/covid-us-counties.csv',header=T)) # N X T
 
 print(paste0("N X T data dimension: ", dim(Y))) 
 
-for(i in c(0,1)){
-  CovidSim(Y,N=500,T=dim(Y)[2],sim=i)
-  CovidSim(Y,N=400,T=dim(Y)[2],sim=i)
-  CovidSim(Y,N=300,T=dim(Y)[2],sim=i)
-  CovidSim(Y,N=200,T=dim(Y)[2],sim=i)
-  CovidSim(Y,N=100,T=dim(Y)[2],sim=i)
-}
+# Fixed NT: 20,000
+CovidSim(Y,N=100,T=dim(Y)[2],sim=0)
+CovidSim(Y,N=130,T=154,sim=0)
+CovidSim(Y,N=160,T=125,sim=0)
+CovidSim(Y,N=190,T=105,sim=0)
+CovidSim(Y,N=dim(Y)[2],T=100,sim=0)
