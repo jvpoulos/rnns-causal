@@ -31,16 +31,21 @@ lstm <- function(Y,p.weights,treat_indices,d, t0, T){
   py$t0 <- t0
   py$T <- T
   py$gpu <- 3
-  py$epochs <- 1000
+  py$epochs <- 500
   py$patience <- 10
   py$lr <- 0.001
   py$dr <- 0.5
-  py$penalty <- 0.001
+  py$penalty <- 0.1
   py$nb_batches <- 16
   
   source_python("code/train_lstm_sim.py")
   
   lstm.pred.test <- as.matrix(read_csv(paste0("results/lstm/",d,"/lstm-",d,"-test.csv"), col_names = FALSE))
+  
+  lstm.pred <- cbind(train_data, rbind(test_data[1:(t0-1),], lstm.pred.test))
+  rownames(lstm.pred) <- rownames(test_data)
+  
+  lstm.pred <-lstm.pred[,match(colnames(data), colnames(lstm.pred))] # same order
   
   return(t(lstm.pred.test))  # N x T
 }

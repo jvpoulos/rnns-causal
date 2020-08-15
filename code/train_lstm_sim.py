@@ -29,7 +29,7 @@ def wrapped_partial(func, *args, **kwargs):
     return partial_func
 
 def weighted_mse(y_true, y_pred, weights):
-    return K.mean(K.square(y_true - y_pred) * (weights/(1-weights)), axis=-1)
+    return K.mean(K.square(y_true - y_pred) * weights, axis=-1)
 
 # Select gpu
 import os

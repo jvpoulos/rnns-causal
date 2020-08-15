@@ -45,11 +45,11 @@ Placebo test experiments
 
 Make each file below executable, execute in shell:
 
+* `sine-placebo.sh`: sine waves data
 * `educ-placebo.sh`: U.S. state government education spending
-* `covid-placebo.sh`: U.S. counties COVID-19 cases
 * `stock-placebo.sh`: U.S. stock prices
 
-To plot RMSEs, run in **R** `stock-placebo-plot.R` and `educ-placebo-plot.R`
+To extract RMSEs for table, run in **R** `placebo-results-table.R`
 
 
 Application: counterfactual predictions
