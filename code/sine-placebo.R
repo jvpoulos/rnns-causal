@@ -220,4 +220,4 @@ print(dim(Y))
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-SineSim(Y,N=dim(Y)[1],T=dim(Y)[2]) 
+SineSim(Y,N=1000,T=dim(Y)[2]) 
