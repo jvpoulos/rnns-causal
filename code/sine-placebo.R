@@ -79,7 +79,7 @@ SineSim <- function(Y,N,T){
     est_model_EN <- en_mp_rows(Y_obs, treat_mat, num_alpha = 1, num_folds = 3)
     est_model_EN_msk_err <- (est_model_EN - Y_sub)*(1-treat_mat)
     est_model_EN_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_EN_msk_err^2, na.rm = TRUE))
-    EN_RMSE_test[i,j] <- est_model_EN_test_RMSE
+    EN_RMSE_test[i] <- est_model_EN_test_RMSE
     print(paste("HR-EN RMSE:", round(est_model_EN_test_RMSE,3),"run",i))
     
     ## -----
@@ -220,4 +220,4 @@ print(dim(Y))
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-SineSim(Y,N=1000,T=dim(Y)[2]) 
+SineSim(Y,N=1000,T=500) 
