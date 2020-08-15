@@ -41,11 +41,12 @@ lstm <- function(Y,p.weights,treat_indices,d, t0, T){
   source_python("code/train_lstm_sim.py")
   
   lstm.pred.test <- as.matrix(read_csv(paste0("results/lstm/",d,"/lstm-",d,"-test.csv"), col_names = FALSE))
+  colnames(lstm.pred.test) <- colnames(test_data)
   
   lstm.pred <- cbind(train_data, rbind(test_data[1:(t0-1),], lstm.pred.test))
   rownames(lstm.pred) <- rownames(test_data)
   
   lstm.pred <-lstm.pred[,match(colnames(data), colnames(lstm.pred))] # same order
   
-  return(t(lstm.pred.test))  # N x T
+  return(t(lstm.pred))  # N x T
 }

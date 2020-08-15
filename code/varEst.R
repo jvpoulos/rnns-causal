@@ -15,7 +15,7 @@ varEst <- function(Y, treat_indices, scale=TRUE){
   test_data <- data[,(treat_indices)]
   
   # Fit the model
-  var.fit <- lassovar(dat=data.frame(train_data), exo=NULL, lags = 1, horizon = 1, ncores=cores) # standardize by default
+  var.fit <- lassovar(dat=data.frame(train_data), exo=NULL, lags = 1, horizon = 1) # standardize by default
   
   # Fit model on treated units
   
