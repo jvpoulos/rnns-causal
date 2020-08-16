@@ -19,7 +19,7 @@ doParallel::registerDoParallel(cores) # register cores (<p)
 
 RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
-SineSim <- function(Y,N,T){
+RBFSim <- function(Y,N,T){
   ## Setting up the configuration
   Nbig <- nrow(Y)
   
@@ -199,8 +199,11 @@ Y.val <- read.csv('data/gp_rbf_val_real.csv',header=F)
 Y.test <- read.csv('data/gp_rbf_test_real.csv',header=F)
 
 Y <- data.matrix(rbind(Y.train,Y.val,Y.test)) # N X T
+colnames(Y) <- 1:ncol(Y)
+rownames(Y) <- 1:nrow(Y)
+
 print(dim(Y))
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-SineSim(Y,N=2000,T=1000) 
+RBFSim(Y,N=2000,T=1000) 

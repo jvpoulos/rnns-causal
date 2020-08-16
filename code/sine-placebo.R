@@ -1,5 +1,5 @@
 ###################################################
-# RBF Data Simulations #
+# Sine Data Simulations #
 ###################################################
 
 ## Loading Source files
@@ -19,7 +19,7 @@ doParallel::registerDoParallel(cores) # register cores (<p)
 
 RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
-rbfSim <- function(Y,N,T){
+SineSim <- function(Y,N,T){
   ## Setting up the configuration
   Nbig <- nrow(Y)
   
@@ -199,8 +199,11 @@ Y.val <- read.csv('data/sine_val_real.csv',header=F)
 Y.test <- read.csv('data/sine_test_real.csv',header=F)
 
 Y <- data.matrix(rbind(Y.train,Y.val,Y.test)) # N X T
+colnames(Y) <- 1:ncol(Y)
+rownames(Y) <- 1:nrow(Y)
+
 print(dim(Y))
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-rbfSim(Y,N=2000,T=1000) 
+SineSim(Y,N=2000,T=1000) 
