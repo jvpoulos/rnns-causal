@@ -30,6 +30,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N){
   Y <- Y[, - as.numeric(which(apply(Y, 2, var) == 0))] # rm col from 0 variance
   Y.missing <- Y.missing[,colnames(Y.missing) %in% colnames(Y)]
   treat <- treat[,colnames(treat) %in% colnames(Y)]
+  covars.x <- covars.x[, - as.numeric(which(apply(covars.x, 2, var) == 0))] # rm col from 0 variance
   
   ## Treated 
   treat_y <- Y[rownames(Y)%in%treated.indices,] 
@@ -38,7 +39,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N){
   treat <- treat[!rownames(treat)%in%rownames(treat_y),]
   Y <- Y[!rownames(Y)%in%rownames(treat_y),]
   Y.missing <- Y.missing[!rownames(Y.missing)%in%rownames(treat_y),]
-  covars.x <- covars.x[!rownames(covars.x)%in%c(rownames(treat_y),"GA"),] # GA not in outcomes
+  covars.x <- covars.x[!rownames(covars.x)%in%c(rownames(treat_y)),]
   
   ## Setting up the configuration
   Nbig <- nrow(Y)
@@ -67,8 +68,8 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N){
     all_indices <- sort(sample(1:Nbig, N))
     treat_indices <- sort(sample(1:N, N_t))
     Y_sub <- Y[all_indices,1:T]
-    Y.missing <- Y.missing[all_indices,1:T]
-    covars.x <- covars.x[rownames(covars.x)%in% rownames(Y_sub),]
+    Y_sub_missing <- Y.missing[all_indices,1:T]
+    covars_x_sub <- covars.x[rownames(covars.x)%in% rownames(Y_sub),]
     ## Simultaneuous (simul_adapt) or Staggered adoption (stag_adapt)
     if(is_simul == 1){
       treat_mat <- simul_adapt(Y_sub, N_t, (t0-1), treat_indices)
@@ -81,7 +82,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N){
     treat_NA <- treat_mat
     treat_NA[treat_NA==0] <- NA
     
-    Y_obs <- Y_sub * treat_NA * Y.missing
+    Y_obs <- Y_sub * treat_NA * Y_sub_missing
     
     Y_obs.fits <- softImpute(Y_obs, rank.max=3, lambda=1.9, type="svd") # fit on training set
     
@@ -91,8 +92,8 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N){
     
     ## Estimate propensity scores
     
-    p.mod <-   cv.glmnet(x=covars.x, y=(1-treat_mat)[,t0], nfolds=3, family="binomial")
-    p.weights <- predict(p.mod, covars.x, type="response")
+    p.mod <-   cv.glmnet(x=covars_x_sub, y=(1-treat_mat)[,t0], nfolds=3, family="binomial")
+    p.weights <- predict(p.mod, covars_x_sub, type="response")
     p.weights <- replicate(T,as.vector(p.weights)) # assume constant across T
     
     rownames(p.weights) <- rownames(Y_obs)
@@ -105,7 +106,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N){
     ## HR-EN: : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
     ## -----
     
-    est_model_EN <- en_mp_rows(Y_obs, treat_mat, num_alpha = 1, num_folds = 3)
+    est_model_EN <- en_mp_rows(Y_obs, treat_mat, num_alpha = 1, num_folds = 10)
     est_model_EN_msk_err <- (est_model_EN - Y_sub)*(1-treat_mat)
     est_model_EN_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_EN_msk_err^2, na.rm = TRUE))
     EN_RMSE_test[i] <- est_model_EN_test_RMSE
@@ -167,7 +168,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N){
     ## VT-EN: : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
     ## -----
     
-    est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_alpha = 1, num_folds = 3))
+    est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_alpha = 1, num_folds = 10))
     est_model_ENT_msk_err <- (est_model_ENT - Y_sub)*(1-treat_mat)
     est_model_ENT_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ENT_msk_err^2, na.rm = TRUE))
     ENT_RMSE_test[i] <- est_model_ENT_test_RMSE
