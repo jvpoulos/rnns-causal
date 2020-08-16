@@ -211,9 +211,9 @@ rbfSim <- function(Y,N,T){
 
 # Load data
 
-Y.train <-  read.csv('data/rbf_train_real.csv',header=F)
-Y.val <- read.csv('data/rbf_val_real.csv',header=F) 
-Y.test <- read.csv('data/rbf_test_real.csv',header=F)
+Y.train <-  read.csv('data/sine_train_real.csv',header=F)
+Y.val <- read.csv('data/sine_val_real.csv',header=F) 
+Y.test <- read.csv('data/sine_test_real.csv',header=F)
 
 Y <- data.matrix(rbind(Y.train,Y.val,Y.test)) # N X T
 print(dim(Y))

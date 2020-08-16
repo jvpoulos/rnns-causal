@@ -81,8 +81,6 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices){
     
     Y_obs <- Y_obs * treat_mat # treated are 0
     
-    Y_imp <- Y * Y.missing # use for calculating RMSE on non-imputed values
-    
     ## Estimate propensity scores
     
     p.mod <-   glmnet(x=covars.x, y=(1-treat_mat)[,t0], lambda=0.1, family="binomial")
@@ -95,14 +93,12 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices){
     p.weights[treat_indices,] <- 1/p.weights[treat_indices,]  # transform 
     p.weights[-treat_indices,] <- 1/(1-p.weights[-treat_indices,])
     
-    # RMSE calculated on Y_imp (missing values are NA)
-    
     ## -----
     ## HR-EN: : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
     ## -----
     
     est_model_EN <- en_mp_rows(Y_obs, treat_mat, num_alpha = 1, num_folds = 3)
-    est_model_EN_msk_err <- (est_model_EN - Y_imp)*(1-treat_mat)
+    est_model_EN_msk_err <- (est_model_EN - Y)*(1-treat_mat)
     est_model_EN_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_EN_msk_err^2, na.rm = TRUE))
     EN_RMSE_test[i] <- est_model_EN_test_RMSE
     print(paste("HR-EN RMSE:", round(est_model_EN_test_RMSE,3),"run",i))
@@ -111,7 +107,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices){
     ## ADH
     ## -----
     est_model_ADH <- adh_mp_rows(Y_obs, treat_mat, niter=200, rel_tol = 0.001)
-    est_model_ADH_msk_err <- (est_model_ADH - Y_imp)*(1-treat_mat)
+    est_model_ADH_msk_err <- (est_model_ADH - Y)*(1-treat_mat)
     est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
     ADH_RMSE_test[i] <- est_model_ADH_test_RMSE
     print(paste("ADH RMSE:", round(est_model_ADH_test_RMSE,3),"run",i))
@@ -122,7 +118,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices){
     
     source("code/ed.R")
     est_model_ED <- ed(Y_obs, p.weights, treat_indices, d, t0, T) 
-    est_model_ED_msk_err <- (est_model_ED - Y_imp)*(1-treat_mat)
+    est_model_ED_msk_err <- (est_model_ED - Y)*(1-treat_mat)
     est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
     ED_RMSE_test[i] <- est_model_ED_test_RMSE
     print(paste("ED RMSE:", round(est_model_ED_test_RMSE,3),"run",i))
@@ -133,7 +129,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices){
     
     source("code/lstm.R")
     est_model_LSTM <- lstm(Y_obs, p.weights, treat_indices, d, t0, T)
-    est_model_LSTM_msk_err <- (est_model_LSTM - Y_imp)*(1-treat_mat)
+    est_model_LSTM_msk_err <- (est_model_LSTM - Y)*(1-treat_mat)
     est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
     LSTM_RMSE_test[i] <- est_model_LSTM_test_RMSE
     print(paste("LSTM RMSE:", round(est_model_LSTM_test_RMSE,3),"run",i))
@@ -144,7 +140,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices){
     
     source("code/varEst.R")
     est_model_VAR <- varEst(Y_obs, treat_indices)
-    est_model_VAR_msk_err <- (est_model_VAR - Y_imp)*(1-treat_mat)
+    est_model_VAR_msk_err <- (est_model_VAR - Y)*(1-treat_mat)
     est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
     VAR_RMSE_test[i] <- est_model_VAR_test_RMSE
     print(paste("VAR RMSE:", round(est_model_VAR_test_RMSE,3),"run",i))
@@ -155,7 +151,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices){
     
     est_model_MCPanel <- mcnnm(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, lambda_L = 0.1, niter = 200)[[1]]
     est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
-    est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y_imp)*(1-treat_mat)
+    est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y)*(1-treat_mat)
     est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
     MCPanel_RMSE_test[i] <- est_model_MCPanel$test_RMSE
     print(paste("MC-NNM RMSE:", round(est_model_MCPanel$test_RMSE,3),"run",i))
@@ -165,7 +161,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices){
     ## -----
     
     est_model_DID <- t(DID(t(Y_obs), t(treat_mat)))
-    est_model_DID_msk_err <- (est_model_DID - Y_imp)*(1-treat_mat)
+    est_model_DID_msk_err <- (est_model_DID - Y)*(1-treat_mat)
     est_model_DID_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_DID_msk_err^2, na.rm = TRUE))
     DID_RMSE_test[i] <- est_model_DID_test_RMSE
     print(paste("DID RMSE:", round(est_model_DID_test_RMSE,3),"run",i))
@@ -175,7 +171,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices){
     ## -----
     
     est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_alpha = 1, num_folds = 3))
-    est_model_ENT_msk_err <- (est_model_ENT - Y_imp)*(1-treat_mat)
+    est_model_ENT_msk_err <- (est_model_ENT - Y)*(1-treat_mat)
     est_model_ENT_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ENT_msk_err^2, na.rm = TRUE))
     ENT_RMSE_test[i] <- est_model_ENT_test_RMSE
     print(paste("VT-EN RMSE:", round(est_model_ENT_test_RMSE,3),"run",i))
