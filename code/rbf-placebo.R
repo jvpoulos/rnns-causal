@@ -36,7 +36,6 @@ SineSim <- function(Y,N,T){
   
   MCPanel_RMSE_test <- matrix(0L,num_runs)
   VAR_RMSE_test <- matrix(0L,num_runs)
-  LSTM_RMSE_test <- matrix(0L,num_runs)
   ED_RMSE_test <- matrix(0L,num_runs)
   DID_RMSE_test <- matrix(0L,num_runs)
   ADH_RMSE_test <- matrix(0L,num_runs)
@@ -87,7 +86,7 @@ SineSim <- function(Y,N,T){
     ## -----
     
     print("ADH Started")
-    est_model_ADH <- adh_mp_rows(Y_obs, treat_mat, niter=200, rel_tol = 0.001)
+    est_model_ADH <- adh_mp_rows(Y_obs, treat_mat)
     est_model_ADH_msk_err <- (est_model_ADH - Y_sub)*(1-treat_mat)
     est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
     ADH_RMSE_test[i] <- est_model_ADH_test_RMSE
@@ -106,18 +105,6 @@ SineSim <- function(Y,N,T){
     print(paste("ED RMSE:", round(est_model_ED_test_RMSE,3),"run",i))
     
     ## ------
-    ## LSTM
-    ## ------
-    
-    print("LSTM Started")
-    source("code/lstm.R")
-    est_model_LSTM <- lstm(Y=Y_obs, p.weights, treat_indices, d, t0, T)
-    est_model_LSTM_msk_err <- (est_model_LSTM - Y_sub)*(1-treat_mat)
-    est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
-    LSTM_RMSE_test[i] <- est_model_LSTM_test_RMSE
-    print(paste("LSTM RMSE:", round(est_model_LSTM_test_RMSE,3),"run",i))
-    
-    ## ------
     ## VAR
     ## ------
     
@@ -134,7 +121,7 @@ SineSim <- function(Y,N,T){
     ## ------
     
     print("MC-NNM Started")
-    est_model_MCPanel <- mcnnm(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, lambda_L = c(0.1), niter = 200)[[1]] # no CV to save computational time
+    est_model_MCPanel <- mcnnm_cv(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, num_folds = 3)
     est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
     est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y_sub)*(1-treat_mat)
     est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
@@ -171,9 +158,6 @@ SineSim <- function(Y,N,T){
   VAR_avg_RMSE <- apply(VAR_RMSE_test,2,mean)
   VAR_std_error <- apply(VAR_RMSE_test,2,sd)/sqrt(num_runs)
   
-  LSTM_avg_RMSE <- apply(LSTM_RMSE_test,2,mean)
-  LSTM_std_error <- apply(LSTM_RMSE_test,2,sd)/sqrt(num_runs)
-  
   ED_avg_RMSE <- apply(ED_RMSE_test,2,mean)
   ED_std_error <- apply(ED_RMSE_test,2,sd)/sqrt(num_runs)
   
@@ -193,13 +177,12 @@ SineSim <- function(Y,N,T){
   
   df1 <-
     data.frame(
-      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,EN_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,ADH_avg_RMSE,VAR_avg_RMSE,ENT_avg_RMSE),
-      "se" = c(DID_std_error,ED_std_error,EN_std_error,LSTM_std_error,MCPanel_std_error,ADH_std_error,VAR_std_error,ENT_std_error),
+      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,EN_avg_RMSE,MCPanel_avg_RMSE,ADH_avg_RMSE,VAR_avg_RMSE,ENT_avg_RMSE),
+      "se" = c(DID_std_error,ED_std_error,EN_std_error,MCPanel_std_error,ADH_std_error,VAR_std_error,ENT_std_error),
       "x" = t0/T,
       "Method" = c("DID", 
                    "Encoder-decoder",
                    "Horizontal",
-                   "LSTM", 
                    "MC-NNM", 
                    "SCM",
                    "VAR",
