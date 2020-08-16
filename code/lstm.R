@@ -36,7 +36,10 @@ lstm <- function(Y,p.weights,treat_indices,d, t0, T){
   py$lr <- 0.001
   py$dr <- 0.5
   py$penalty <- 0.1
-  py$nb_batches <- 16
+  py$nb_batches <- 32
+  if(d=='educ.pc'){
+    py$nb_batches <- 8
+  }
   
   source_python("code/train_lstm_sim.py")
   

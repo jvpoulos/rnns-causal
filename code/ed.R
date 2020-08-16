@@ -36,7 +36,10 @@ ed <- function(Y,p.weights,treat_indices,d, t0, T){
   py$lr <- 0.001
   py$dr <- 0.5
   py$penalty <- 0.1
-  py$nb_batches <- 16
+  py$nb_batches <- 32
+  if(d=='educ.pc'){
+    py$nb_batches <- 8
+  }
   
   source_python("code/train_encoder_decoder_sim.py")
   
@@ -46,7 +49,7 @@ ed <- function(Y,p.weights,treat_indices,d, t0, T){
   ed.pred <- cbind(train_data, rbind(test_data[1:(t0-1),], ed.pred.test))
   rownames(ed.pred) <- rownames(test_data)
   
-  ed.pred <-ed.pred[,match(colnames(data), colnames(ed.pred))] # same order
+  ed.pred <- ed.pred[,match(colnames(data), colnames(ed.pred))] # same order
   
   return(t(ed.pred)) # N x T
 }

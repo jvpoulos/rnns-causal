@@ -62,7 +62,7 @@ StockSim <- function(Y,N,T){
 
     ## Estimate propensity scores
 
-    p.mod <-   glmnet(x=Y_obs, y=(1-treat_mat)[,t0], lambda=0.1, family="binomial")
+    p.mod <-   cv.glmnet(x=Y_obs, y=(1-treat_mat)[,t0], nfolds=3, family="binomial")
     p.weights <- predict(p.mod, Y_obs, type="response")
     p.weights <- replicate(T,as.vector(p.weights)) # assume constant across T
     

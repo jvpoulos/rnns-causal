@@ -22,22 +22,27 @@ cl <- makePSOCKcluster(cores)
 
 doParallel::registerDoParallel(cores) # register cores (<p)
 
-CapacitySim <- function(outcomes,covars.x,d,treated.indices){
+CapacitySim <- function(outcomes,covars.x,d,treated.indices,N){
   Y <- outcomes[[d]]$M # NxT 
   Y.missing <- outcomes[[d]]$M.missing # NxT 
   treat <- outcomes[[d]]$mask # NxT masked matrix 
+  
+  Y <- Y[, - as.numeric(which(apply(Y, 2, var) == 0))] # rm col from 0 variance
+  Y.missing <- Y.missing[,colnames(Y.missing) %in% colnames(Y)]
+  treat <- treat[,colnames(treat) %in% colnames(Y)]
   
   ## Treated 
   treat_y <- Y[rownames(Y)%in%treated.indices,] 
   
   ## Working with the rest of matrix
-  treat <- treat[!rownames(treat)%in%c(rownames(treat_y),"TN"),][,which(as.numeric(colnames(treat))>= 1809)] # (randomly) drop TN for parity
-  Y <- Y[!rownames(Y)%in%c(rownames(treat_y),"TN"),][,which(as.numeric(colnames(Y))>= 1809)]
-  Y.missing <- Y.missing[!rownames(Y.missing)%in%c(rownames(treat_y),"TN"),][,which(as.numeric(colnames(Y.missing))>= 1809)]
-  covars.x <- covars.x[!rownames(covars.x)%in%c(rownames(treat_y),"TN","GA"),] # GA not in outcomes
+  treat <- treat[!rownames(treat)%in%rownames(treat_y),]
+  Y <- Y[!rownames(Y)%in%rownames(treat_y),]
+  Y.missing <- Y.missing[!rownames(Y.missing)%in%rownames(treat_y),]
+  covars.x <- covars.x[!rownames(covars.x)%in%c(rownames(treat_y),"GA"),] # GA not in outcomes
   
   ## Setting up the configuration
-  N <- nrow(treat)
+  Nbig <- nrow(Y)
+  N <- N
   T <- ncol(treat)
   t0 <- ceiling(T*0.5)
   N_t <- ceiling(N*0.5) # no. treated units desired <=N
@@ -60,20 +65,24 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices){
   for(i in c(1:num_runs)){
     print(paste0(paste0("Run number ", i)," started"))
     ## Fix the treated units in the whole run for a better comparison
+    all_indices <- sort(sample(1:Nbig, N))
     treat_indices <- sort(sample(1:N, N_t))
+    Y_sub <- Y[all_indices,1:T]
+    Y.missing <- Y.missing[all_indices,1:T]
+    covars.x <- covars.x[rownames(covars.x)%in% rownames(Y_sub),]
     ## Simultaneuous (simul_adapt) or Staggered adoption (stag_adapt)
     if(is_simul == 1){
-      treat_mat <- simul_adapt(Y, N_t, (t0-1), treat_indices)
+      treat_mat <- simul_adapt(Y_sub, N_t, (t0-1), treat_indices)
     }else{
-      treat_mat <- stag_adapt(Y, N_t, (t0-1), treat_indices)
+      treat_mat <- stag_adapt(Y_sub, N_t, (t0-1), treat_indices)
     }
-    rownames(treat_mat) <- rownames(Y)
-    colnames(treat_mat) <- colnames(Y)
+    rownames(treat_mat) <- rownames(Y_sub)
+    colnames(treat_mat) <- colnames(Y_sub)
     
     treat_NA <- treat_mat
     treat_NA[treat_NA==0] <- NA
     
-    Y_obs <- Y * treat_NA * Y.missing
+    Y_obs <- Y_sub * treat_NA * Y.missing
     
     Y_obs.fits <- softImpute(Y_obs[,1:(t0-1)][-treat_indices,], rank.max=3, lambda=1.9, type="svd") # fit on training set
     
@@ -83,7 +92,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices){
     
     ## Estimate propensity scores
     
-    p.mod <-   glmnet(x=covars.x, y=(1-treat_mat)[,t0], lambda=0.1, family="binomial")
+    p.mod <-   cv.glmnet(x=covars.x, y=(1-treat_mat)[,t0], nfolds=3, family="binomial")
     p.weights <- predict(p.mod, covars.x, type="response")
     p.weights <- replicate(T,as.vector(p.weights)) # assume constant across T
     
@@ -98,7 +107,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices){
     ## -----
     
     est_model_EN <- en_mp_rows(Y_obs, treat_mat, num_alpha = 1, num_folds = 3)
-    est_model_EN_msk_err <- (est_model_EN - Y)*(1-treat_mat)
+    est_model_EN_msk_err <- (est_model_EN - Y_sub)*(1-treat_mat)
     est_model_EN_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_EN_msk_err^2, na.rm = TRUE))
     EN_RMSE_test[i] <- est_model_EN_test_RMSE
     print(paste("HR-EN RMSE:", round(est_model_EN_test_RMSE,3),"run",i))
@@ -107,7 +116,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices){
     ## ADH
     ## -----
     est_model_ADH <- adh_mp_rows(Y_obs, treat_mat, niter=200, rel_tol = 0.001)
-    est_model_ADH_msk_err <- (est_model_ADH - Y)*(1-treat_mat)
+    est_model_ADH_msk_err <- (est_model_ADH - Y_sub)*(1-treat_mat)
     est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
     ADH_RMSE_test[i] <- est_model_ADH_test_RMSE
     print(paste("ADH RMSE:", round(est_model_ADH_test_RMSE,3),"run",i))
@@ -118,7 +127,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices){
     
     source("code/ed.R")
     est_model_ED <- ed(Y_obs, p.weights, treat_indices, d, t0, T) 
-    est_model_ED_msk_err <- (est_model_ED - Y)*(1-treat_mat)
+    est_model_ED_msk_err <- (est_model_ED - Y_sub)*(1-treat_mat)
     est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
     ED_RMSE_test[i] <- est_model_ED_test_RMSE
     print(paste("ED RMSE:", round(est_model_ED_test_RMSE,3),"run",i))
@@ -129,7 +138,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices){
     
     source("code/lstm.R")
     est_model_LSTM <- lstm(Y_obs, p.weights, treat_indices, d, t0, T)
-    est_model_LSTM_msk_err <- (est_model_LSTM - Y)*(1-treat_mat)
+    est_model_LSTM_msk_err <- (est_model_LSTM - Y_sub)*(1-treat_mat)
     est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
     LSTM_RMSE_test[i] <- est_model_LSTM_test_RMSE
     print(paste("LSTM RMSE:", round(est_model_LSTM_test_RMSE,3),"run",i))
@@ -140,7 +149,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices){
     
     source("code/varEst.R")
     est_model_VAR <- varEst(Y_obs, treat_indices)
-    est_model_VAR_msk_err <- (est_model_VAR - Y)*(1-treat_mat)
+    est_model_VAR_msk_err <- (est_model_VAR - Y_sub)*(1-treat_mat)
     est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
     VAR_RMSE_test[i] <- est_model_VAR_test_RMSE
     print(paste("VAR RMSE:", round(est_model_VAR_test_RMSE,3),"run",i))
@@ -151,7 +160,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices){
     
     est_model_MCPanel <- mcnnm(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, lambda_L = 0.1, niter = 200)[[1]]
     est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
-    est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y)*(1-treat_mat)
+    est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y_sub)*(1-treat_mat)
     est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
     MCPanel_RMSE_test[i] <- est_model_MCPanel$test_RMSE
     print(paste("MC-NNM RMSE:", round(est_model_MCPanel$test_RMSE,3),"run",i))
@@ -161,7 +170,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices){
     ## -----
     
     est_model_DID <- t(DID(t(Y_obs), t(treat_mat)))
-    est_model_DID_msk_err <- (est_model_DID - Y)*(1-treat_mat)
+    est_model_DID_msk_err <- (est_model_DID - Y_sub)*(1-treat_mat)
     est_model_DID_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_DID_msk_err^2, na.rm = TRUE))
     DID_RMSE_test[i] <- est_model_DID_test_RMSE
     print(paste("DID RMSE:", round(est_model_DID_test_RMSE,3),"run",i))
@@ -171,7 +180,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices){
     ## -----
     
     est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_alpha = 1, num_folds = 3))
-    est_model_ENT_msk_err <- (est_model_ENT - Y)*(1-treat_mat)
+    est_model_ENT_msk_err <- (est_model_ENT - Y_sub)*(1-treat_mat)
     est_model_ENT_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ENT_msk_err^2, na.rm = TRUE))
     ENT_RMSE_test[i] <- est_model_ENT_test_RMSE
     print(paste("VT-EN RMSE:", round(est_model_ENT_test_RMSE,3),"run",i))
@@ -238,4 +247,4 @@ capacity.covars <-capacity.covars[match(rownames(capacity.outcomes$educ.pc$M), r
 
 treat_indices_order <- row.names(capacity.outcomes$educ.pc$M)[row.names(capacity.outcomes$educ.pc$M)%in% c("CA", "IA", "KS", "MI", "MN", "MO", "OH", "OR", "WI", "IL", "NV", "AL", "MS", "FL", "LA", "IN")]
 
-CapacitySim(outcomes=capacity.outcomes,covars.x=capacity.covars, d="educ.pc", treated.indices = treat_indices_order)
+CapacitySim(outcomes=capacity.outcomes,covars.x=capacity.covars, d="educ.pc", treated.indices = treat_indices_order, N=length(treat_indices_order))
