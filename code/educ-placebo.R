@@ -9,6 +9,7 @@ library(dplyr)
 library(glmnet)
 library(caret)
 library(imputeTS)
+library(softImpute)
 
 # Setup parallel processing 
 library(parallel)
@@ -74,8 +75,9 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices){
     
     Y_obs <- Y * treat_NA * Y.missing
     
-    preProcValues <- preProcess(t(Y_obs), method = c("medianImpute"), verbose=TRUE) # use training set median
-    Y_obs <- t(predict(preProcValues, t(Y_obs)))
+    Y_obs.fits <- softImpute(Y_obs[,1:(t0-1)][-treat_indices,], rank.max=3, lambda=1.9, type="svd") # fit on training set
+    
+    Y_obs <- complete(Y_obs, Y_obs.fits) # complete on full matrix
     
     Y_obs <- Y_obs * treat_mat # treated are 0
     

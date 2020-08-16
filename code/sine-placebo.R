@@ -1,5 +1,5 @@
 ###################################################
-# Sine Wave Data Simulations #
+# RBF Data Simulations #
 ###################################################
 
 ## Loading Source files
@@ -19,7 +19,7 @@ doParallel::registerDoParallel(cores) # register cores (<p)
 
 RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
-SineSim <- function(Y,N,T){
+rbfSim <- function(Y,N,T){
   ## Setting up the configuration
   Nbig <- nrow(Y)
   
@@ -30,7 +30,7 @@ SineSim <- function(Y,N,T){
   N_t <- ceiling(N/2)
   num_runs <- 100
   is_simul <- 1 ## Whether to simulate Simultaneus Adoption or Staggered Adoption
-  d <- 'sine'
+  d <- 'rbf'
 
   ## Matrices for saving RMSE values
   
@@ -211,13 +211,13 @@ SineSim <- function(Y,N,T){
 
 # Load data
 
-Y.train <-  read.csv('data/sine_train_real.csv',header=F)
-Y.val <- read.csv('data/sine_val_real.csv',header=F) 
-Y.test <- read.csv('data/sine_test_real.csv',header=F)
+Y.train <-  read.csv('data/rbf_train_real.csv',header=F)
+Y.val <- read.csv('data/rbf_val_real.csv',header=F) 
+Y.test <- read.csv('data/rbf_test_real.csv',header=F)
 
 Y <- data.matrix(rbind(Y.train,Y.val,Y.test)) # N X T
 print(dim(Y))
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-SineSim(Y,N=1000,T=500) 
+rbfSim(Y,N=1500,T=1000) 
