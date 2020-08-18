@@ -19,7 +19,7 @@ doParallel::registerDoParallel(cores) # register cores (<p)
 
 RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
-SineSim <- function(Y,N,T){
+SineSim <- function(Y,N,T,cores){
   ## Setting up the configuration
   Nbig <- nrow(Y)
   
@@ -28,7 +28,7 @@ SineSim <- function(Y,N,T){
   
   t0 <- ceiling(T/2) # time of initial treatment
   N_t <- ceiling(N/2)
-  num_runs <- 100
+  num_runs <- 60
   is_simul <- 1 ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   d <- 'sine'
 
@@ -61,7 +61,7 @@ SineSim <- function(Y,N,T){
 
     ## Estimate propensity scores
 
-    p.mod <-   cv.glmnet(x=Y_obs, y=(1-treat_mat)[,t0], nfolds=3, family="binomial")
+    p.mod <-   cv.glmnet(x=Y_obs, y=(1-treat_mat)[,t0], nfolds=3, nlambda = 10, thresh = 1e-05, family="binomial")
     p.weights <- predict(p.mod, Y_obs, type="response")
     p.weights <- replicate(T,as.vector(p.weights)) # assume constant across T
     
@@ -75,7 +75,7 @@ SineSim <- function(Y,N,T){
     ## HR-EN: : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
     ## -----
     
-    est_model_EN <- en_mp_rows(Y_obs, treat_mat, num_alpha = 1, num_folds = 3)
+    est_model_EN <- en_mp_rows(Y_obs, treat_mat, num_lam = 10, num_alpha = 1, num_folds = 3)
     est_model_EN_msk_err <- (est_model_EN - Y_sub)*(1-treat_mat)
     est_model_EN_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_EN_msk_err^2, na.rm = TRUE))
     EN_RMSE_test[i] <- est_model_EN_test_RMSE
@@ -86,7 +86,7 @@ SineSim <- function(Y,N,T){
     ## -----
     
     print("ADH Started")
-    est_model_ADH <- adh_mp_rows(Y_obs, treat_mat)
+    est_model_ADH <- adh_mp_rows(Y_obs, treat_mat, niter = 400, rel_tol = 1e-05)
     est_model_ADH_msk_err <- (est_model_ADH - Y_sub)*(1-treat_mat)
     est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
     ADH_RMSE_test[i] <- est_model_ADH_test_RMSE
@@ -110,7 +110,7 @@ SineSim <- function(Y,N,T){
     
     print("VAR Started")
     source("code/varEst.R")
-    est_model_VAR <- varEst(Y=Y_obs, treat_indices)
+    est_model_VAR <- varEst(Y=Y_obs, treat_indices, cores=cores)
     est_model_VAR_msk_err <- (est_model_VAR - Y_sub)*(1-treat_mat)
     est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
     VAR_RMSE_test[i] <- est_model_VAR_test_RMSE
@@ -121,7 +121,7 @@ SineSim <- function(Y,N,T){
     ## ------
     
     print("MC-NNM Started")
-    est_model_MCPanel <- mcnnm_cv(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, num_folds = 3)
+    est_model_MCPanel <- mcnnm_cv(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, num_folds = 3, num_lam_L = 10, niter = 400, rel_tol = 1e-05)
     est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
     est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y_sub)*(1-treat_mat)
     est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
@@ -143,7 +143,7 @@ SineSim <- function(Y,N,T){
     ## VT-EN : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
     ## -----
     
-    est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_alpha = 1, num_folds = 3))
+    est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_lam = 10, num_alpha = 1, num_folds = 3))
     est_model_ENT_msk_err <- (est_model_ENT - Y_sub)*(1-treat_mat)
     est_model_ENT_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ENT_msk_err^2, na.rm = TRUE))
     ENT_RMSE_test[i] <- est_model_ENT_test_RMSE
@@ -206,4 +206,4 @@ print(dim(Y))
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-SineSim(Y,N=2000,T=1000) 
+SineSim(Y,N=1000,T=500, cores=cores) 

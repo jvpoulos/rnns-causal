@@ -7,7 +7,7 @@
 library(lassovar)
 library(gtools)
 
-varEst <- function(Y, treat_indices, scale=TRUE){
+varEst <- function(Y, treat_indices, scale=TRUE, cores){
   # Converting the data to a floating point matrix
   data <- data.matrix(t(Y)) # (T x N)
   
@@ -15,7 +15,7 @@ varEst <- function(Y, treat_indices, scale=TRUE){
   test_data <- data[,(treat_indices)]
   
   # Fit the model
-  var.fit <- lassovar(dat=data.frame(train_data), exo=NULL, lags = 1, horizon = 1) # standardize by default
+  var.fit <- lassovar(dat=data.frame(train_data), exo=NULL, lags = 1, horizon = 1, mc=TRUE, ncores=cores) # standardize by default
   
   # Fit model on treated units
   
