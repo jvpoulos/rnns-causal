@@ -206,4 +206,4 @@ print(dim(Y))
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-LinearSim(Y,N=1000,T=500, cores=cores) 
+LinearSim(Y,N=2000,T=500, cores=cores) 

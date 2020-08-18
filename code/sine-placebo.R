@@ -206,4 +206,4 @@ print(dim(Y))
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-SineSim(Y,N=1000,T=500, cores=cores) 
+SineSim(Y,N=2000,T=500, cores=cores) 
