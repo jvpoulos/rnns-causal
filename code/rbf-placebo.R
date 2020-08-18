@@ -10,7 +10,7 @@ library(glmnet)
 library(parallel)
 library(doParallel)
 
-cores <- parallel::detectCores()
+cores <- ceiling(parallel::detectCores()/1.2)
 print(paste0('cores registered: ', cores))
 
 cl <- makePSOCKcluster(cores)
@@ -206,4 +206,4 @@ print(dim(Y))
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-RBFSim(Y,N=2000,T=500, cores=cores) 
+RBFSim(Y,N=1500,T=500, cores=cores) 
