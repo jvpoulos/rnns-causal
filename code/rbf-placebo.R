@@ -10,7 +10,7 @@ library(glmnet)
 library(parallel)
 library(doParallel)
 
-cores <- ceiling(parallel::detectCores()/1.2)
+cores <- parallel::detectCores()
 print(paste0('cores registered: ', cores))
 
 cl <- makePSOCKcluster(cores)
@@ -86,7 +86,7 @@ RBFSim <- function(Y,N,T,cores){
     ## -----
     
     print("ADH Started")
-    est_model_ADH <- adh_mp_rows(Y_obs, treat_mat, niter = 400, rel_tol = 1e-05)
+    est_model_ADH <- adh_mp_rows(Y_obs, treat_mat, niter = 200, rel_tol = 1e-05)
     est_model_ADH_msk_err <- (est_model_ADH - Y_sub)*(1-treat_mat)
     est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
     ADH_RMSE_test[i] <- est_model_ADH_test_RMSE
@@ -121,7 +121,7 @@ RBFSim <- function(Y,N,T,cores){
     ## ------
     
     print("MC-NNM Started")
-    est_model_MCPanel <- mcnnm_cv(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, num_folds = 3, num_lam_L = 10, niter = 400, rel_tol = 1e-05)
+    est_model_MCPanel <- mcnnm(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, lambda_L = c(0.1), niter = 200, rel_tol = 1e-05)[[1]] # no CV to save computational time
     est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
     est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y_sub)*(1-treat_mat)
     est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
