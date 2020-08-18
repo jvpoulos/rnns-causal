@@ -45,6 +45,7 @@ Placebo test experiments
 
 Make each file below executable, execute in shell:
 
+* `linear-placebo.sh`: generated linear data
 * `sine-placebo.sh`: generated sine waves data
 * `rbf-placebo.sh`: generated RBF data
 * `educ-placebo.sh`: U.S. state government education spending
