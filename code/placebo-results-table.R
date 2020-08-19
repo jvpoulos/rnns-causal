@@ -1,18 +1,25 @@
 ### Load placebo test results ###
 
-# Education spending
+# Sine
 
-educ_pc_N_16_T_156_numruns_100_num_treated_8_simultaneuous_1 <- 
-  load("results/plots/educ_pc_N_16_T_130_numruns_100_num_treated_8_simultaneuous_1.rds")
+load("results/table-results/sine_N_1500_T_500_numruns_60_num_treated_750_simultaneuous_1.rds")
 
-df1$stderror <- (df1$y -df1$lb)/1.96
+sine <- df1
 
-print(df1[df1$x==0.5,], digits=4)
+# RBF
+
+load("results/table-results/rbf_N_1500_T_500_numruns_60_num_treated_750_simultaneuous_1.rds")
+
+rbf <- df1
 
 # Stock
 
-stock <- readRDS("results/plots/stock_N_800_T_125_numruns_100_num_treated_400_simultaneuous_1.rds") 
+load("results/table-results/stock_N_1500_T_500_numruns_60_num_treated_750_simultaneuous_1.rds")
 
-stock$stderror <- (stock$y -stock$lb)/1.96
+stock <- df1
 
-print(stock, digits=2)
+# Education spending
+
+load("results/table-results/educ_pc_N_16_T_148_numruns_100_num_treated_8_simultaneuous_1.rds")
+
+educ <- df1

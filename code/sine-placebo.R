@@ -19,16 +19,16 @@ doParallel::registerDoParallel(cores) # register cores (<p)
 
 RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
-SineSim <- function(Y,N,T,cores){
+SineSim <- function(Y,N,T){
   ## Setting up the configuration
   Nbig <- nrow(Y)
   
   N <- N
   T <- T
   
-  t0 <- ceiling(T/2) # time of initial treatment
+  t0 <- ceiling(T*0.5) # time of initial treatment
   N_t <- ceiling(N/2)
-  num_runs <- 60
+  num_runs <- 100
   is_simul <- 1 ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   d <- 'sine'
 
@@ -62,14 +62,14 @@ SineSim <- function(Y,N,T,cores){
     ## Estimate propensity scores
 
     p.mod <-   cv.glmnet(x=Y_obs, y=(1-treat_mat)[,t0], nfolds=3, nlambda = 10, thresh = 1e-05, family="binomial")
-    p.weights <- predict(p.mod, Y_obs, type="response")
-    p.weights <- replicate(T,as.vector(p.weights)) # assume constant across T
+    W <- predict(p.mod, Y_obs, type="response")
+    W <- replicate(T,as.vector(W)) # assume constant across T
     
-    rownames(p.weights) <- rownames(Y_obs)
-    colnames(p.weights) <- colnames(Y_obs)
+    rownames(W) <- rownames(Y_obs)
+    colnames(W) <- colnames(Y_obs)
     
-    p.weights[treat_indices,] <- 1/p.weights[treat_indices,]  # transform 
-    p.weights[-treat_indices,] <- 1/(1-p.weights[-treat_indices,])
+    p.weights <- matrix(NA, nrow=nrow(W), ncol=ncol(W), dimnames = list(rownames(W), colnames(W)))
+    p.weights <- (1-treat_mat) + (treat_mat)*W/(1-W) # weighting by the odds
     
     ## -----
     ## HR-EN: : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
@@ -110,7 +110,7 @@ SineSim <- function(Y,N,T,cores){
     
     print("VAR Started")
     source("code/varEst.R")
-    est_model_VAR <- varEst(Y=Y_obs, treat_indices, cores=cores)
+    est_model_VAR <- varEst(Y=Y_obs, treat_indices)
     est_model_VAR_msk_err <- (est_model_VAR - Y_sub)*(1-treat_mat)
     est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
     VAR_RMSE_test[i] <- est_model_VAR_test_RMSE
@@ -206,4 +206,4 @@ print(dim(Y))
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-SineSim(Y,N=1500,T=500, cores=cores) 
+SineSim(Y,N=N=2000,T=1000) 

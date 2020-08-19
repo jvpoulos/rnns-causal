@@ -43,7 +43,7 @@ $ git clone https://github.com/jvpoulos/rnns-causal
 Placebo test experiments
 ------
 
-Make each file below executable, execute in shell:
+Make each file below executable, then execute in shell:
 
 * `linear-placebo.sh`: generated linear data
 * `sine-placebo.sh`: generated sine waves data
