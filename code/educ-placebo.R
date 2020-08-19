@@ -45,7 +45,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N){
   Nbig <- nrow(Y)
   N <- N
   T <- ncol(treat)
-  t0 <- ceiling(T*0.5)
+  t0 <- ceiling(T*0.8)
   N_t <- ceiling(N*0.5) # no. treated units desired <=N
   num_runs <- 100
   is_simul <- 1 ## Whether to simulate Simultaneus Adoption or Staggered Adoption
@@ -92,7 +92,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N){
     
     ## Estimate propensity scores
     
-    p.mod <-   cv.glmnet(x=covars_x_sub, y=(1-treat_mat)[,t0], nfolds=3, nlambda = 10, thresh = 1e-05, family="binomial")
+    p.mod <- glmnet(x=covars_x_sub, y=(1-treat_mat)[,t0], lambda=c(0.2), thresh = 1e-05, family="binomial")
     W <- predict(p.mod, covars_x_sub, type="response")
     W <- replicate(T,as.vector(W)) # assume constant across T
     
@@ -106,7 +106,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N){
     ## HR-EN: : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
     ## -----
     
-    est_model_EN <- en_mp_rows(Y_obs, treat_mat, num_lam = 10, num_alpha = 1, num_folds = 3)
+    est_model_EN <- en_mp_rows(Y_obs, treat_mat, num_lam = 5, num_alpha = 1, num_folds = 2)
     est_model_EN_msk_err <- (est_model_EN - Y_sub)*(1-treat_mat)
     est_model_EN_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_EN_msk_err^2, na.rm = TRUE))
     EN_RMSE_test[i] <- est_model_EN_test_RMSE
@@ -147,7 +147,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N){
     ## MC-NNM
     ## ------
     
-    est_model_MCPanel <- mcnnm(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, lambda_L = c(0.1), niter = 200, rel_tol = 1e-05)[[1]] # no CV to save computational time
+    est_model_MCPanel <- mcnnm(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, lambda_L = c(0.2), niter = 200, rel_tol = 1e-05)[[1]] # no CV to save computational time
     est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
     est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y_sub)*(1-treat_mat)
     est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
@@ -168,7 +168,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N){
     ## VT-EN: : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
     ## -----
     
-    est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_alpha = 1, num_lam = 10, num_folds = 3))
+    est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_alpha = 1, num_lam = 5, num_folds = 2))
     est_model_ENT_msk_err <- (est_model_ENT - Y_sub)*(1-treat_mat)
     est_model_ENT_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ENT_msk_err^2, na.rm = TRUE))
     ENT_RMSE_test[i] <- est_model_ENT_test_RMSE

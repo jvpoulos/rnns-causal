@@ -26,7 +26,7 @@ StockSim <- function(Y,N,T){
   N <- N
   T <- T
   
-  t0 <- ceiling(T*0.5) # time of initial treatment
+  t0 <- ceiling(T*0.8) # time of initial treatment
   N_t <- ceiling(N/2)
   num_runs <- 100
   is_simul <- 1 ## Whether to simulate Simultaneus Adoption or Staggered Adoption
@@ -61,7 +61,7 @@ StockSim <- function(Y,N,T){
 
     ## Estimate propensity scores
 
-    p.mod <-   cv.glmnet(x=Y_obs, y=(1-treat_mat)[,t0], nfolds=3, nlambda = 10, thresh = 1e-05, family="binomial")
+    p.mod <-   glmnet(x=Y_obs, y=(1-treat_mat)[,t0], lambda=c(0.2), thresh = 1e-05, family="binomial")
     W <- predict(p.mod, Y_obs, type="response")
     W <- replicate(T,as.vector(W)) # assume constant across T
     
@@ -75,7 +75,7 @@ StockSim <- function(Y,N,T){
     ## HR-EN: : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
     ## -----
     
-    est_model_EN <- en_mp_rows(Y_obs, treat_mat, num_lam = 10, num_alpha = 1, num_folds = 3)
+    est_model_EN <- en_mp_rows(Y_obs, treat_mat, num_lam = 5, num_alpha = 1, num_folds = 2)
     est_model_EN_msk_err <- (est_model_EN - Y_sub)*(1-treat_mat)
     est_model_EN_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_EN_msk_err^2, na.rm = TRUE))
     EN_RMSE_test[i] <- est_model_EN_test_RMSE
@@ -121,7 +121,7 @@ StockSim <- function(Y,N,T){
     ## ------
     
     print("MC-NNM Started")
-    est_model_MCPanel <- mcnnm(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, lambda_L = c(0.1), niter = 200, rel_tol = 1e-05)[[1]] # no CV to save computational time
+    est_model_MCPanel <- mcnnm(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, lambda_L = c(0.2), niter = 200, rel_tol = 1e-05)[[1]] # no CV to save computational time
     est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
     est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y_sub)*(1-treat_mat)
     est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
@@ -143,7 +143,7 @@ StockSim <- function(Y,N,T){
     ## VT-EN : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
     ## -----
     
-    est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_lam = 10, num_alpha = 1, num_folds = 3))
+    est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_lam = 5, num_alpha = 1, num_folds = 2))
     est_model_ENT_msk_err <- (est_model_ENT - Y_sub)*(1-treat_mat)
     est_model_ENT_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ENT_msk_err^2, na.rm = TRUE))
     ENT_RMSE_test[i] <- est_model_ENT_test_RMSE
@@ -197,4 +197,4 @@ Y <- t(read.csv('data/returns_no_missing.csv',header=F)) # N X T
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-StockSim(Y,N=2000,T=1000) 
+StockSim(Y,N=1500,T=600) 
