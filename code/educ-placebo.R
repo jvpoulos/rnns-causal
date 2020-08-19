@@ -22,7 +22,7 @@ cl <- makePSOCKcluster(cores)
 
 doParallel::registerDoParallel(cores) # register cores (<p)
 
-CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,cores){
+CapacitySim <- function(outcomes,covars.x,d,treated.indices,N){
   Y <- outcomes[[d]]$M # NxT 
   Y.missing <- outcomes[[d]]$M.missing # NxT 
   treat <- outcomes[[d]]$mask # NxT masked matrix 
@@ -137,7 +137,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,cores){
     ## ------
     
     source("code/varEst.R")
-    est_model_VAR <- varEst(Y_obs, treat_indices, cores=cores)
+    est_model_VAR <- varEst(Y_obs, treat_indices)
     est_model_VAR_msk_err <- (est_model_VAR - Y_sub)*(1-treat_mat)
     est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
     VAR_RMSE_test[i] <- est_model_VAR_test_RMSE
