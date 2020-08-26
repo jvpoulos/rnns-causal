@@ -19,17 +19,17 @@ doParallel::registerDoParallel(cores) # register cores (<p)
 
 RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
-RBFSim <- function(Y,N,T){
+RBFSim <- function(Y,N,T,sim){
   ## Setting up the configuration
   Nbig <- nrow(Y)
   
   N <- N
   T <- T
   
-  t0 <- ceiling(T*0.8) # time of initial treatment
+  t0 <- ceiling(T*0.5) # time of initial treatment
   N_t <- ceiling(N/2)
-  num_runs <- 100
-  is_simul <- 1 ## Whether to simulate Simultaneus Adoption or Staggered Adoption
+  num_runs <- 60
+  is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   d <- 'rbf'
 
   ## Matrices for saving RMSE values
@@ -37,6 +37,7 @@ RBFSim <- function(Y,N,T){
   MCPanel_RMSE_test <- matrix(0L,num_runs)
   VAR_RMSE_test <- matrix(0L,num_runs)
   ED_RMSE_test <- matrix(0L,num_runs)
+  LSTM_RMSE_test <- matrix(0L,num_runs)
   DID_RMSE_test <- matrix(0L,num_runs)
   ADH_RMSE_test <- matrix(0L,num_runs)
   ENT_RMSE_test <- matrix(0L,num_runs)
@@ -71,6 +72,30 @@ RBFSim <- function(Y,N,T){
     p.weights <- matrix(NA, nrow=nrow(W), ncol=ncol(W), dimnames = list(rownames(W), colnames(W)))
     p.weights <- (1-treat_mat) + (treat_mat)*W/(1-W) # weighting by the odds
     
+    ## ------
+    ## ED
+    ## ------
+    
+    print("ED Started")
+    source("code/ed.R")
+    est_model_ED <- ed(Y_obs, p.weights, treat_indices, d, t0, T)
+    est_model_ED_msk_err <-  (est_model_ED - Y_sub)*(1-treat_mat)
+    est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
+    ED_RMSE_test[i] <- est_model_ED_test_RMSE
+    print(paste("ED RMSE:", round(est_model_ED_test_RMSE,3),"run",i))
+    
+    ## ------
+    ## LSTM
+    ## ------
+    
+    print("LSTM started")
+    source("code/lstm.R")
+    est_model_lstm <- lstm(Y_obs, p.weights, treat_indices, d, t0, T)
+    est_model_lstm_msk_err <-  (est_model_lstm - Y_sub)*(1-treat_mat)
+    est_model_lstm_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_lstm_msk_err^2, na.rm = TRUE))
+    lstm_RMSE_test[i] <- est_model_lstm_test_RMSE
+    print(paste("LSTM RMSE:", round(est_model_lstm_test_RMSE,3),"run",i))
+    
     ## -----
     ## HR-EN: : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
     ## -----
@@ -86,23 +111,12 @@ RBFSim <- function(Y,N,T){
     ## -----
     
     print("ADH Started")
+    source("code/ADH.R")
     est_model_ADH <- adh_mp_rows(Y_obs, treat_mat, niter = 200, rel_tol = 1e-05)
     est_model_ADH_msk_err <- (est_model_ADH - Y_sub)*(1-treat_mat)
     est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
     ADH_RMSE_test[i] <- est_model_ADH_test_RMSE
     print(paste("ADH RMSE:", round(est_model_ADH_test_RMSE,3),"run",i))
-    
-    ## ------
-    ## ED
-    ## ------
-    
-    print("ED Started")
-    source("code/ed.R")
-    est_model_ED <- ed(Y=Y_obs, p.weights, treat_indices, d, t0, T)
-    est_model_ED_msk_err <-  (est_model_ED - Y_sub)*(1-treat_mat)
-    est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
-    ED_RMSE_test[i] <- est_model_ED_test_RMSE
-    print(paste("ED RMSE:", round(est_model_ED_test_RMSE,3),"run",i))
     
     ## ------
     ## VAR
@@ -161,6 +175,9 @@ RBFSim <- function(Y,N,T){
   ED_avg_RMSE <- apply(ED_RMSE_test,2,mean)
   ED_std_error <- apply(ED_RMSE_test,2,sd)/sqrt(num_runs)
   
+  LSTM_avg_RMSE <- apply(LSTM_RMSE_test,2,mean)
+  LSTM_std_error <- apply(LSTM_RMSE_test,2,sd)/sqrt(num_runs)
+  
   DID_avg_RMSE <- apply(DID_RMSE_test,2,mean)
   DID_std_error <- apply(DID_RMSE_test,2,sd)/sqrt(num_runs)
   
@@ -177,16 +194,17 @@ RBFSim <- function(Y,N,T){
   
   df1 <-
     data.frame(
-      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,EN_avg_RMSE,MCPanel_avg_RMSE,ADH_avg_RMSE,VAR_avg_RMSE,ENT_avg_RMSE),
-      "se" = c(DID_std_error,ED_std_error,EN_std_error,MCPanel_std_error,ADH_std_error,VAR_std_error,ENT_std_error),
+      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,ADH_avg_RMSE,EN_avg_RMSE,ENT_avg_RMSE,VAR_avg_RMSE),
+      "se" = c(DID_std_error,ED_std_error,LSTM_std_error,MCPanel_std_error,ADH_std_error,EN_std_error,ENT_std_error,VAR_std_error),
       "x" = t0/T,
       "Method" = c("DID", 
                    "Encoder-decoder",
-                   "Horizontal",
+                   "LSTM",
                    "MC-NNM", 
                    "SCM",
-                   "VAR",
-                   "Vertical"))
+                   "SCM-EN",
+                   "SCM-ENT",
+                   "VAR"))
   
   filename <- paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".rds")
   save(df1, file = paste0("results/",filename))
@@ -206,4 +224,4 @@ print(dim(Y))
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-RBFSim(Y,N=1500,T=600) 
+RBFSim(Y,N=1000,T=1500,sim=1) 

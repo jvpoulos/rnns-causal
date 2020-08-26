@@ -32,10 +32,10 @@ ed <- function(Y,p.weights,treat_indices,d, t0, T){
   py$T <- T
   py$gpu <- 3
   py$epochs <- 500
-  py$patience <- 10
+  py$patience <- 25
   py$lr <- 0.001
   py$dr <- 0.5
-  py$penalty <- 0.1
+  py$penalty <- 0.001
   py$nb_batches <- 32
   if(d=='educ.pc'){
     py$nb_batches <- 8
