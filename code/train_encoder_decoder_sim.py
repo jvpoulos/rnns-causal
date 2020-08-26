@@ -20,7 +20,7 @@ from keras.optimizers import Adam
 from keras_self_attention import SeqSelfAttention
 
 from sklearn.preprocessing import MinMaxScaler
-scaler = MinMaxScaler(feature_range = (0, 1))
+scaler = MinMaxScaler(feature_range = (-1, 1))
 
 from functools import partial, update_wrapper
 
