@@ -93,7 +93,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
     
     ## Estimate propensity scores
     
-    p.mod <- glmnet(x=covars_x_sub, y=(1-treat_mat)[,t0], lambda=c(0.2), thresh = 1e-05, family="binomial")
+    p.mod <- glmnet(x=covars_x_sub, y=(1-treat_mat)[,t0], lambda=c(0.01), thresh = 1e-05, family="binomial")
     W <- predict(p.mod, covars_x_sub, type="response")
     W <- replicate(T,as.vector(W)) # assume constant across T
     
@@ -103,12 +103,22 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
     p.weights <- matrix(NA, nrow=nrow(W), ncol=ncol(W), dimnames = list(rownames(W), colnames(W)))
     p.weights <- (1-treat_mat) + (treat_mat)*W/(1-W) # weighting by the odds
     
+    ## Estimate trends
+    
+    trends <- matrix(NA, nrow=nrow(Y_obs), ncol=ncol(Y_obs), dimnames = list(rownames(Y_obs), colnames(Y_obs)))
+    for(i in c(1:N)){
+      trend.data <- melt(log(Y_obs[i,]+1),value.name="outcome") # ln(obs)
+      trend.data$year <- as.numeric(rownames(trend.data))
+      trend.data$trend  <- loess(outcome ~ year, data = trend.data)$fitted
+      trends[i,] <- trend.data$trend
+    }
+    
     ## ------
     ## ED
     ## ------
     
     source("code/ed.R")
-    est_model_ED <- ed(Y_obs, p.weights, treat_indices, d, t0, T) 
+    est_model_ED <- ed(Y_obs, p.weights, trends, treat_indices, d, t0, T) 
     est_model_ED_msk_err <- (est_model_ED - Y_sub)*(1-treat_mat)
     est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
     ED_RMSE_test[i] <- est_model_ED_test_RMSE
@@ -120,7 +130,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
     
     print("LSTM started")
     source("code/lstm.R")
-    est_model_lstm <- lstm(Y_obs, p.weights, treat_indices, d, t0, T)
+    est_model_lstm <- lstm(Y_obs, p.weights, trends, treat_indices, d, t0, T)
     est_model_lstm_msk_err <-  (est_model_lstm - Y_sub)*(1-treat_mat)
     est_model_lstm_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_lstm_msk_err^2, na.rm = TRUE))
     LSTM_RMSE_test[i] <- est_model_lstm_test_RMSE
@@ -162,7 +172,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
     ## MC-NNM
     ## ------
     
-    est_model_MCPanel <- mcnnm(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, lambda_L = c(0.2), niter = 200, rel_tol = 1e-05)[[1]] # no CV to save computational time
+    est_model_MCPanel <- mcnnm(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, lambda_L = c(0.01), niter = 200, rel_tol = 1e-05)[[1]] # no CV to save computational time
     est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
     est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y_sub)*(1-treat_mat)
     est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
