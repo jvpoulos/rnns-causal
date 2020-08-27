@@ -115,17 +115,6 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
     }
     
     ## ------
-    ## ED
-    ## ------
-    
-    source("code/ed.R")
-    est_model_ED <- ed(Y_obs, p.weights, trends, treat_indices, d, t0, T) 
-    est_model_ED_msk_err <- (est_model_ED - Y_sub)*(1-treat_mat)
-    est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
-    ED_RMSE_test[i] <- est_model_ED_test_RMSE
-    print(paste("ED RMSE:", round(est_model_ED_test_RMSE,3),"run",i))
-    
-    ## ------
     ## LSTM
     ## ------
     
@@ -136,6 +125,17 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
     est_model_lstm_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_lstm_msk_err^2, na.rm = TRUE))
     LSTM_RMSE_test[i] <- est_model_lstm_test_RMSE
     print(paste("LSTM RMSE:", round(est_model_lstm_test_RMSE,3),"run",i))
+    
+    ## ------
+    ## ED
+    ## ------
+    
+    source("code/ed.R")
+    est_model_ED <- ed(Y_obs, p.weights, trends, treat_indices, d, t0, T) 
+    est_model_ED_msk_err <- (est_model_ED - Y_sub)*(1-treat_mat)
+    est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
+    ED_RMSE_test[i] <- est_model_ED_test_RMSE
+    print(paste("ED RMSE:", round(est_model_ED_test_RMSE,3),"run",i))
     
     ## -----
     ## HR-EN: : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
