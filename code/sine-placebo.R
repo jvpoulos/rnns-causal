@@ -78,6 +78,7 @@ SineSim <- function(Y,N,T,sim){
     trends <- matrix(NA, nrow=nrow(Y_obs), ncol=ncol(Y_obs), dimnames = list(rownames(Y_obs), colnames(Y_obs)))
     for(t in c(1:N)){
       trend.data <- melt(log(Y_obs[t,]+1),value.name="outcome") # ln(obs)
+      trend.data[is.na(trend.data)] <- 0 # nan is 0
       trend.data$year <- as.numeric(rownames(trend.data))
       trend.data$trend  <- loess(outcome ~ year, data = trend.data)$fitted
       trends[t,] <- trend.data$trend
