@@ -49,13 +49,9 @@ patience = sys.argv[-10]
 
 # Create directories
 results_directory = 'results/encoder-decoder/{}'.format(dataname)
-data_directory = 'data/{}'.format(dataname)
 
 if not os.path.exists(results_directory):
     os.makedirs(results_directory)
-
-if not os.path.exists(data_directory):
-    os.makedirs(data_directory)
 
 def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr):
     """ 
@@ -133,14 +129,13 @@ def test_model():
     print('raw tx shape', tx.shape)  
     
     x = np.array(pd.read_csv("data/{}-x-{}.csv".format(dataname,imp)))
-    x_scaled = np.log1p(x)
 
-    print('raw x shape', x_scaled.shape)   
+    print('raw x shape', x.shape)   
 
     dXC, dYC = [], []
     for i in range(seq_len-n_pre):
-        dXC.append(x_scaled[i:i+n_pre] - tx[i+n_pre-1]) # subtract last value of trend
-        dYC.append(x_scaled[i+n_pre] - tx[i+n_pre-1])
+        dXC.append(x[i:i+n_pre] - tx[i+n_pre-1]) # subtract last value of trend
+        dYC.append(x[i+n_pre] - tx[i+n_pre-1])
     
     dataXC = np.array(dXC)
     dataYC = np.array(dYC)
@@ -178,8 +173,6 @@ def test_model():
 
     print('predictions shape (squeezed)=', preds_train.shape)
 
-    preds_train = np.expm1(preds_train) # reverse scaled preds to actual values
-
     print('Saving to results/encoder-decoder/{}/encoder-decoder-{}-train-{}.csv'.format(dataname,dataname,imp))
 
     np.savetxt("results/encoder-decoder/{}/encoder-decoder-{}-train-{}.csv".format(dataname,dataname,imp), preds_train, delimiter=",")
@@ -212,13 +205,11 @@ def test_model():
 
     y = np.array(pd.read_csv("data/{}-y-{}.csv".format(dataname,imp)))
      
-    y_scaled = np.log1p(y)
-     
-    print('raw y shape', y_scaled.shape)   
+    print('raw y shape', y.shape)   
 
     dXT = []
     for i in range(seq_len-n_pre):
-        dXT.append(y_scaled[i:i+n_pre] - ty[i+n_pre-1]) # subtract last value of trend
+        dXT.append(y[i:i+n_pre] - ty[i+n_pre-1]) # subtract last value of trend
 
     dataXT = np.array(dXT)
 
@@ -233,8 +224,6 @@ def test_model():
     preds_test = np.squeeze(preds_test)
 
     print('predictions shape (squeezed)=', preds_test.shape)
-
-    preds_test = np.expm1(preds_test) # reverse scaled preds to actual values
 
     print('Saving to results/encoder-decoder/{}/encoder-decoder-{}-test-{}.csv'.format(dataname,dataname,imp))
 

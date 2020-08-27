@@ -46,7 +46,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
   Nbig <- nrow(Y)
   N <- N
   T <- ncol(treat)
-  t0 <- ceiling(T*0.5)
+  t0 <- ceiling(T*0.75)
   N_t <- ceiling(N*0.5) # no. treated units desired <=N
   num_runs <- 60
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
@@ -108,8 +108,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
     
     trends <- matrix(NA, nrow=nrow(Y_obs), ncol=ncol(Y_obs), dimnames = list(rownames(Y_obs), colnames(Y_obs)))
     for(t in c(1:N)){
-      trend.data <- melt(log1p(Y_obs[t,]),value.name="outcome") # ln(obs)
-      trend.data[is.na(trend.data)] <- 0 # nan is 0
+      trend.data <- melt(Y_obs[t,],value.name="outcome") # ln(obs)
       trend.data$year <- as.numeric(rownames(trend.data))
       trend.data$trend  <- loess(outcome ~ year, data = trend.data)$fitted
       trends[t,] <- trend.data$trend
