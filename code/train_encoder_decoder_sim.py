@@ -125,6 +125,9 @@ def test_model():
         dXC.append(x_scaled[i:i+n_pre])
         dYC.append(x_scaled[i+n_pre])
 
+    dataXC = np.array(dXC)
+    dataYC = np.array(dYC)
+    
     print('dataXC shape:', dataXC.shape)
     print('dataYC shape:', dataYC.shape)
 
