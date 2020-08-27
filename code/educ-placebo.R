@@ -46,9 +46,9 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
   Nbig <- nrow(Y)
   N <- N
   T <- ncol(treat)
-  t0 <- ceiling(T*0.75)
+  t0 <- ceiling(T*0.9)
   N_t <- ceiling(N*0.5) # no. treated units desired <=N
-  num_runs <- 100
+  num_runs <- 60
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   
   ## Matrices for saving RMSE values
@@ -103,22 +103,12 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
     p.weights <- matrix(NA, nrow=nrow(W), ncol=ncol(W), dimnames = list(rownames(W), colnames(W)))
     p.weights <- (1-treat_mat) + (treat_mat)*W/(1-W) # weighting by the odds
     
-    ## Estimate trends
-    
-    trends <- matrix(NA, nrow=nrow(Y_obs), ncol=ncol(Y_obs), dimnames = list(rownames(Y_obs), colnames(Y_obs)))
-    for(t in c(1:N)){
-      trend.data <- melt(Y_obs[t,],value.name="outcome") # ln(obs)
-      trend.data$year <- as.numeric(rownames(trend.data))
-      trend.data$trend  <- loess(outcome ~ year, data = trend.data)$fitted
-      trends[t,] <- trend.data$trend
-    }
-    
     ## ------
     ## ED
     ## ------
     
     source("code/ed.R")
-    est_model_ED <- ed(Y_obs, p.weights, trends, treat_indices, d, t0, T) 
+    est_model_ED <- ed(Y_obs, trends, treat_indices, d, t0, T) 
     est_model_ED_msk_err <- (est_model_ED - Y_sub)*(1-treat_mat)
     est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
     ED_RMSE_test[i] <- est_model_ED_test_RMSE

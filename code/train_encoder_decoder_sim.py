@@ -19,6 +19,9 @@ from keras import regularizers
 from keras.optimizers import Adam
 from keras_self_attention import SeqSelfAttention
 
+from sklearn.preprocessing import MinMaxScaler
+scaler = MinMaxScaler(feature_range = (-1, 1))
+
 from functools import partial, update_wrapper
 
 def wrapped_partial(func, *args, **kwargs):
@@ -71,7 +74,7 @@ def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr):
 
     # Compile
     cl = wrapped_partial(weighted_mse, weights=weights_tensor)
-    model.compile(optimizer=Adam(lr=lr,clipnorm=1.0), loss=cl)
+    model.compile(optimizer=Adam(lr=lr), loss=cl)
 
     return model
 
@@ -111,21 +114,16 @@ def test_model():
 
     print('wXC shape:', wXC.shape)
 
-    tx = np.array(pd.read_csv("data/{}-tx.csv".format(dataname)))
-
-    print('raw tx shape', tx.shape)  
-
     x = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))
 
     print('raw x shape', x.shape) 
  
+    x_scaled = scaler.fit_transform(x)
+ 
     dXC, dYC = [], []
     for i in range(seq_len-n_pre):
-        dXC.append(x[i:i+n_pre] - tx[i+n_pre-1]) # subtract last value of trend
-        dYC.append(x[i+n_pre] - tx[i+n_pre-1])
-
-    dataXC = np.array(dXC)
-    dataYC = np.array(dYC)
+        dXC.append(x_scaled[i:i+n_pre])
+        dYC.append(x_scaled[i+n_pre])
 
     print('dataXC shape:', dataXC.shape)
     print('dataYC shape:', dataYC.shape)
@@ -164,25 +162,15 @@ def test_model():
 
     print('wXT shape:', wXT.shape)
 
-    ty = np.array(pd.read_csv("data/{}-ty.csv".format(dataname)))
-
-    print('raw ty shape', ty.shape)  
-
-    tXT = []
-    for i in range(seq_len-n_pre):
-        tXT.append(ty[i+n_pre-1]) # collect last values of trend
-
-    tXT = np.array(tXT)
-
-    print('tXT shape:', tXT.shape)
-
     y = np.array(pd.read_csv("data/{}-y.csv".format(dataname)))
-     
+
     print('raw y shape', y.shape)  
+
+    y_scaled = scaler.transform(y)
 
     dXT = []
     for i in range(seq_len-n_pre):
-        dXT.append(y[i:i+n_pre] - ty[i+n_pre-1]) # subtract last value of trend
+        dXT.append(y_scaled[i:i+n_pre]) # treated is input
 
     dataXT = np.array(dXT)
 
@@ -192,11 +180,11 @@ def test_model():
 
     print('predictions shape =', preds_test.shape)
 
-    preds_test = preds_test + tXT # revert detrend
-
     preds_test = np.squeeze(preds_test)
 
     print('predictions shape (squeezed)=', preds_test.shape)
+
+    preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
 
     # Save predictions
 
