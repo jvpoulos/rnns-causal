@@ -66,7 +66,7 @@ def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr):
     encoder_hidden = 128
     decoder_hidden = 128
 
-    hidden_activation = 'tanh'
+    hidden_activation = 'relu'
 
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
     mask = Masking(mask_value=0.)(inputs)
