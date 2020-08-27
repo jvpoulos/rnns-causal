@@ -27,7 +27,7 @@ SineSim <- function(Y,N,T,sim){
   N <- N
   T <- T
   
-  t0 <- ceiling(T*0.9) # time of initial treatment
+  t0 <- ceiling(T*0.5) # time of initial treatment
   N_t <- ceiling(N/2)
   num_runs <- 60
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
