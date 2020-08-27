@@ -5,6 +5,7 @@
 ## Loading Source files
 library(MCPanel)
 library(glmnet)
+library(reshape2)
 
 # Setup parallel processing 
 library(parallel)
