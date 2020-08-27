@@ -29,7 +29,7 @@ StockSim <- function(Y,N,T,sim){
   
   t0 <- ceiling(T*0.5) # time of initial treatment
   N_t <- ceiling(N/2)
-  num_runs <- 60
+  num_runs <- 100
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   d <- 'stock'
 
@@ -76,11 +76,11 @@ StockSim <- function(Y,N,T,sim){
     ## Estimate trends
     
     trends <- matrix(NA, nrow=nrow(Y_obs), ncol=ncol(Y_obs), dimnames = list(rownames(Y_obs), colnames(Y_obs)))
-    for(i in c(1:N)){
-      trend.data <- melt(log(Y_obs[i,]+1),value.name="outcome") # ln(obs)
+    for(t in c(1:N)){
+      trend.data <- melt(log(Y_obs[t,]+1),value.name="outcome") # ln(obs)
       trend.data$year <- as.numeric(rownames(trend.data))
       trend.data$trend  <- loess(outcome ~ year, data = trend.data)$fitted
-      trends[i,] <- trend.data$trend
+      trends[t,] <- trend.data$trend
     }
     
     ## ------
@@ -226,4 +226,4 @@ Y <- t(read.csv('data/returns_no_missing.csv',header=F)) # N X T
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-StockSim(Y,N=1000,T=1500,sim=1) 
+StockSim(Y,N=1000,T=1000,sim=1) 
