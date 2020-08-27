@@ -52,7 +52,7 @@ def create_model(n_pre, nb_features, output_dim, lr, penalty, dr):
 
     n_hidden = 128
 
-    hidden_activation = 'relu'
+    hidden_activation = 'tanh'
 
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
     mask = Masking(mask_value=0.)(inputs)
@@ -64,7 +64,7 @@ def create_model(n_pre, nb_features, output_dim, lr, penalty, dr):
 
     # Compile
     cl = wrapped_partial(weighted_mse, weights=weights_tensor)
-    model.compile(optimizer=Adam(lr=lr, clipnorm=1.0), loss=cl)
+    model.compile(optimizer=Adam(lr=lr), loss=cl)
 
     return model
 
