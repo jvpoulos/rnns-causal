@@ -48,7 +48,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
   T <- ncol(treat)
   t0 <- ceiling(T*0.75)
   N_t <- ceiling(N*0.5) # no. treated units desired <=N
-  num_runs <- 60
+  num_runs <- 100
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   
   ## Matrices for saving RMSE values
@@ -56,7 +56,6 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
   MCPanel_RMSE_test <- matrix(0L,num_runs)
   VAR_RMSE_test <- matrix(0L,num_runs)
   ED_RMSE_test <- matrix(0L,num_runs)
-  LSTM_RMSE_test <- matrix(0L,num_runs)
   DID_RMSE_test <- matrix(0L,num_runs)
   ADH_RMSE_test <- matrix(0L,num_runs)
   ENT_RMSE_test <- matrix(0L,num_runs)
@@ -113,18 +112,6 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
       trend.data$trend  <- loess(outcome ~ year, data = trend.data)$fitted
       trends[t,] <- trend.data$trend
     }
-    
-    ## ------
-    ## LSTM
-    ## ------
-    
-    print("LSTM started")
-    source("code/lstm.R")
-    est_model_lstm <- lstm(Y_obs, p.weights, trends, treat_indices, d, t0, T)
-    est_model_lstm_msk_err <-  (est_model_lstm - Y_sub)*(1-treat_mat)
-    est_model_lstm_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_lstm_msk_err^2, na.rm = TRUE))
-    LSTM_RMSE_test[i] <- est_model_lstm_test_RMSE
-    print(paste("LSTM RMSE:", round(est_model_lstm_test_RMSE,3),"run",i))
     
     ## ------
     ## ED
@@ -212,9 +199,6 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
   ED_avg_RMSE <- apply(ED_RMSE_test,2,mean)
   ED_std_error <- apply(ED_RMSE_test,2,sd)/sqrt(num_runs)
   
-  LSTM_avg_RMSE <- apply(LSTM_RMSE_test,2,mean)
-  LSTM_std_error <- apply(LSTM_RMSE_test,2,sd)/sqrt(num_runs)
-  
   DID_avg_RMSE <- apply(DID_RMSE_test,2,mean)
   DID_std_error <- apply(DID_RMSE_test,2,sd)/sqrt(num_runs)
   
@@ -231,12 +215,11 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
   
   df1 <-
     data.frame(
-      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,ADH_avg_RMSE,EN_avg_RMSE,ENT_avg_RMSE,VAR_avg_RMSE),
-      "se" = c(DID_std_error,ED_std_error,LSTM_std_error,MCPanel_std_error,ADH_std_error,EN_std_error,ENT_std_error,VAR_std_error),
+      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,MCPanel_avg_RMSE,ADH_avg_RMSE,EN_avg_RMSE,ENT_avg_RMSE,VAR_avg_RMSE),
+      "se" = c(DID_std_error,ED_std_error,MCPanel_std_error,ADH_std_error,EN_std_error,ENT_std_error,VAR_std_error),
       "x" = t0/T,
       "Method" = c("DID", 
                    "Encoder-decoder",
-                   "LSTM",
                    "MC-NNM", 
                    "SCM",
                    "SCM-EN",

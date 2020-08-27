@@ -38,8 +38,8 @@ ed <- function(Y,p.weights,trends,treat_indices,d, t0, T){
   py$T <- T
   py$gpu <- 3
   py$epochs <- 500
-  py$patience <- 15
-  py$lr <- 0.001
+  py$patience <- 25
+  py$lr <- 0.0005
   py$dr <- 0.5
   py$penalty <- 0.001
   py$nb_batches <- 32
