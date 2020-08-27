@@ -67,7 +67,7 @@ def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr):
     lstm_2 = LSTM(encoder_hidden, dropout=dr, recurrent_dropout=dr, activation=hidden_activation, return_sequences=False, name='LSTM_2')(lstm_1) # Encoder
     repeat = RepeatVector(n_post, name='Repeat')(lstm_2) # get the last output of the LSTM and repeats it
     lstm_3 = LSTM(decoder_hidden, return_sequences=True, name='Decoder')(repeat)  # Decoder
-    attn = SeqSelfAttention(attention_activation=hidden_activation)(lstm_3)
+    attn = SeqSelfAttention(attention_activation='sigmoid')(lstm_3)
     attn = Flatten()(attn)
     output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(attn)
 
