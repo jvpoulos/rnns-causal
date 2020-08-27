@@ -17,7 +17,6 @@ from keras.layers import LSTM, Input, Masking, Dense, Flatten
 from keras.callbacks import EarlyStopping, TerminateOnNaN
 from keras import regularizers
 from keras.optimizers import Adam
-from keras_self_attention import SeqSelfAttention
 
 from functools import partial, update_wrapper
 
@@ -58,10 +57,8 @@ def create_model(n_pre, nb_features, output_dim, lr, penalty, dr):
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
     mask = Masking(mask_value=0.)(inputs)
     weights_tensor = Input(shape=(nb_features,), name="Weights")
-    lstm_1 = LSTM(n_hidden, dropout=dr, recurrent_dropout=dr, activation=hidden_activation, return_sequences=True, name="LSTM_1")(mask) 
-    attn = SeqSelfAttention(attention_activation='sigmoid')(lstm_1)
-    attn = Flatten()(attn)
-    output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(attn)
+    lstm_1 = LSTM(n_hidden, dropout=dr, recurrent_dropout=dr, activation= hidden_activation, return_sequences=False, name="LSTM_1")(mask) 
+    output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(lstm_1)
 
     model = Model([inputs,weights_tensor], output) 
 
