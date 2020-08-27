@@ -32,7 +32,7 @@ ed <- function(Y,p.weights,treat_indices,d, t0, T){
   py$T <- T
   py$gpu <- 3
   py$epochs <- 500
-  py$patience <- 15
+  py$patience <- 10
   py$lr <- 0.001
   py$dr <- 0.2
   py$penalty <- 0.001
