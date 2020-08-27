@@ -133,7 +133,7 @@ def test_model():
     print('raw tx shape', tx.shape)  
     
     x = np.array(pd.read_csv("data/{}-x-{}.csv".format(dataname,imp)))
-    x_scaled = np.log1(x)
+    x_scaled = np.log1p(x)
 
     print('raw x shape', x_scaled.shape)   
 
@@ -212,7 +212,7 @@ def test_model():
 
     y = np.array(pd.read_csv("data/{}-y-{}.csv".format(dataname,imp)))
      
-    y_scaled = np.log1(y)
+    y_scaled = np.log1p(y)
      
     print('raw y shape', y_scaled.shape)   
 
