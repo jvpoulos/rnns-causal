@@ -113,7 +113,7 @@ def test_model():
 
     x = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))
 
-    x_scaled = np.log(x+1)
+    x_scaled = np.log1(x)
 
     print('raw x shape', x_scaled.shape)   
 
@@ -176,7 +176,7 @@ def test_model():
 
     y = np.array(pd.read_csv("data/{}-y.csv".format(dataname)))
      
-    y_scaled = np.log(y+1)
+    y_scaled = np.log1(y)
      
     print('raw y shape', y_scaled.shape)  
 
@@ -194,7 +194,7 @@ def test_model():
 
     preds_test = preds_test + tXT # revert detrend
     
-    preds_test = np.exp(preds_test)-1 # reverse scaled preds to actual values
+    preds_test = np.expm1(preds_test) # reverse scaled preds to actual values
 
     print('predictions shape =', preds_test.shape)
 

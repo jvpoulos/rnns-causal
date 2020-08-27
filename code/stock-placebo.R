@@ -226,4 +226,4 @@ Y <- t(read.csv('data/returns_no_missing.csv',header=F)) # N X T
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-StockSim(Y,N=1000,T=1000,sim=1) 
+StockSim(Y,N=500,T=1000,sim=1) 

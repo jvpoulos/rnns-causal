@@ -235,4 +235,4 @@ print(dim(Y))
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-RBFSim(Y,N=1000,T=1000,sim=1) 
+RBFSim(Y,N=500,T=1000,sim=1) 
