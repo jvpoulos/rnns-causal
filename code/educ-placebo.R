@@ -65,6 +65,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
   
   for(i in c(1:num_runs)){
     print(paste0(paste0("Run number ", i)," started"))
+    
     ## Fix the treated units in the whole run for a better comparison
     all_indices <- sort(sample(1:Nbig, N))
     treat_indices <- sort(sample(1:N, N_t))
@@ -85,7 +86,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
     
     Y_obs <- Y_sub * treat_NA * Y_sub_missing
     
-    Y_obs.fits <- softImpute(Y_obs, rank.max=3, lambda=1.9, type="svd") # fit on training set
+    Y_obs.fits <- softImpute(Y_obs, rank.max=min(dim(Y_obs))-1, lambda=1.9, type="svd") # fit on training set
     
     Y_obs <- complete(Y_obs, Y_obs.fits) # complete on full matrix
     
@@ -93,10 +94,16 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
     
     ## Estimate propensity scores
     
-    p.mod <- glmnet(x=covars_x_sub, y=(1-treat_mat)[,t0], lambda=c(0.01), thresh = 1e-05, family="binomial")
-    W <- predict(p.mod, covars_x_sub, type="response")
-    W <- replicate(T,as.vector(W)) # assume constant across T
-    
+    if(is_simul == 1){
+      p.mod <- cv.glmnet(x=covars_x_sub, y=(1-treat_mat)[,t0], thresh = 1e-05, family="binomial", nfolds=3)
+      W <- predict(p.mod, covars_x_sub, type="response")
+      W <- replicate(T,as.vector(W)) # assume constant across T
+    }else{
+      p.mod <- cv.glmnet(x=covars_x_sub, y=(1-treat_mat)[,t0:T], thresh = 1e-05, family="multinomial", type.multinomial = "grouped", nfolds=3)
+      W <- predict(p.mod, covars_x_sub, type="response")[, ,]
+      W <- cbind(replicate(T-t0-1, W[,1]), W) # assume constant in pre-treatment period
+    }
+
     rownames(W) <- rownames(Y_obs)
     colnames(W) <- colnames(Y_obs)
     
@@ -118,7 +125,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
     ## HR-EN: : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
     ## -----
     
-    est_model_EN <- en_mp_rows(Y_obs, treat_mat, num_lam = 5, num_alpha = 1, num_folds = 10)
+    est_model_EN <- en_mp_rows(Y_obs, treat_mat, num_alpha = 1, num_lam = 5, num_folds = 3)
     est_model_EN_msk_err <- (est_model_EN - Y_sub)*(1-treat_mat)
     est_model_EN_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_EN_msk_err^2, na.rm = TRUE))
     EN_RMSE_test[i] <- est_model_EN_test_RMSE
@@ -128,7 +135,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
     ## ADH
     ## -----
     print("ADH Started")
-    source("code/ADH.R")
+    source("code/ADH.R") # clip gradients
     est_model_ADH <- adh_mp_rows(Y_obs, treat_mat, niter = 200, rel_tol = 1e-05)
     est_model_ADH_msk_err <- (est_model_ADH - Y_sub)*(1-treat_mat)
     est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
@@ -150,7 +157,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
     ## MC-NNM
     ## ------
     
-    est_model_MCPanel <- mcnnm(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, lambda_L = c(0.01), niter = 200, rel_tol = 1e-05)[[1]] # no CV to save computational time
+    est_model_MCPanel <- mcnnm(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, lambda_L = c(0.2), niter = 200, rel_tol = 1e-05)[[1]] # no CV to save computational time
     est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
     est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y_sub)*(1-treat_mat)
     est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
@@ -171,7 +178,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
     ## VT-EN: : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
     ## -----
     
-    est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_alpha = 1, num_lam = 5, num_folds = 10))
+    est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_alpha = 1, num_lam = 5, num_folds = nrow(t(Y_obs)))) # avoid constant y
     est_model_ENT_msk_err <- (est_model_ENT - Y_sub)*(1-treat_mat)
     est_model_ENT_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ENT_msk_err^2, na.rm = TRUE))
     ENT_RMSE_test[i] <- est_model_ENT_test_RMSE

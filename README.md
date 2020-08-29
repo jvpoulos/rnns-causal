@@ -47,6 +47,7 @@ Make each file below executable, then execute in shell:
 
 * `sine-placebo.sh`: generated sine waves data
 * `rbf-placebo.sh`: generated RBF data
+* `mnist-placebo.sh`: sequential MNIST data
 * `educ-placebo.sh`: U.S. state government education spending
 * `stock-placebo.sh`: U.S. stock prices
 
