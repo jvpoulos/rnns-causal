@@ -84,7 +84,7 @@ StockSim <- function(Y,N,T,sim){
     
     print("ED Started")
     source("code/ed.R")
-    est_model_ED <- ed(Y_obs, p.weights, treat_indices, d, t0, T)
+    est_model_ED <- ed(Y_obs, p.weights, treat_indices, d, t0=ceiling(t0/4), T)
     est_model_ED_msk_err <- (est_model_ED - Y_sub)*(1-treat_mat)
     est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
     ED_RMSE_test[i] <- est_model_ED_test_RMSE

@@ -84,7 +84,7 @@ RBFSim <- function(Y,N,T,sim){
     
     print("ED Started")
     source("code/ed.R")
-    est_model_ED <- ed(Y_obs, p.weights, treat_indices, d, t0, T)
+    est_model_ED <- ed(Y_obs, p.weights, treat_indices, d, t0=ceiling(t0/4), T)
     est_model_ED_msk_err <-  (est_model_ED - Y_sub)*(1-treat_mat)
     est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
     ED_RMSE_test[i] <- est_model_ED_test_RMSE
@@ -151,7 +151,7 @@ RBFSim <- function(Y,N,T,sim){
     ## VT-EN : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
     ## -----
     
-    est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_alpha = 1, num_lam = 5, num_folds = 3))
+    est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_alpha = 1, num_lam = 5, num_folds = nrow(t(Y_obs)))) # avoid constant y
     est_model_ENT_msk_err <- (est_model_ENT - Y_sub)*(1-treat_mat)
     est_model_ENT_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ENT_msk_err^2, na.rm = TRUE))
     ENT_RMSE_test[i] <- est_model_ENT_test_RMSE

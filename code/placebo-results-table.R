@@ -6,11 +6,6 @@
 load("results/table-results/educ_pc_N_16_T_148_numruns_60_num_treated_8_simultaneuous_1.rds") # simultaneous
 
 educ <- df1
-
-load("results/table-results/educ_pc_N_16_T_148_numruns_60_num_treated_8_simultaneuous_0.rds") # staggered
-
-educ2<- df1
-
 # Stock
 
 #load("results/table-results/stock_N_1000_T_500_numruns_100_num_treated_500_simultaneuous_1.rds")

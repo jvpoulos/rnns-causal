@@ -38,13 +38,13 @@ ed <- function(Y,p.weights,treat_indices,d, t0, T){
   py$penalty <- 0.001
   py$nb_batches <- 128
   if(d=='stock'){
-    py$nb_batches <- 32
     py$penalty <- 0.2
     py$dr <- 0.5
   }
   if(d=='educ.pc'){
     py$nb_batches <- 16
-    py$penalty <- 0.5
+    py$dr <- 0.7
+    py$penalty <- 0.2
   }
   if(d=='rbf'){
     py$dr <- 0.2
