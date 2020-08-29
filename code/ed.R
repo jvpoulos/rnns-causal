@@ -44,8 +44,7 @@ ed <- function(Y,p.weights,treat_indices,d, t0, T){
   }
   if(d=='educ.pc'){
     py$nb_batches <- 16
-    py$penalty <- 0.2
-    py$dr <- 0.5
+    py$penalty <- 0.5
   }
   if(d=='rbf'){
     py$dr <- 0.2
