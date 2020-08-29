@@ -16,8 +16,8 @@ from keras import regularizers
 from keras.optimizers import Adam
 from keras_self_attention import SeqSelfAttention
 
-from sklearn.preprocessing import MinMaxScaler
-scaler = MinMaxScaler(feature_range = (0, 1))
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler()
 
 from functools import partial, update_wrapper
 
@@ -66,7 +66,7 @@ def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr):
     encoder_hidden = 128
     decoder_hidden = 128
 
-    hidden_activation = 'tanh'
+    hidden_activation = 'relu'
 
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
     mask = Masking(mask_value=0.)(inputs)
