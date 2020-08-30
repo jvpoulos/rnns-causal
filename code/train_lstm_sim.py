@@ -13,11 +13,10 @@ import tensorflow as tf
 
 from keras import backend as K
 from keras.models import Model
-from keras.layers import LSTM, Input, Masking, Dense, RepeatVector, Flatten
+from keras.layers import LSTM, Input, Masking, Dense, Flatten
 from keras.callbacks import EarlyStopping, TerminateOnNaN
 from keras import regularizers
 from keras.optimizers import Adam
-from keras_self_attention import SeqSelfAttention
 
 from sklearn.preprocessing import StandardScaler
 scaler = StandardScaler()
@@ -42,35 +41,29 @@ if gpu < 3:
     print(device_lib.list_local_devices())
 
 # Create directories
-results_directory = 'results/encoder-decoder/{}'.format(dataname)
+results_directory = 'results/lstm/{}'.format(dataname)
 
 if not os.path.exists(results_directory):
     os.makedirs(results_directory)
 
-def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr):
+def create_model(n_pre, nb_features, output_dim, lr, penalty, dr):
     """ 
         creates, compiles and returns a RNN model 
         @param nb_features: the number of features in the model
     """
     # Define model parameters
 
-    encoder_hidden = 128
-    decoder_hidden = 128
+    n_hidden = 128
 
     hidden_activation = 'relu'
 
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
     mask = Masking(mask_value=0.)(inputs)
     weights_tensor = Input(shape=(nb_features,), name="Weights")
-    lstm_1 = LSTM(encoder_hidden, dropout=dr, recurrent_dropout=dr, activation=hidden_activation, return_sequences=True, name='LSTM_1')(mask) # Encoder
-    lstm_2 = LSTM(encoder_hidden, dropout=dr, recurrent_dropout=dr, activation=hidden_activation, return_sequences=False, name='LSTM_2')(lstm_1) # Encoder
-    repeat = RepeatVector(n_post, name='Repeat')(lstm_2) # get the last output of the LSTM and repeats it
-    lstm_3 = LSTM(decoder_hidden, return_sequences=True, name='Decoder')(repeat)  # Decoder
-    attn = SeqSelfAttention(attention_activation='sigmoid')(lstm_3)
-    attn = Flatten()(attn)
-    output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(attn)
+    lstm_1 = LSTM(n_hidden, dropout=dr, recurrent_dropout=dr, activation= hidden_activation, return_sequences=False, name="LSTM_1")(mask) 
+    output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(lstm_1)
 
-    model = Model([inputs, weights_tensor], output)
+    model = Model([inputs,weights_tensor], output) 
 
     # Compile
     cl = wrapped_partial(weighted_mse, weights=weights_tensor)
@@ -88,8 +81,8 @@ def train_model(model, dataX, dataY, weights, epoch_count, batches):
 
     # Model fit
 
-    history = model.fit([dataX,weights], 
-        dataY, 
+    history = model.fit(x=[dataX,weights], 
+        y=dataY, 
         batch_size=batches, 
         verbose=1,
         epochs=epoch_count, 
@@ -98,11 +91,10 @@ def train_model(model, dataX, dataY, weights, epoch_count, batches):
 
 def test_model():
 
-    n_post = int(1)
-    n_pre =int(t0)-1
+    n_pre = int(t0)-1
     seq_len = int(T)
 
-    wx = np.array(pd.read_csv("data/{}-wx.csv".format(dataname)))
+    wx = np.array(pd.read_csv("data/{}-wx.csv".format(dataname)))  
 
     print('raw wx shape', wx.shape)  
 
@@ -116,30 +108,30 @@ def test_model():
 
     x = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))
 
-    print('raw x shape', x.shape) 
- 
+    print('raw x shape', x.shape)   
+
     x_scaled = scaler.fit_transform(x)
  
     dXC, dYC = [], []
     for i in range(seq_len-n_pre):
         dXC.append(x_scaled[i:i+n_pre])
         dYC.append(x_scaled[i+n_pre])
-
+    
     dataXC = np.array(dXC)
     dataYC = np.array(dYC)
-    
+
     print('dataXC shape:', dataXC.shape)
     print('dataYC shape:', dataYC.shape)
 
     nb_features = dataXC.shape[2]
     output_dim = dataYC.shape[1]
-
+  
     # create and fit the LSTM network
     print('creating model...')
-    model = create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr)
+    model = create_model(n_pre, nb_features, output_dim, lr, penalty, dr)
 
-    # Load pre-trained weights
-    weights_path = 'results/encoder-decoder/{}'.format(dataname) +'/weights-placebo-{}-{}.h5'.format(str(n_pre), str(nb_features))
+    # load pre-trained weights
+    weights_path = 'results/lstm/{}'.format(dataname) +'/weights-placebo-{}-{}.h5'.format(str(n_pre), str(nb_features))
     if path.exists(weights_path):
         print("loading weights from", weights_path)
         model.load_weights(weights_path)
@@ -147,7 +139,7 @@ def test_model():
     train_model(model, dataXC, dataYC, wXC, int(epochs), int(nb_batches))
 
     # save weights
-    model.save_weights('results/encoder-decoder/{}'.format(dataname) +'/weights-placebo-{}-{}.h5'.format(str(n_pre),str(nb_features)))
+    model.save_weights('results/lstm/{}'.format(dataname) +'/weights-placebo-{}-{}.h5'.format(str(n_pre),str(nb_features)))
 
     # now test
 
@@ -166,7 +158,7 @@ def test_model():
     print('wXT shape:', wXT.shape)
 
     y = np.array(pd.read_csv("data/{}-y.csv".format(dataname)))
-
+     
     print('raw y shape', y.shape)  
 
     y_scaled = scaler.transform(y)
@@ -179,25 +171,21 @@ def test_model():
 
     print('dataXT shape:', dataXT.shape)
 
-    preds_test = model.predict([dataXT, wXT], batch_size=int(nb_batches), verbose=1)
+    preds_test = model.predict([dataXT, wXT], batch_size=int(nb_batches), verbose=0)
 
     print('predictions shape =', preds_test.shape)
-
-    preds_test = np.squeeze(preds_test)
-
-    print('predictions shape (squeezed)=', preds_test.shape)
 
     preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
 
     # Save predictions
 
-    print('Saving to results/encoder-decoder/{}/encoder-decoder-{}-test.csv'.format(dataname,dataname))
+    print('Saving to results/lstm/{}/lstm-{}-test.csv'.format(dataname,dataname))
 
-    np.savetxt("results/encoder-decoder/{}/encoder-decoder-{}-test.csv".format(dataname,dataname), preds_test, delimiter=",")
+    np.savetxt("results/lstm/{}/lstm-{}-test.csv".format(dataname,dataname), preds_test, delimiter=",")
 
 def main():
     test_model()
     return 1
 
 if __name__ == "__main__":
-    main()
+	main()

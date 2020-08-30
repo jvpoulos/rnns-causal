@@ -1,5 +1,5 @@
 ###################################
-# ED for Simulations #
+# LSTM for Simulations #
 ###################################
 
 library(keras)
@@ -8,15 +8,15 @@ library(readr)
 # use_python("/usr/local/bin/python")
 use_python("~/venv/bin/python") # comet
 
-ed <- function(Y,p.weights,treat_indices,d, t0, T){
+lstm <- function(Y,p.weights,treat_indices,d, t0, T){
   # Converting the data to a floating point matrix
   data <- data.matrix(t(Y)) # T x N
   data_w <- data.matrix(t(p.weights)) # T x N
 
   # Splits
-  train_data <- data[,(-treat_indices)] # control units
+  train_data <- data[,(-treat_indices)] # train on control units
   train_w <- data_w[,(-treat_indices)]
-  
+
   test_data <- data[,(treat_indices)] # treated units
   test_w <- data_w[,(treat_indices)]
 
@@ -57,15 +57,15 @@ ed <- function(Y,p.weights,treat_indices,d, t0, T){
     py$penalty <- 0.0001
   }
   
-  source_python("code/train_encoder_decoder_sim.py")
+  source_python("code/train_lstm_sim.py")
   
-  ed.pred.test <- as.matrix(read_csv(paste0("results/encoder-decoder/",d,"/encoder-decoder-",d,"-test.csv"), col_names = FALSE))
-  colnames(ed.pred.test) <- colnames(test_data)
+  lstm.pred.test <- as.matrix(read_csv(paste0("results/lstm/",d,"/lstm-",d,"-test.csv"), col_names = FALSE))
+  colnames(lstm.pred.test) <- colnames(test_data)
   
-  ed.pred <- cbind(train_data, rbind(test_data[1:(t0-1),], ed.pred.test))
-  rownames(ed.pred) <- rownames(test_data)
+  lstm.pred <- cbind(train_data, rbind(test_data[1:(t0-1),], lstm.pred.test))
+  rownames(lstm.pred) <- rownames(test_data)
   
-  ed.pred <- ed.pred[,match(colnames(data), colnames(ed.pred))] # same order
+  lstm.pred <-lstm.pred[,match(colnames(data), colnames(lstm.pred))] # same order
   
-  return(t(ed.pred)) # N x T
+  return(t(lstm.pred))  # N x T
 }

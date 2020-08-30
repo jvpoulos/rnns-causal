@@ -6,6 +6,12 @@
 load("results/table-results/educ_pc_N_16_T_148_numruns_60_num_treated_8_simultaneuous_1.rds") # simultaneous
 
 educ <- df1
+
+# MNIST
+load("results/table-results/rbf_N_500_T_2000_numruns_60_num_treated_250_simultaneuous_1.rds") # simultaneous
+
+mnist <- df1
+
 # Stock
 
 #load("results/table-results/stock_N_1000_T_500_numruns_100_num_treated_500_simultaneuous_1.rds")
@@ -19,7 +25,8 @@ stock2 <- df1
 # RBF
 
 #load("results/table-results/rbf_N_1500_T_600_numruns_100_num_treated_750_simultaneuous_1.rds")
-load("results/table-results/rbf_N_500_T_1000_numruns_60_num_treated_250_simultaneuous_1.rds")
+#load("results/table-results/rbf_N_500_T_1000_numruns_60_num_treated_250_simultaneuous_1.rds")
+load("results/table-results/rbf_N_500_T_2000_numruns_60_num_treated_250_simultaneuous_1.rds") # simultaneous
 
 rbf <- df1
 
