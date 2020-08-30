@@ -32,7 +32,6 @@ ed <- function(Y,p.weights,treat_indices,d, t0, T){
   py$T <- T
   py$gpu <- 3
   py$epochs <- 500
-  py$patience <- 10
   py$lr <- 0.001
   py$dr <- 0.5
   py$penalty <- 0.001
@@ -40,21 +39,28 @@ ed <- function(Y,p.weights,treat_indices,d, t0, T){
   if(d=='stock'){
     py$penalty <- 0.0001
     py$dr <- 0.2
+    py$patience <- 1
   }
   if(d=='educ.pc'){
     py$nb_batches <- 16
     py$dr <- 0.7
-    py$penalty <- 0.25
+    py$penalty <- 0.35
+    py$patience <- 10
   }
   if(d=='rbf'){
     py$nb_batches <- 32
     py$dr <- 0.2
     py$penalty <- 0.0001
+    py$patience <- 3
   }
   if(d=='mnist'){
     py$nb_batches <- 32
     py$dr <- 0.2
     py$penalty <- 0.0001
+    py$patience <- 3
+  }
+  if(d=='sine'){
+    py$patience <- 1
   }
   
   source_python("code/train_encoder_decoder_sim.py")

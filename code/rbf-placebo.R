@@ -29,7 +29,7 @@ RBFSim <- function(Y,N,T,sim){
   
   t0 <- ceiling(T*0.5) # time of initial treatment
   N_t <- ceiling(N/2)
-  num_runs <- 60
+  num_runs <- 100
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   d <- 'rbf'
 
@@ -85,11 +85,11 @@ RBFSim <- function(Y,N,T,sim){
     
     print("LSTM Started")
     source("code/lstm.R")
-    est_model_ED <- lstm(Y_obs, p.weights, treat_indices, d, t0=28, T)
-    est_model_ED_msk_err <- (est_model_ED - Y_sub)*(1-treat_mat)
-    est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
-    ED_RMSE_test[i] <- est_model_ED_test_RMSE
-    print(paste("LSTM RMSE:", round(est_model_ED_test_RMSE,3),"run",i))
+    est_model_LSTM <- lstm(Y_obs, p.weights, treat_indices, d, t0=28, T)
+    est_model_LSTM_msk_err <- (est_model_LSTM - Y_sub)*(1-treat_mat)
+    est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
+    LSTM_RMSE_test[i] <- est_model_LSTM_test_RMSE
+    print(paste("LSTM RMSE:", round(est_model_LSTM_test_RMSE,3),"run",i))
     
     ## ------
     ## ED
