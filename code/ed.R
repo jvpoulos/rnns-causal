@@ -43,9 +43,9 @@ ed <- function(Y,p.weights,treat_indices,d, t0, T){
   }
   if(d%in%c('basque','california','germany','educ.pc')){
     py$nb_batches <- 16
-    py$dr <- 0.5
-    py$penalty <- 0.5
-    py$patience <- 15
+    py$dr <- 0.7
+    py$penalty <- 1
+    py$patience <- 10
   }
   if(d=='rbf'){
     py$nb_batches <- 32

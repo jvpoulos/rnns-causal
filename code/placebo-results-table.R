@@ -1,5 +1,23 @@
 ### Load placebo test results ###
 
+# Basque 
+
+load("results/table-results/basque_N_16_T_43_numruns_100_num_treated_8_simultaneuous_1.rds")
+
+basque <- df1
+
+# California
+
+load("results/table-results/california_N_38_T_31_numruns_100_num_treated_19_simultaneuous_1.rds")
+
+california <- df1
+
+# Germany
+
+load("results/table-results/germany_N_16_T_44_numruns_100_num_treated_8_simultaneuous_1.rds")
+
+germany <- df1
+
 # Education spending
 
 #load("results/table-results/educ_pc_N_16_T_148_numruns_100_num_treated_8_simultaneuous_1.rds")
