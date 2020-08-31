@@ -43,12 +43,17 @@ $ git clone https://github.com/jvpoulos/rnns-causal
 Placebo test experiments
 ------
 
+Download the [MNIST in CSV train set](https://pjreddie.com/media/files/mnist_train.csv) into data folder. 
+
 Make each file below executable, then execute in shell:
 
 * `sine-placebo.sh`: generated sine waves data
 * `rbf-placebo.sh`: generated RBF data
 * `mnist-placebo.sh`: sequential MNIST data
 * `educ-placebo.sh`: U.S. state government education spending
+* `basque-placebo.sh`: Basque Country GDP 
+* `california-placebo.sh`: California smoking
+* `germany-placebo.sh`: W. Germany GDP
 * `stock-placebo.sh`: U.S. stock prices
 
 To extract RMSEs for table, run in **R** `placebo-results-table.R`

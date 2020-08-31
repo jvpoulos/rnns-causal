@@ -1,38 +1,16 @@
-###################################################
-# Sine Data Simulations #
-###################################################
-
-## Loading Source files
-library(MCPanel)
-library(glmnet)
-library(reshape2)
-
-# Setup parallel processing 
-library(parallel)
-library(doParallel)
-
-cores <- parallel::detectCores()
-print(paste0('cores registered: ', cores))
-
-cl <- makePSOCKcluster(cores)
-
-doParallel::registerDoParallel(cores) # register cores (<p)
-
-RNGkind("L'Ecuyer-CMRG") # ensure random number generation
-
-SineSim <- function(Y,N,T,sim){
+## Reading data
+SynthSim <- function(outcomes,covars.x,d,sim){
+  Y <- outcomes[[d]]$M # NxT outcomes
+  treat <- outcomes[[d]]$mask # NxT masked matrix 
+  
   ## Setting up the configuration
-  Nbig <- nrow(Y)
-  
-  N <- N
-  T <- T
-  
-  t0 <- ceiling(T*0.5) # time of initial treatment
-  N_t <- ceiling(N/2)
+  N <- nrow(treat)
+  T <- ncol(treat)
+  t0 <- ceiling(T*0.5)
+  N_t <- ceiling(N*0.5) # no. treated units desired <=N
   num_runs <- 100
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
-  d <- 'sine'
-
+  
   ## Matrices for saving RMSE values
   
   MCPanel_RMSE_test <- matrix(0L,num_runs)
@@ -49,27 +27,25 @@ SineSim <- function(Y,N,T,sim){
   for(i in c(1:num_runs)){
     print(paste0(paste0("Run number ", i)," started"))
     ## Fix the treated units in the whole run for a better comparison
-    all_indices <- sort(sample(1:Nbig, N))
     treat_indices <- sort(sample(1:N, N_t))
-    Y_sub <- Y[all_indices,1:T]
     ## Simultaneuous (simul_adapt) or Staggered adoption (stag_adapt)
     if(is_simul == 1){
-      treat_mat <- simul_adapt(Y_sub, N_t, (t0-1), treat_indices)
+      treat_mat <- simul_adapt(Y, N_t, (t0-1), treat_indices) # t0 is time of initial treatment
     }else{
-      treat_mat <- stag_adapt(Y_sub, N_t, (t0-1), treat_indices)
+      treat_mat <- stag_adapt(Y, N_t, (t0-1), treat_indices)
     }
     
-    Y_obs <- Y_sub * treat_mat
-
+    Y_obs <- Y * treat_mat
+    
     ## Estimate propensity scores
-
+    
     if(is_simul == 1){
-      p.mod <- cv.glmnet(x=Y_obs, y=(1-treat_mat)[,t0], thresh = 1e-05, family="binomial", nfolds=3)
-      W <- predict(p.mod, Y_obs, type="response")
+      p.mod <- cv.glmnet(x=covars.x, y=(1-treat_mat)[,t0], thresh = 1e-05, family="binomial", nfolds=3)
+      W <- predict(p.mod, covars.x, type="response")
       W <- replicate(T,as.vector(W)) # assume constant across T
     }else{
-      p.mod <- cv.glmnet(x=Y_obs, y=(1-treat_mat)[,t0:T], thresh = 1e-05, family="multinomial", type.multinomial = "grouped", nfolds=3)
-      W <- predict(p.mod, Y_obs, type="response")[, ,]
+      p.mod <- cv.glmnet(x=covars.x, y=(1-treat_mat)[,t0:T], thresh = 1e-05, family="multinomial", type.multinomial = "grouped", nfolds=3)
+      W <- predict(p.mod, covars.x, type="response")[, ,]
       W <- cbind(replicate(T-t0-1, W[,1]), W) # assume constant in pre-treatment period
     }
     
@@ -86,7 +62,7 @@ SineSim <- function(Y,N,T,sim){
     print("LSTM Started")
     source("code/lstm.R")
     est_model_LSTM <- lstm(Y_obs, p.weights, treat_indices, d, t0=28, T)
-    est_model_LSTM_msk_err <- (est_model_LSTM - Y_sub)*(1-treat_mat)
+    est_model_LSTM_msk_err <- (est_model_LSTM - Y)*(1-treat_mat)
     est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
     LSTM_RMSE_test[i] <- est_model_LSTM_test_RMSE
     print(paste("LSTM RMSE:", round(est_model_LSTM_test_RMSE,3),"run",i))
@@ -95,20 +71,19 @@ SineSim <- function(Y,N,T,sim){
     ## ED
     ## ------
     
-    print("ED Started")
     source("code/ed.R")
-    est_model_ED <- ed(Y=Y_obs, p.weights, treat_indices, d, t0=28, T)
-    est_model_ED_msk_err <-  (est_model_ED - Y_sub)*(1-treat_mat)
+    est_model_ED <- ed(Y_obs, p.weights, treat_indices, d, t0=28, T) 
+    est_model_ED_msk_err <- (est_model_ED - Y)*(1-treat_mat)
     est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
     ED_RMSE_test[i] <- est_model_ED_test_RMSE
     print(paste("ED RMSE:", round(est_model_ED_test_RMSE,3),"run",i))
     
-    ## ----
+    ## -----
     ## HR-EN: : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
     ## -----
     
-    est_model_EN <- en_mp_rows(Y_obs, treat_mat, num_lam = 5, num_alpha = 1, num_folds = 3)
-    est_model_EN_msk_err <- (est_model_EN - Y_sub)*(1-treat_mat)
+    est_model_EN <- en_mp_rows(Y_obs, treat_mat, num_alpha = 1, num_lam = 5, num_folds = 3)
+    est_model_EN_msk_err <- (est_model_EN - Y)*(1-treat_mat)
     est_model_EN_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_EN_msk_err^2, na.rm = TRUE))
     EN_RMSE_test[i] <- est_model_EN_test_RMSE
     print(paste("HR-EN RMSE:", round(est_model_EN_test_RMSE,3),"run",i))
@@ -116,11 +91,10 @@ SineSim <- function(Y,N,T,sim){
     ## -----
     ## ADH
     ## -----
-    
     print("ADH Started")
-    source("code/ADH.R")
+    source("code/ADH.R") # clip gradients
     est_model_ADH <- adh_mp_rows(Y_obs, treat_mat, niter = 200, rel_tol = 1e-05)
-    est_model_ADH_msk_err <- (est_model_ADH - Y_sub)*(1-treat_mat)
+    est_model_ADH_msk_err <- (est_model_ADH - Y)*(1-treat_mat)
     est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
     ADH_RMSE_test[i] <- est_model_ADH_test_RMSE
     print(paste("ADH RMSE:", round(est_model_ADH_test_RMSE,3),"run",i))
@@ -129,10 +103,9 @@ SineSim <- function(Y,N,T,sim){
     ## VAR
     ## ------
     
-    print("VAR Started")
     source("code/varEst.R")
-    est_model_VAR <- varEst(Y=Y_obs, treat_indices)
-    est_model_VAR_msk_err <- (est_model_VAR - Y_sub)*(1-treat_mat)
+    est_model_VAR <- varEst(Y_obs, treat_indices)
+    est_model_VAR_msk_err <- (est_model_VAR - Y)*(1-treat_mat)
     est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
     VAR_RMSE_test[i] <- est_model_VAR_test_RMSE
     print(paste("VAR RMSE:", round(est_model_VAR_test_RMSE,3),"run",i))
@@ -141,10 +114,9 @@ SineSim <- function(Y,N,T,sim){
     ## MC-NNM
     ## ------
     
-    print("MC-NNM Started")
     est_model_MCPanel <- mcnnm(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, lambda_L = c(0.05), niter = 200, rel_tol = 1e-05)[[1]] # no CV to save computational time
     est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
-    est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y_sub)*(1-treat_mat)
+    est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y)*(1-treat_mat)
     est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
     MCPanel_RMSE_test[i] <- est_model_MCPanel$test_RMSE
     print(paste("MC-NNM RMSE:", round(est_model_MCPanel$test_RMSE,3),"run",i))
@@ -153,19 +125,18 @@ SineSim <- function(Y,N,T,sim){
     ## DID
     ## -----
     
-    print("DID Started")
     est_model_DID <- t(DID(t(Y_obs), t(treat_mat)))
-    est_model_DID_msk_err <- (est_model_DID - Y_sub)*(1-treat_mat)
+    est_model_DID_msk_err <- (est_model_DID - Y)*(1-treat_mat)
     est_model_DID_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_DID_msk_err^2, na.rm = TRUE))
     DID_RMSE_test[i] <- est_model_DID_test_RMSE
     print(paste("DID RMSE:", round(est_model_DID_test_RMSE,3),"run",i))
     
     ## -----
-    ## VT-EN : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
+    ## VT-EN: : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
     ## -----
     
-    est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_lam = 5, num_alpha = 1, num_folds = nrow(t(Y_obs)))) # avoid constant y
-    est_model_ENT_msk_err <- (est_model_ENT - Y_sub)*(1-treat_mat)
+    est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_alpha = 1, num_lam = 5, num_folds = nrow(t(Y_obs)))) # avoid constant y
+    est_model_ENT_msk_err <- (est_model_ENT - Y)*(1-treat_mat)
     est_model_ENT_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ENT_msk_err^2, na.rm = TRUE))
     ENT_RMSE_test[i] <- est_model_ENT_test_RMSE
     print(paste("VT-EN RMSE:", round(est_model_ENT_test_RMSE,3),"run",i))
@@ -213,27 +184,6 @@ SineSim <- function(Y,N,T,sim){
                    "SCM-ENT",
                    "VAR"))
   
-  filename <- paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".rds")
+  filename<-paste0(paste0(paste0(paste0(paste0(paste0(gsub("\\.", "_", d),"_N_", N),"_T_", T),"_numruns_", num_runs), "_num_treated_", N_t), "_simultaneuous_", is_simul),".rds")
   save(df1, file = paste0("results/",filename))
 }
-
-# Load data
-
-Y.train <-  read.csv('data/sine_train_real.csv',header=F)
-Y.val <- read.csv('data/sine_val_real.csv',header=F) 
-Y.test <- read.csv('data/sine_test_real.csv',header=F)
-
-Y <- data.matrix(rbind(Y.train,Y.val,Y.test)) # N X T
-colnames(Y) <- 1:ncol(Y)
-rownames(Y) <- 1:nrow(Y)
-
-print(dim(Y))
-
-print(paste0("N X T data dimension: ", dim(Y)))
-
-# Fixed Dimensions =500*2000 = 1,000,000
-#SineSim(Y,N=500,T=2000,sim=1) # DONE
-SineSim(Y,N=800,T=1250,sim=1) 
-#SineSim(Y,N=1000,T=1000,sim=1) 
-#SineSim(Y,N=1250,T=800,sim=1) 
-#SineSim(Y,N=2000,T=500,sim=1) 
