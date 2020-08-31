@@ -41,7 +41,7 @@ ed <- function(Y,p.weights,treat_indices,d, t0, T){
     py$dr <- 0.2
     py$patience <- 1
   }
-  if(d==c('basque','california','germany','educ.pc')){
+  if(d%in%c('basque','california','germany','educ.pc')){
     py$nb_batches <- 16
     py$dr <- 0.5
     py$penalty <- 0.5
