@@ -51,6 +51,7 @@ stock <- df1
 #load("results/table-results/rbf_N_500_T_1000_numruns_60_num_treated_250_simultaneuous_1.rds")
 #load("results/table-results/rbf_N_500_T_2000_numruns_60_num_treated_250_simultaneuous_1.rds") # simultaneous
 load("results/table-results/rbf_N_500_T_2000_numruns_100_num_treated_250_simultaneuous_1.rds") # simultaneous
+load("results/table-results/sine_N_800_T_1250_numruns_100_num_treated_400_simultaneuous_1.rds") # simultaneous
 
 rbf <- df1
 

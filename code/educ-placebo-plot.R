@@ -2,9 +2,9 @@ library(ggplot2)
 library(latex2exp)
 library(dplyr)
 
-load("results/plots/educ_pc_N_16_T_130_numruns_100_num_treated_8_simultaneuous_1.rds") # 100 runs
+load("results/plots/educ_pc_N_16_T_148_numruns_100_num_treated_8_simultaneuous_1.rds") # 100 runs
 
-df1 <- df1 %>% group_by(x) %>% mutate(y = y,
+df1 <- df1 %>% group_by(x.1) %>% mutate(y = y,
                                       lb= lb,
                                       ub = ub)
 
