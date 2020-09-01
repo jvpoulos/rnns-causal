@@ -41,7 +41,7 @@ lstm <- function(Y,p.weights,treat_indices,d, t0, T){
     py$dr <- 0
     py$patience <- 1
   }
-  if(d%in%c('basque','california','germany','educ.pc')){
+  if(d%in%c('basque','california','germany','educ.pc','covid')){
     py$nb_batches <- 32
     py$dr <- 0.7
     py$penalty <- 1.25

@@ -1,5 +1,5 @@
 ###################################
-# Prepare education spending data for RNNs (LOCF)#
+# Prepare education spending data for RNNs#
 ###################################
 
 library(caret)
@@ -7,63 +7,35 @@ library(imputeTS)
 library(glmnet)
 library(dplyr)
 
-PreProcessData <- function(imp=c('none','median')){
+PreProcessData <- function(imp=c('none','linear','locf','median','random','svd')){
   # Read data
   capacity.outcomes <- readRDS(paste0("data/capacity-outcomes-",imp,".rds"))
   capacity.covariates <- readRDS("data/capacity-covariates.rds")
   
   # Transform covars to unit and time-specific inputs
-  capacity.covars.x <- as.matrix(bind_rows(lapply(capacity.covariates,rowMeans))) # N x # predictors
-  rownames(capacity.covars.x) <- rownames(capacity.covariates$faval)
+  capacity.covars <- cbind(capacity.covariates$faval[,c("faval.1850","faval.1860")], 
+                           capacity.covariates$farmsize[,c("farmsize.1790", "farmsize.1800", "farmsize.1810", "farmsize.1820", "farmsize.1830", "farmsize.1840", "farmsize.1850", "farmsize.1860")],
+                           capacity.covariates$access[,c("track2.1835", "track2.1837", "track2.1839", "track2.1840", "track2.1845", "track2.1850", 
+                                                         "track2.1851", "track2.1852", "track2.1854", "track2.1856", "track2.1857",
+                                                         "track2.1858", "track2.1859", "track2.1860", "track2.1861")])
   
-  # matrix of same time dimension as outcomes
-  capacity.covars.z <- list("faval"=matrix(NA, nrow = nrow(capacity.outcomes$educ.pc$M), ncol = ncol(capacity.outcomes$educ.pc$M)),
-                            "farmsize"=matrix(NA, nrow = nrow(capacity.outcomes$educ.pc$M), ncol = ncol(capacity.outcomes$educ.pc$M)),
-                            "access"=matrix(NA, nrow = nrow(capacity.outcomes$educ.pc$M), ncol = ncol(capacity.outcomes$educ.pc$M)))
-  
-  for(i in c("faval","farmsize","access")){
-    colnames(capacity.covars.z[[i]]) <- colnames(capacity.outcomes$educ.pc$M)
-    rownames(capacity.covars.z[[i]]) <- rownames(capacity.outcomes$educ.pc$M)
-  }
-  
-  colnames(capacity.covariates$faval) <- sub('faval.', '', colnames(capacity.covariates$faval))
-  colnames(capacity.covariates$farmsize) <- sub('farmsize.', '', colnames(capacity.covariates$farmsize))
-  colnames(capacity.covariates$access) <- sub('track2.', '', colnames(capacity.covariates$access))
-  
-  # fill in observed data and impute missing 
-  
-  for(i in c("faval","farmsize","access")){
-    for(n in rownames(capacity.outcomes$educ.pc$M)){
-      for(t in colnames(capacity.outcomes$educ.pc$M)){
-        capacity.covars.z[[i]][n,][t] <- capacity.covariates[[i]][n,][t]
-      }
-    }
-    
-    capacity.covars.z[[i]] <- t(capacity.covars.z[[i]])
-    preProcValues <- preProcess(capacity.covars.z[[i]], method = c("medianImpute"), verbose=TRUE) # use training set median
-    
-    capacity.covars.z[[i]] <- predict(preProcValues, capacity.covars.z[[i]])
-    
-    capacity.covars.z[[i]] <- t(capacity.covars.z[[i]])
-  }
-  
-  capacity.covars.z <- as.matrix(bind_rows(lapply(capacity.covars.z,colMeans))) # T x # predictors
-  rownames(capacity.covars.z) <- colnames(capacity.outcomes$educ.pc$M)
+  capacity.covars <-capacity.covars[match(rownames(capacity.outcomes$educ.pc$M), rownames(capacity.covars)), ] # same order
   
   # Prepare outcomes data
   educ <- capacity.outcomes$educ.pc
   Y.missing <- educ$M.missing # NxT
   Y <- educ$M # NxT 
+  Y <- Y[, - as.numeric(which(apply(Y, 2, var) == 0))] # rm col from 0 variance
+  Y.missing <- Y.missing[,colnames(Y.missing) %in% colnames(Y)]
   
   treat <- educ$mask # NxT masked matrix 
-  
+  treat <- treat[,colnames(treat) %in% colnames(Y)]
+
   N <- nrow(treat)
   T <- ncol(treat)
   
-  treated.indices <- c("CA", "CO", "IA", "KS", "MI", "MN", "MO", "NE", "OH", "OR", "SD", "WA", "WI", "IL", "NV", "ID", "MT", "ND",  "UT", "AL", "MS", "AR", "FL", "LA", "IN", "NM", "WY", "AZ", "OK", "AK")
-  t0 <- which(colnames(Y)=="1869") # first treatment time # same for all outcomes
-  
-  treat[rownames(treat)%in% treated.indices,][,as.numeric(colnames(treat)) >= 1869] <- 1# adjust for simultaneous adoption 
+  treated.indices <- row.names(capacity.outcomes$educ.pc$M)[row.names(capacity.outcomes$educ.pc$M)%in% c("CA", "IA", "KS", "MI", "MN", "MO", "OH", "OR", "WI", "IL", "NV", "AL", "MS", "FL", "LA", "IN")]
+  t0 <- ceiling(which(colnames(Y)=="1869")/4) # window size
   
   # Censor post-period treated values
   
@@ -71,10 +43,6 @@ PreProcessData <- function(imp=c('none','median')){
   Y_obs <- Y * treat_mat
   
   Y_imp <- Y * Y.missing # use for calculating RMSE on non-imputed values
-  
-  # RNN-based methods train on Y (no imputation, no censoring)
-  # benchmark estimators train on Y_obs (treated censored with 0, missing values imputed with predictor training set median)
-  # RMSE calculated on Y_imp (missing values are NA)
   
   # converting the data to a floating point matrix
   data <- data.matrix(t(Y_obs)) # T x N
@@ -86,7 +54,8 @@ PreProcessData <- function(imp=c('none','median')){
   
   ## Estimate propensity scores
   
-  capacity.covars.x <- capacity.covars.x[!rownames(capacity.covars.x)%in%c("GA"),] # GA not in outcomes, TN for parity
+  covars.x <- capacity.covars[!rownames(capacity.covars)%in%c(rownames(treated.indices),"TN","GA"),]
+  
   capacity.covars.z <- capacity.covars.z
   
   logitMod.x <- cv.glmnet(x=capacity.covars.x, y=as.factor((1-treat_mat)[,t0]), family="binomial", nfolds= nrow(capacity.covars.x), parallel = TRUE, nlambda=400) # LOO

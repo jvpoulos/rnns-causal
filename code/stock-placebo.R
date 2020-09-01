@@ -29,7 +29,8 @@ StockSim <- function(Y,N,T,sim){
   
   t0 <- ceiling(T*0.5) # time of initial treatment
   N_t <- ceiling(N/2)
-  num_runs <- 100
+ # num_runs <- 100
+  num_runs <- 10
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   d <- 'stock'
 
@@ -78,7 +79,6 @@ StockSim <- function(Y,N,T,sim){
     
     p.weights <- matrix(NA, nrow=nrow(W), ncol=ncol(W), dimnames = list(rownames(W), colnames(W)))
     p.weights <- (1-treat_mat) + (treat_mat)*W/(1-W) # weighting by the odds
-    
     
     ## ------
     ## LSTM
@@ -204,7 +204,7 @@ StockSim <- function(Y,N,T,sim){
     data.frame(
       "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,ADH_avg_RMSE,EN_avg_RMSE,ENT_avg_RMSE,VAR_avg_RMSE),
       "se" = c(DID_std_error,ED_std_error,LSTM_std_error,MCPanel_std_error,ADH_std_error,EN_std_error,ENT_std_error,VAR_std_error),
-      "x" = t0/T,
+      "x" = N,
       "Method" = c("DID", 
                    "Encoder-decoder",
                    "LSTM",
@@ -223,4 +223,12 @@ Y <- t(read.csv('data/returns_no_missing.csv',header=F)) # N X T
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-StockSim(Y,N=500,T=2000,sim=1) 
+# Fixed dimensions: NxT=400,000
+N.seq <- seq(200,2000, by=200)[-c(1:2)]
+T.seq <- round(200*2000/N.seq)[-c(1:2)]
+
+for(n in 1:length(N.seq)){
+    StockSim(Y,N=N.seq[n],T=T.seq[n],sim=1)
+}
+
+#StockSim(Y,N=500,T=2000,sim=1) 
