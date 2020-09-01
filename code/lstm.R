@@ -37,27 +37,26 @@ lstm <- function(Y,p.weights,treat_indices,d, t0, T){
   py$penalty <- 0.001
   py$nb_batches <- 128
   if(d=='stock'){
-    py$penalty <- 0.0001
-    py$dr <- 0.2
+    py$penalty <- 0
+    py$dr <- 0
     py$patience <- 1
   }
   if(d%in%c('basque','california','germany','educ.pc')){
-    py$nb_batches <- 16
+    py$nb_batches <- 32
     py$dr <- 0.7
-    py$penalty <- 1
+    py$penalty <- 1.25
     py$patience <- 10
   }
   if(d=='rbf'){
-    py$nb_batches <- 32
-    py$dr <- 0.2
-    py$penalty <- 0.0001
-    py$patience <- 3
+    py$dr <- 0
+    py$penalty <- 0
+    py$patience <- 5
   }
   if(d=='mnist'){
-    py$nb_batches <- 32
+    py$nb_batches <- 64
     py$dr <- 0.2
-    py$penalty <- 0.0001
-    py$patience <- 3
+    py$penalty <- 0
+    py$patience <- 5
   }
   if(d=='sine'){
     py$patience <- 1

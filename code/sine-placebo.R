@@ -233,7 +233,7 @@ print(paste0("N X T data dimension: ", dim(Y)))
 
 # Fixed Dimensions =500*2000 = 1,000,000
 #SineSim(Y,N=500,T=2000,sim=1) # DONE
-SineSim(Y,N=800,T=1250,sim=1) 
-#SineSim(Y,N=1000,T=1000,sim=1) 
+#SineSim(Y,N=800,T=1250,sim=1) # Done
+SineSim(Y,N=1000,T=1000,sim=1) 
 #SineSim(Y,N=1250,T=800,sim=1) 
 #SineSim(Y,N=2000,T=500,sim=1) 

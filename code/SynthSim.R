@@ -61,7 +61,7 @@ SynthSim <- function(outcomes,covars.x,d,sim){
     
     print("LSTM Started")
     source("code/lstm.R")
-    est_model_LSTM <- lstm(Y_obs, p.weights, treat_indices, d, t0=7, T)
+    est_model_LSTM <- lstm(Y_obs, p.weights, treat_indices, d, t0=ceiling(t0/4), T)
     est_model_LSTM_msk_err <- (est_model_LSTM - Y)*(1-treat_mat)
     est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
     LSTM_RMSE_test[i] <- est_model_LSTM_test_RMSE
@@ -72,7 +72,7 @@ SynthSim <- function(outcomes,covars.x,d,sim){
     ## ------
     
     source("code/ed.R")
-    est_model_ED <- ed(Y_obs, p.weights, treat_indices, d, t0=7, T) 
+    est_model_ED <- ed(Y_obs, p.weights, treat_indices, d, t0=ceiling(t0/4), T) 
     est_model_ED_msk_err <- (est_model_ED - Y)*(1-treat_mat)
     est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
     ED_RMSE_test[i] <- est_model_ED_test_RMSE
