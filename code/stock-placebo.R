@@ -224,11 +224,12 @@ Y <- t(read.csv('data/returns_no_missing.csv',header=F)) # N X T
 print(paste0("N X T data dimension: ", dim(Y)))
 
 # Fixed dimensions: NxT=400,000
-N.seq <- seq(200,2000, by=200)[-c(1:2)]
-T.seq <- round(200*2000/N.seq)[-c(1:2)]
+N.seq <- seq(200,2000, by=200)
+T.seq <- round(200*2000/N.seq)
 
 for(n in 1:length(N.seq)){
-    StockSim(Y,N=N.seq[n],T=T.seq[n],sim=1)
+  if(n<3) next
+  StockSim(Y,N=N.seq[n],T=T.seq[n],sim=1)
 }
 
 #StockSim(Y,N=500,T=2000,sim=1) 
