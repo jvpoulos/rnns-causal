@@ -46,14 +46,12 @@ results_directory = 'results/lstm/{}'.format(dataname)
 if not os.path.exists(results_directory):
     os.makedirs(results_directory)
 
-def create_model(n_pre, nb_features, output_dim, lr, penalty, dr):
+def create_model(n_pre, nb_features, output_dim, lr, penalty, dr, n_hidden):
     """ 
         creates, compiles and returns a RNN model 
         @param nb_features: the number of features in the model
     """
     # Define model parameters
-
-    n_hidden = 128
 
     hidden_activation = 'relu'
 
@@ -128,7 +126,7 @@ def test_model():
   
     # create and fit the LSTM network
     print('creating model...')
-    model = create_model(n_pre, nb_features, output_dim, lr, penalty, dr)
+    model = create_model(n_pre, nb_features, output_dim, lr, penalty, dr, n_hidden)
 
     # load pre-trained weights
     weights_path = 'results/lstm/{}'.format(dataname) +'/weights-placebo-{}-{}.h5'.format(str(n_pre), str(nb_features))

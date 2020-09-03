@@ -65,9 +65,14 @@ Application: counterfactual predictions
 
 First, prepare public education spending data by running in **R** `prepare-funds.R`
 
-Second, run in shell with command line arguments `<GPU_ID> <patience> <dropout rate> <penalty> <learning_rate> <epochs> <batches> <data_name> <window_size> <T> <imputation_method>`; e.g., 
+Second, run in shell with command line arguments `<GPU_ID> <hidden_activation>  <encoder_hidden_1>  <encoder_hidden_2> <decoder_hidden> <patience> <dropout rate> <penalty> <learning_rate> <epochs> <batches> <data_name> <window_size> <T> <imputation_method>`; e.g., 
 ```
-python code/train_encoder_decoder.py 3 10 0.7 1.25 0.001 500 32 'educ' 22 156 'none'
+python code/train_encoder_decoder.py 3 'relu' 128 64 32 15 0.5 0.2 0.0005 500 32 'educ' 22 156 'none'
+```
+For the LSTM, arguments `<GPU_ID> <hidden_activation> <n_hidden> <patience> <dropout rate> <penalty> <learning_rate> <epochs> <batches> <data_name> <window_size> <T> <imputation_method>`; e.g., 
+
+```
+python code/lstm.py 3 'relu' 64 15 0.5 0.2 0.0005 500 32 'educ' 22 156 'none'
 ```
 
 To plot the training and validation error, run `code/plot_history.py <file location of training log> <title>`; e.g., 

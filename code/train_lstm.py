@@ -30,7 +30,7 @@ def weighted_mse(y_true, y_pred, weights):
 
 # Select gpu
 import os
-gpu = sys.argv[-11]
+gpu = sys.argv[-13]
 if gpu < 3:
     os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
     os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
@@ -48,6 +48,8 @@ lr = float(sys.argv[-7])
 penalty = float(sys.argv[-8])
 dr = float(sys.argv[-9])
 patience = sys.argv[-10]
+n_hidden = int(sys.argv[-11])
+hidden_activation = sys.argv[-12]
 
 # Create directories
 results_directory = 'results/lstm/{}'.format(dataname)
@@ -56,16 +58,12 @@ if not os.path.exists(results_directory):
     os.makedirs(results_directory)
 
 
-def create_model(n_pre, nb_features, output_dim, lr, penalty, dr):
+def create_model(n_pre, nb_features, output_dim, lr, penalty, dr, n_hidden, hidden_activation):
     """ 
         creates, compiles and returns a RNN model 
         @param nb_features: the number of features in the model
     """
     # Define model parameters
-
-    n_hidden = 128
-
-    hidden_activation = 'relu'
 
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
     mask = Masking(mask_value=0.)(inputs)
@@ -142,7 +140,7 @@ def test_model():
 
     # create and fit the lstm network
     print('creating model...')
-    model = create_model(n_pre, nb_features, output_dim, lr, penalty, dr)
+    model = create_model(n_pre, nb_features, output_dim, lr, penalty, dr, n_hidden, hidden_activation)
 
     # load pre-trained weights
     weights_path = 'results/lstm/{}'.format(dataname) +'/weights-{}-{}.h5'.format(str(n_pre), str(nb_features))

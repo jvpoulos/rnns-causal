@@ -2,10 +2,7 @@
 # Prepare education spending data for RNNs#
 ###################################
 
-library(caret)
-library(imputeTS)
 library(glmnet)
-library(dplyr)
 
 PreProcessData <- function(imp=c('none','linear','locf','median','random','svd')){
   # Read data
@@ -23,19 +20,22 @@ PreProcessData <- function(imp=c('none','linear','locf','median','random','svd')
   
   # Prepare outcomes data
   educ <- capacity.outcomes$educ.pc
+  treat <- educ$mask # NxT masked matrix 
   Y.missing <- educ$M.missing # NxT
   Y <- educ$M # NxT 
-  Y <- Y[, - as.numeric(which(apply(Y, 2, var) == 0))] # rm col from 0 variance
-  Y.missing <- Y.missing[,colnames(Y.missing) %in% colnames(Y)]
-  
-  treat <- educ$mask # NxT masked matrix 
-  treat <- treat[,colnames(treat) %in% colnames(Y)]
+  if(imp=='none'){
+    Y <- Y[, - as.numeric(which(apply(Y, 2, var) == 0))] # rm col from 0 variance
+    Y.missing <- Y.missing[,colnames(Y.missing) %in% colnames(Y)]
+    treat <- treat[,colnames(treat) %in% colnames(Y)]
+  }
 
   N <- nrow(treat)
   T <- ncol(treat)
   
   treated.indices <- row.names(capacity.outcomes$educ.pc$M)[row.names(capacity.outcomes$educ.pc$M)%in% c("CA", "IA", "KS", "MI", "MN", "MO", "OH", "OR", "WI", "IL", "NV", "AL", "MS", "FL", "LA", "IN")]
-  t0 <- ceiling(which(colnames(Y)=="1869")/4) # window size
+  control.indices <-row.names(capacity.outcomes$educ.pc$M)[!row.names(capacity.outcomes$educ.pc$M)%in% c(treated.indices,"TN")] # make N_t = N_c
+  
+  t0 <- which(colnames(Y)=="1869")
   
   # Censor post-period treated values
   
@@ -48,27 +48,20 @@ PreProcessData <- function(imp=c('none','linear','locf','median','random','svd')
   data <- data.matrix(t(Y_obs)) # T x N
   
   # # Splits
-  train_data <- data[,!colnames(data)%in% c(treated.indices,"TN")] # train on control units
+  train_data <- data[,colnames(data)%in% control.indices] # train on control units
   
   test_data <- data[,colnames(data)%in% treated.indices]  # treated units
   
   ## Estimate propensity scores
   
-  covars.x <- capacity.covars[!rownames(capacity.covars)%in%c(rownames(treated.indices),"TN","GA"),]
+  p.mod <- cv.glmnet(x=capacity.covars, y=(1-treat_mat)[,t0], family="binomial")
+  W <- predict(p.mod, capacity.covars, type="response", s = "lambda.min")
+  W <- replicate(T,as.vector(W)) # assume constant across T
   
-  capacity.covars.z <- capacity.covars.z
+  p.weights <- matrix(NA, nrow=nrow(W), ncol=ncol(W), dimnames = list(rownames(W), colnames(W)))
+  p.weights <- (1-treat_mat) + (treat_mat)*W/(1-W) # weighting by the odds
   
-  logitMod.x <- cv.glmnet(x=capacity.covars.x, y=as.factor((1-treat_mat)[,t0]), family="binomial", nfolds= nrow(capacity.covars.x), parallel = TRUE, nlambda=400) # LOO
-  
-  logitMod.z <- cv.glmnet(x=capacity.covars.z, y=as.factor((1-treat_mat)[treated.indices[1],]), family="binomial", nfolds=nrow(capacity.covars.z), parallel = TRUE, nlambda=400)
-  
-  p.weights.x <- as.vector(predict(logitMod.x, capacity.covars.x, type="response", s ="lambda.min"))
-  p.weights.z <- as.vector(predict(logitMod.z, capacity.covars.z, type="response", s ="lambda.min"))
-  
-  p.weights <- outer(p.weights.x,p.weights.z)   # outer product of fitted values on response scale
   p.weights <- t(p.weights) # T x N
-  rownames(p.weights) <-rownames(data)
-  colnames(p.weights) <-colnames(data)
   
   train_w <- p.weights[,colnames(p.weights)%in%colnames(train_data)][rownames(p.weights)%in%rownames(train_data),]
   test_w <- p.weights[,colnames(p.weights)%in%colnames(test_data)][rownames(p.weights)%in%rownames(test_data),]
@@ -82,6 +75,6 @@ PreProcessData <- function(imp=c('none','linear','locf','median','random','svd')
               "Y"=Y,"Y_imp"=Y_imp,"Y_obs"=Y_obs,"treated.indices"=treated.indices,"p.weights"=p.weights))
 }
 
-PreProcessData(imp="median")
- 
-PreProcessData(imp="none")
+for(imp in c('none','linear','locf','median','random','svd')){
+  PreProcessData(imp)
+}

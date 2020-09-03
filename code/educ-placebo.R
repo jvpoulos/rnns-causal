@@ -5,9 +5,7 @@
 ## Loading Source files
 library(MCPanel)
 library(glmnet)
-library(dplyr)
 library(glmnet)
-library(reshape2)
 
 # Setup parallel processing 
 library(parallel)
@@ -79,15 +77,9 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
 
       ## Estimate propensity scores
       
-      if(is_simul == 1){
-        p.mod <- cv.glmnet(x=covars_x_sub, y=(1-treat_mat)[,t0], thresh = 1e-05, family="binomial", nfolds=3)
-        W <- predict(p.mod, covars_x_sub, type="response")
-        W <- replicate(T,as.vector(W)) # assume constant across T
-      }else{
-        p.mod <- cv.glmnet(x=covars_x_sub, y=(1-treat_mat)[,t0:T], thresh = 1e-05, family="multinomial", type.multinomial = "grouped", nfolds=3)
-        W <- predict(p.mod, covars_x_sub, type="response")[, ,]
-        W <- cbind(replicate(T-t0-1, W[,1]), W) # assume constant in pre-treatment period
-      }
+      p.mod <- cv.glmnet(x=covars_x_sub, y=(1-treat_mat)[,t0], family="binomial")
+      W <- predict(p.mod, covars_x_sub, type="response", s = "lambda.min")
+      W <- replicate(T,as.vector(W)) # assume constant across T
       
       rownames(W) <- rownames(Y_obs)
       colnames(W) <- colnames(Y_obs)
@@ -154,7 +146,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
       ## MC-NNM
       ## ------
       
-      est_model_MCPanel <- mcnnm(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, lambda_L = c(0.05), niter = 200, rel_tol = 1e-05)[[1]] # no CV to save computational time
+      est_model_MCPanel <- mcnnm_cv(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, num_lam_L = 5, num_folds =3, niter = 200)
       est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
       est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y_sub)*(1-treat_mat)
       est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
@@ -246,4 +238,5 @@ capacity.covars <-capacity.covars[match(rownames(capacity.outcomes$educ.pc$M), r
 
 treat_indices_order <- row.names(capacity.outcomes$educ.pc$M)[row.names(capacity.outcomes$educ.pc$M)%in% c("CA", "IA", "KS", "MI", "MN", "MO", "OH", "OR", "WI", "IL", "NV", "AL", "MS", "FL", "LA", "IN")]
 
-CapacitySim(outcomes=capacity.outcomes,covars.x=capacity.covars, d="educ.pc", treated.indices = treat_indices_order, N=length(treat_indices_order),sim=1)
+CapacitySim(outcomes=capacity.outcomes,covars.x=capacity.covars, d="educ.pc", treated.indices = treat_indices_order, N=length(treat_indices_order),sim=1) # simul
+CapacitySim(outcomes=capacity.outcomes,covars.x=capacity.covars, d="educ.pc", treated.indices = treat_indices_order, N=length(treat_indices_order),sim=0) # stag

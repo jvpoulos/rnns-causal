@@ -63,15 +63,9 @@ CovidSim <- function(Y,N,T,sim){
     
     ## Estimate propensity scores
     
-    if(is_simul == 1){
-      p.mod <- cv.glmnet(x=Y_obs, y=(1-treat_mat)[,t0], thresh = 1e-05, family="binomial", nfolds=3)
-      W <- predict(p.mod, Y_obs, type="response")
-      W <- replicate(T,as.vector(W)) # assume constant across T
-    }else{
-      p.mod <- cv.glmnet(x=Y_obs, y=(1-treat_mat)[,t0:T], thresh = 1e-05, family="multinomial", type.multinomial = "grouped", nfolds=3)
-      W <- predict(p.mod, Y_obs, type="response")[, ,]
-      W <- cbind(replicate(T-t0-1, W[,1]), W) # assume constant in pre-treatment period
-    }
+    p.mod <- cv.glmnet(x=Y_obs, y=(1-treat_mat)[,t0], family="binomial")
+    W <- predict(p.mod, Y_obs, type="response", s = "lambda.min")
+    W <- replicate(T,as.vector(W)) # assume constant across T
     
     rownames(W) <- rownames(Y_obs)
     colnames(W) <- colnames(Y_obs)
@@ -107,7 +101,7 @@ CovidSim <- function(Y,N,T,sim){
     ## HR-EN: : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
     ## -----
     
-    est_model_EN <- en_mp_rows(Y_obs, treat_mat, num_lam = 5, num_alpha = 1, num_folds = 3)
+    est_model_EN <- en_mp_rows(Y_obs, treat_mat, num_lam = 5, num_alpha = 1, num_folds = nrow(Y_obs)) # LOOCV to avoid constant y
     est_model_EN_msk_err <- (est_model_EN - Y_sub)*(1-treat_mat)
     est_model_EN_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_EN_msk_err^2, na.rm = TRUE))
     EN_RMSE_test[i] <- est_model_EN_test_RMSE
@@ -142,7 +136,7 @@ CovidSim <- function(Y,N,T,sim){
     ## ------
     
     print("MC-NNM Started")
-    est_model_MCPanel <- mcnnm(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, lambda_L = c(0.05), niter = 200, rel_tol = 1e-05)[[1]] # no CV to save computational time
+    est_model_MCPanel <- mcnnm_cv(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, num_lam_L = 5, num_folds =3, niter = 200)
     est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
     est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y_sub)*(1-treat_mat)
     est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))

@@ -33,33 +33,32 @@ lstm <- function(Y,p.weights,treat_indices,d, t0, T){
   py$gpu <- 3
   py$epochs <- 500
   py$lr <- 0.001
-  py$dr <- 0.5
+  py$dr <- 0.2
   py$penalty <- 0.001
   py$nb_batches <- 128
+  py$n_hidden <- 128
+  py$patience <- 15
   if(d=='stock'){
-    py$penalty <- 0
-    py$dr <- 0
-    py$patience <- 1
+    py$patience <- 5
+    py$n_hidden <- 256
   }
   if(d%in%c('basque','california','germany','educ.pc','covid')){
+    py$lr <- 0.0005
     py$nb_batches <- 32
-    py$dr <- 0.7
-    py$penalty <- 1.25
-    py$patience <- 10
+    py$dr <- 0.5
+    py$penalty <- 0.2
+    py$n_hidden <- 64
   }
   if(d=='rbf'){
-    py$dr <- 0
-    py$penalty <- 0
-    py$patience <- 5
+    py$n_hidden <- 256
   }
   if(d=='mnist'){
     py$nb_batches <- 64
-    py$dr <- 0.2
-    py$penalty <- 0
-    py$patience <- 5
+    py$n_hidden <- 256
   }
   if(d=='sine'){
-    py$patience <- 1
+    py$patience <- 5
+    py$n_hidden <- 256
   }
   
   source_python("code/train_lstm_sim.py")

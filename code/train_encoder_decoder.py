@@ -31,7 +31,7 @@ def weighted_mse(y_true, y_pred, weights):
 
 # Select gpu
 import os
-gpu = sys.argv[-11]
+gpu = sys.argv[-15]
 if gpu < 3:
     os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
     os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
@@ -49,6 +49,10 @@ lr = float(sys.argv[-7])
 penalty = float(sys.argv[-8])
 dr = float(sys.argv[-9])
 patience = sys.argv[-10]
+decoder_hidden = int(sys.argv[-11])
+encoder_hidden_2 = int(sys.argv[-12])
+encoder_hidden_1 = int(sys.argv[-13])
+hidden_activation = sys.argv[-14]
 
 # Create directories
 results_directory = 'results/encoder-decoder/{}'.format(dataname)
@@ -56,23 +60,18 @@ results_directory = 'results/encoder-decoder/{}'.format(dataname)
 if not os.path.exists(results_directory):
     os.makedirs(results_directory)
 
-def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr):
+def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr, encoder_hidden_1, encoder_hidden_2, decoder_hidden, hidden_activation):
     """ 
         creates, compiles and returns a RNN model 
         @param nb_features: the number of features in the model
     """
     # Define model parameters
 
-    encoder_hidden = 128
-    decoder_hidden = 128
-
-    hidden_activation = 'relu'
-
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
     mask = Masking(mask_value=0.)(inputs)
     weights_tensor = Input(shape=(nb_features,), name="Weights")
-    lstm_1 = LSTM(encoder_hidden, dropout=dr, recurrent_dropout=dr, activation=hidden_activation, return_sequences=True, name='LSTM_1')(mask) # Encoder
-    lstm_2 = LSTM(encoder_hidden, dropout=dr, recurrent_dropout=dr, activation=hidden_activation, return_sequences=False, name='LSTM_2')(lstm_1) # Encoder
+    lstm_1 = LSTM(encoder_hidden_1, dropout=dr, recurrent_dropout=dr, activation=hidden_activation, return_sequences=True, name='LSTM_1')(mask) # Encoder
+    lstm_2 = LSTM(encoder_hidden_2, dropout=dr, recurrent_dropout=dr, activation=hidden_activation, return_sequences=False, name='LSTM_2')(lstm_1) # Encoder
     repeat = RepeatVector(n_post, name='Repeat')(lstm_2) # get the last output of the LSTM and repeats it
     lstm_3 = LSTM(decoder_hidden, return_sequences=True, name='Decoder')(repeat)  # Decoder
     attn = SeqSelfAttention(attention_activation='sigmoid')(lstm_3)
@@ -127,7 +126,7 @@ def test_model():
 
     print('wXC shape:', wXC.shape)
 
-    x = np.array(pd.read_csv("data/{}-x.csv".format(dataname)))
+    x = np.array(pd.read_csv("data/{}-x-{}.csv".format(dataname,imp)))
 
     print('raw x shape', x.shape) 
  
@@ -149,7 +148,7 @@ def test_model():
 
     # create and fit the encoder-decoder network
     print('creating model...')
-    model = create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr)
+    model = create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr, encoder_hidden_1, encoder_hidden_2, decoder_hidden, hidden_activation)
 
     # Load pre-trained weights
     weights_path = 'results/encoder-decoder/{}'.format(dataname) +'/weights-{}-{}.h5'.format(str(n_pre), str(nb_features))
@@ -192,7 +191,7 @@ def test_model():
 
     print('wXT shape:', wXT.shape)
 
-    y = np.array(pd.read_csv("data/{}-y.csv".format(dataname)))
+    y = np.array(pd.read_csv("data/{}-y-{}.csv".format(dataname,imp)))
 
     print('raw y shape', y.shape)  
 

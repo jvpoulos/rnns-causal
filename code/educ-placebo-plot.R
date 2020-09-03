@@ -9,7 +9,7 @@ df1 <- df1 %>% group_by(x) %>% mutate(y = y,
                                       ub = y+1.96*se)
 
 educ <- ggplot(data = df1[df1$y<2 & df1$Method!=
-                            "SCM-ENT",], aes(x, log(y), color = Method, shape = Method)) +
+                            "SCM-ENT",], aes(x, y, color = Method, shape = Method)) +
   geom_point(size = 5, position=position_dodge(width=0.1)) +
   geom_errorbar(
     aes(ymin = lb, ymax = ub),
