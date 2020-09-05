@@ -5,7 +5,6 @@
 ## Loading Source files
 library(MCPanel)
 library(glmnet)
-library(glmnet)
 
 # Setup parallel processing 
 library(parallel)
@@ -238,5 +237,5 @@ capacity.covars <-capacity.covars[match(rownames(capacity.outcomes$educ.pc$M), r
 
 treat_indices_order <- row.names(capacity.outcomes$educ.pc$M)[row.names(capacity.outcomes$educ.pc$M)%in% c("CA", "IA", "KS", "MI", "MN", "MO", "OH", "OR", "WI", "IL", "NV", "AL", "MS", "FL", "LA", "IN")]
 
-CapacitySim(outcomes=capacity.outcomes,covars.x=capacity.covars, d="educ.pc", treated.indices = treat_indices_order, N=length(treat_indices_order),sim=1) # simul
+#CapacitySim(outcomes=capacity.outcomes,covars.x=capacity.covars, d="educ.pc", treated.indices = treat_indices_order, N=length(treat_indices_order),sim=1) # simul
 CapacitySim(outcomes=capacity.outcomes,covars.x=capacity.covars, d="educ.pc", treated.indices = treat_indices_order, N=length(treat_indices_order),sim=0) # stag

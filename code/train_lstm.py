@@ -8,6 +8,8 @@ import math
 import numpy as np
 import pandas as pd
 
+import tensorflow as tf
+
 from keras import backend as K
 from keras.models import Model
 from keras.layers import LSTM, Input, Masking, Dense

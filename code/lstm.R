@@ -6,7 +6,8 @@ library(keras)
 library(reticulate)
 library(readr)
 # use_python("/usr/local/bin/python")
-use_python("~/venv/bin/python") # comet
+#use_python("~/venv/bin/python") # comet
+use_python("/usr/bin/python3") # dcc
 
 lstm <- function(Y,p.weights,treat_indices,d, t0, T){
   # Converting the data to a floating point matrix
@@ -45,8 +46,8 @@ lstm <- function(Y,p.weights,treat_indices,d, t0, T){
   if(d%in%c('basque','california','germany','educ.pc','covid')){
     py$lr <- 0.0005
     py$nb_batches <- 32
-    py$dr <- 0.5
-    py$penalty <- 0.2
+    py$dr <- 0.7
+    py$penalty <- 0.9
     py$n_hidden <- 64
   }
   if(d=='rbf'){

@@ -25,11 +25,15 @@ archivePrefix = {arXiv},
 Prerequsites
 ------
 
-* Python 2.7
-  * keras-self-attention, scikit-learn, numpy, pandas,h5py
-* Tensorflow 2.1.0
-* Keras 2.2.5
-* **R** 3.6.1
+* Python 3 (tested on Python 3.6.8)
+  * keras-self-attention (tested on 0.47.0)
+  * scikit-learn (tested on 0.23.2)
+  * numpy (tested on 1.19.1)
+  * pandas (tested on 1.0.3)
+  * h5py (tested on 2.10.0)
+* Tensorflow 2.1.0 (CUDA 10.1 and cudDNN 7.6 for Linux GPU)
+* Keras (tested on 2.3.1)
+* **R** (tested on 3.6.3) 
 
 Set up
 ------
@@ -40,10 +44,10 @@ $ git clone https://github.com/jvpoulos/rnns-causal
 * Open `package-list.R` in a script editor
   * Verify that all required packages in `package-list.R` are installed in your **R** library
 
+* Download the [MNIST in CSV train set](https://pjreddie.com/media/files/mnist_train.csv) into data folder if running placebo tests on sequential MNIST data
+
 Placebo test experiments
 ------
-
-Download the [MNIST in CSV train set](https://pjreddie.com/media/files/mnist_train.csv) into data folder. 
 
 Make each file below executable, then execute in shell:
 

@@ -8,6 +8,8 @@ import math
 import numpy as np
 import pandas as pd
 
+import tensorflow as tf
+
 from keras import backend as K
 from keras.models import Model
 from keras.layers import LSTM, Input, Masking, Dense, RepeatVector, Flatten
@@ -99,7 +101,7 @@ def train_model(model, dataX, dataY, weights, nb_epoches, nb_batches):
     terminate = TerminateOnNaN()
 
     # Model fit
-
+    
     history = model.fit(x=[dataX,weights], 
         y=dataY, 
         batch_size=nb_batches, 
