@@ -2,7 +2,8 @@ library(ggplot2)
 library(latex2exp)
 library(dplyr)
 
-load("results/plots/educ_pc_N_16_T_148_numruns_100_num_treated_8_simultaneuous_1.rds") # 100 runs
+load("results/plots/educ_pc_N_16_T_148_numruns_100_num_treated_8_simultaneuous_1.rds")
+#load("results/plots/educ_pc_N_16_T_156_numruns_100_num_treated_8_simultaneuous_1.rds") 
 
 df1 <- df1 %>% group_by(x) %>% mutate(y = y,
                                       lb= y-1.96*se,

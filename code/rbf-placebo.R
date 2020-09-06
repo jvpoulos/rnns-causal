@@ -63,7 +63,7 @@ RBFSim <- function(Y,N,T,sim){
 
     ## Estimate propensity scores
 
-    p.mod <- cv.glmnet(x=Y_obs, y=(1-treat_mat)[,t0], family="binomial")
+    p.mod <- cv.glmnet(x=Y_obs, y=(1-treat_mat)[,T], family="binomial")
     W <- predict(p.mod, Y_obs, type="response", s = "lambda.min")
     W <- replicate(T,as.vector(W)) # assume constant across T
     
@@ -79,7 +79,7 @@ RBFSim <- function(Y,N,T,sim){
     
     print("LSTM Started")
     source("code/lstm.R")
-    est_model_LSTM <- lstm(Y_obs, p.weights, treat_indices, d, t0=ceiling(t0/4), T)
+    est_model_LSTM <- lstm(Y_obs, p.weights, treat_indices, d, t0=28, T)
     est_model_LSTM_msk_err <- (est_model_LSTM - Y_sub)*(1-treat_mat)
     est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
     LSTM_RMSE_test[i] <- est_model_LSTM_test_RMSE
@@ -91,7 +91,7 @@ RBFSim <- function(Y,N,T,sim){
     
     print("ED Started")
     source("code/ed.R")
-    est_model_ED <- ed(Y_obs, p.weights, treat_indices, d, t0=ceiling(t0/4), T)
+    est_model_ED <- ed(Y_obs, p.weights, treat_indices, d, t0=28, T)
     est_model_ED_msk_err <-  (est_model_ED - Y_sub)*(1-treat_mat)
     est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
     ED_RMSE_test[i] <- est_model_ED_test_RMSE
@@ -136,8 +136,7 @@ RBFSim <- function(Y,N,T,sim){
     ## ------
     
     print("MC-NNM Started")
-    est_model_MCPanel <- mcnnm_cv(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, num_lam_L = 5, num_folds =3, niter = 200)
-    est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
+    est_model_MCPanel <- mcnnm(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, lambda_L = c(0.05), niter = 200, rel_tol = 1e-05)[[1]] # no CV to save computational time    est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
     est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y_sub)*(1-treat_mat)
     est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
     MCPanel_RMSE_test[i] <- est_model_MCPanel$test_RMSE

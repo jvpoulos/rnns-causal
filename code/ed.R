@@ -40,29 +40,34 @@ ed <- function(Y,p.weights,treat_indices,d, t0, T){
   py$encoder_hidden_1 <- 128
   py$encoder_hidden_2 <- 128
   py$decoder_hidden <- 128
-  py$patience <- 15
+  py$patience <- 10
   if(d=='stock'){
     py$patience <- 5
+    py$dr <- 0
     py$encoder_hidden_1 <- 256
+    py$encoder_hidden_2 <- 256
   }
   if(d%in%c('basque','california','germany','educ.pc','covid')){
-    py$lr <- 0.0005
     py$nb_batches <- 32
     py$dr <- 0.7
-    py$penalty <- 0.9
-    py$encoder_hidden_2 <- 64
-    py$decoder_hidden <- 32
+    py$penalty <- 1.25
   }
   if(d=='rbf'){
+    py$dr <- 0
     py$encoder_hidden_1 <- 256
+    py$encoder_hidden_2 <- 256
   }
   if(d=='mnist'){
     py$nb_batches <- 64
+    py$dr <- 0
     py$encoder_hidden_1 <- 256
+    py$encoder_hidden_2 <- 256
   }
   if(d=='sine'){
     py$patience <- 5
+    py$dr <- 0
     py$encoder_hidden_1 <- 256
+    py$encoder_hidden_2 <- 256
   }
   
   source_python("code/train_encoder_decoder_sim.py")
