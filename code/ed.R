@@ -44,16 +44,16 @@ ed <- function(Y,p.weights,treat_indices,d, t0, T){
   if(d=='stock'){
     py$patience <- 5
     py$dr <- 0
+    py$penalty <- 0
     py$encoder_hidden_1 <- 256
     py$encoder_hidden_2 <- 256
   }
   if(d%in%c('basque','california','germany','educ.pc','covid')){
     py$nb_batches <- 32
     py$dr <- 0.7
-    py$penalty <- 1.25
+    py$penalty <- 2
   }
   if(d=='rbf'){
-    py$dr <- 0
     py$encoder_hidden_1 <- 256
     py$encoder_hidden_2 <- 256
   }
@@ -65,7 +65,7 @@ ed <- function(Y,p.weights,treat_indices,d, t0, T){
   }
   if(d=='sine'){
     py$patience <- 5
-    py$dr <- 0
+    py$dr <- 0.5
     py$encoder_hidden_1 <- 256
     py$encoder_hidden_2 <- 256
   }

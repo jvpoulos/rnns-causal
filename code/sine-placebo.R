@@ -136,7 +136,8 @@ SineSim <- function(Y,N,T,sim){
     ## ------
     
     print("MC-NNM Started")
-    est_model_MCPanel <- mcnnm(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, lambda_L = c(0.05), niter = 200, rel_tol = 1e-05)[[1]] # no CV to save computational time    est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
+    est_model_MCPanel <- mcnnm(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, lambda_L = c(0.05), niter = 200, rel_tol = 1e-05)[[1]] # no CV to save computational time    
+    est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
     est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y_sub)*(1-treat_mat)
     est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
     MCPanel_RMSE_test[i] <- est_model_MCPanel$test_RMSE
@@ -224,6 +225,6 @@ print(dim(Y))
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-# Fixed Dimensions =500*2000 = 1,000,000
-SineSim(Y,N=500,T=2000,sim=1) # DONE
-#SineSim(Y,N=800,T=1250,sim=1) # Done
+for(sim in c(0,1)){
+  SineSim(Y,N=500,T=2000,sim=sim)
+}

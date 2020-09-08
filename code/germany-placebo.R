@@ -33,4 +33,4 @@ print(paste0("N X T dimensions :", dim(synth.control.outcomes$germany$M)))
 
 ## Run simulations
 source("code/SynthSim.R")
-SynthSim(outcomes=synth.control.outcomes,covars.x=germany.covars.x,d='germany',sim=1)
+SynthSim(outcomes=synth.control.outcomes,covars.x=germany.covars.x,d='germany',sim=0)

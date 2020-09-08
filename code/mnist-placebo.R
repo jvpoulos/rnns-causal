@@ -221,4 +221,4 @@ rownames(Y) <- 1:nrow(Y)
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-MNISTSim(Y,N=500,T=dim(Y)[2],sim=1) 
+MNISTSim(Y,N=500,T=dim(Y)[2],sim=0) 

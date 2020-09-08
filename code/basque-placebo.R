@@ -34,4 +34,4 @@ print(paste0("N X T dimensions :", dim(synth.control.outcomes$basque$M)))
 
 ## Run simulations
 source("code/SynthSim.R")
-SynthSim(outcomes=synth.control.outcomes, covars.x=basque.covars.x, d='basque', sim=1)
+SynthSim(outcomes=synth.control.outcomes, covars.x=basque.covars.x, d='basque', sim=0)

@@ -2,56 +2,40 @@
 
 # Education spending
 
-#load("results/table-results/educ_pc_N_16_T_148_numruns_100_num_treated_8_simultaneuous_1.rds")
-#load("results/table-results/educ_pc_N_16_T_148_numruns_60_num_treated_8_simultaneuous_1.rds") # simultaneous
-load("results/table-results/educ_pc_N_16_T_148_numruns_100_num_treated_8_simultaneuous_1.rds") # simultaneous
+load("results/plots/educ_pc_N_16_T_156_numruns_100_num_treated_8_simultaneuous_1.rds") # simultaneous
 
-educ <- df1
+educ.sim <- df1
 
-# MNIST
-#load("results/table-results/mnist_N_500_T_784_numruns_60_num_treated_250_simultaneuous_1.rds") # simultaneous
-load("results/table-results/mnist_N_500_T_784_numruns_100_num_treated_250_simultaneuous_1.rds") # simultaneous
+load("results/plots/educ_pc_N_16_T_156_numruns_100_num_treated_8_simultaneuous_0.rds") # staggered
 
-mnist <- df1
+educ.stag <- df1
 
 # Stock
 
-#load("results/table-results/stock_N_1000_T_500_numruns_100_num_treated_500_simultaneuous_1.rds")
-#load("results/table-results/stock_N_500_T_1000_numruns_60_num_treated_250_simultaneuous_1.rds")
-#load("results/table-results/stock_N_500_T_2000_numruns_60_num_treated_250_simultaneuous_1.rds")
 load("results/table-results/stock_N_500_T_2000_numruns_100_num_treated_250_simultaneuous_1.rds")
 
-stock <- df1
+stock.sim <- df1
 
-#load("results/table-results/stock_N_500_T_1000_numruns_100_num_treated_250_simultaneuous_1.rds")
+load("results/table-results/stock_N_500_T_2000_numruns_100_num_treated_250_simultaneuous_0.rds")
 
-#stock2 <- df1
+stock.stag <- df1
 
 # RBF
 
-#load("results/table-results/rbf_N_1500_T_600_numruns_100_num_treated_750_simultaneuous_1.rds")
-#load("results/table-results/rbf_N_500_T_1000_numruns_60_num_treated_250_simultaneuous_1.rds")
-#load("results/table-results/rbf_N_500_T_2000_numruns_60_num_treated_250_simultaneuous_1.rds") # simultaneous
-load("results/table-results/rbf_N_500_T_2000_numruns_100_num_treated_250_simultaneuous_1.rds") # simultaneous
-load("results/table-results/sine_N_800_T_1250_numruns_100_num_treated_400_simultaneuous_1.rds") # simultaneous
+load("results/table-results/rbf_N_500_T_2000_numruns_100_num_treated_250_simultaneuous_1.rds") # simulatneous
 
-rbf <- df1
+rbf.sim <- df1
 
-# load("results/table-results/rbf_N_600_T_1500_numruns_100_num_treated_300_simultaneuous_1.rds")
-#load("results/table-results/rbf_N_500_T_1000_numruns_60_num_treated_250_simultaneuous_0.rds")
+load("results/table-results/rbf_N_500_T_2000_numruns_100_num_treated_250_simultaneuous_0.rds") # staggered
 
-#rbf2 <- df1
+rbf.stag <- df1
 
 # Sine
 
-#load("results/table-results/sine_N_1500_T_600_numruns_100_num_treated_750_simultaneuous_1.rds")
-#load("results/table-results/sine_N_500_T_1000_numruns_60_num_treated_250_simultaneuous_1.rds")
-#load("results/table-results/sine_N_500_T_2000_numruns_60_num_treated_250_simultaneuous_1.rds")
-load("results/table-results/sine_N_500_T_2000_numruns_100_num_treated_250_simultaneuous_1.rds")
+load("results/table-results/sine_N_500_T_2000_numruns_100_num_treated_250_simultaneuous_1.rds") 
 
-sine <- df1
+sine.sim <- df1
 
-#load("results/table-results/sine_N_600_T_1500_numruns_100_num_treated_300_simultaneuous_1.rds")
-#load("results/table-results/sine_N_500_T_1000_numruns_60_num_treated_250_simultaneuous_0.rds")
+load("results/table-results/sine_N_500_T_2000_numruns_100_num_treated_250_simultaneuous_0.rds") 
 
-#sine2 <- df1
+sine.stag <- df1

@@ -74,16 +74,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
       rownames(treat_mat) <- rownames(Y_sub)
       colnames(treat_mat) <- colnames(Y_sub)
       
-      treat_NA <- treat_mat
-      treat_NA[treat_NA==0] <- NA
-      
-      Y_obs <- Y_sub * treat_NA * Y_sub_missing
-      
-      Y_obs.fits <- softImpute(Y_obs, rank.max=min(dim(Y_obs))-1, lambda=1.9, type="svd") # fit on training set
-      
-      Y_obs <- complete(Y_obs, Y_obs.fits) # complete on full matrix
-      
-      Y_obs <- Y_obs * treat_mat # treated are 0
+      Y_obs <- Y_sub * treat_mat
       
       ## Estimate propensity scores
       
@@ -232,7 +223,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
 }
 
 # Read data
-capacity.outcomes <- readRDS("data/capacity-outcomes-none.rds")
+capacity.outcomes <- readRDS("data/capacity-outcomes-median.rds")
 capacity.covariates <- readRDS("data/capacity-covariates.rds")
 
 print(dim(capacity.outcomes$educ.pc$M))
