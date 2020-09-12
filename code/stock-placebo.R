@@ -20,7 +20,7 @@ doParallel::registerDoParallel(cores) # register cores (<p)
 
 RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
-StockSim <- function(Y,N,T,sim){
+StockSim <- function(Y,N,T,sim,nruns){
   ## Setting up the configuration
   Nbig <- nrow(Y)
   
@@ -30,7 +30,7 @@ StockSim <- function(Y,N,T,sim){
   t0 <- ceiling(T*0.5) # time of initial treatment
   N_t <- ceiling(N/2)
  # num_runs <- 100
-  num_runs <- 10
+  num_runs <- nruns
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   d <- 'stock'
 
@@ -221,12 +221,12 @@ print(paste0("N X T data dimension: ", dim(Y)))
 N.seq <- seq(200,2000, by=200)
 T.seq <- round(200*2000/N.seq)
 
-for(sim in c(0,1)){
-  for(n in 1:length(N.seq)){
-    StockSim(Y,N=N.seq[n],T=T.seq[n],sim=sim)
-  }
-}
+# for(sim in c(0,1)){
+#   for(n in 1:length(N.seq)){
+#     StockSim(Y,N=N.seq[n],T=T.seq[n],sim=sim,nruns=10)
+#   }
+# }
 
 for(sim in c(0,1)){
-  StockSim(Y,N=500,T=2000,sim=sim) 
+  StockSim(Y,N=500,T=2000,sim=sim,nruns=100) 
 }

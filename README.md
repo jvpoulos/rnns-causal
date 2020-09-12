@@ -31,6 +31,7 @@ Prerequsites
   * numpy (tested on 1.19.1)
   * pandas (tested on 1.0.3)
   * h5py (tested on 2.10.0)
+  * matplotlib (tested on 2.0.2)
 * Tensorflow 2.1.0 (CUDA 10.1 and cudDNN 7.6 for Linux GPU)
 * Keras (tested on 2.3.1)
 * **R** (tested on 3.6.3) 
@@ -46,6 +47,10 @@ $ git clone https://github.com/jvpoulos/rnns-causal
 
 * Download the [MNIST in CSV train set](https://pjreddie.com/media/files/mnist_train.csv) into data folder if running placebo tests on sequential MNIST data
 
+* Extract sales prices data: 
+```
+$ tar -xzf data/sales_train_validation.tar.xz
+```
 Placebo test experiments
 ------
 
@@ -59,6 +64,7 @@ Make each file below executable, then execute in shell:
 * `california-placebo.sh`: California smoking study 
 * `germany-placebo.sh`: W. Germany reunification study
 * `stock-placebo.sh`: U.S. stock prices
+* `sales-placebo.sh`: Sale prices data
 * `covid-placebo.sh`: U.S. county covid cases
 
 To extract RMSEs for table, run in **R** `placebo-results-table.R`
@@ -69,20 +75,18 @@ Application: counterfactual predictions
 
 First, prepare public education spending data by running in **R** `prepare-funds.R`
 
-Second, run in shell with command line arguments `<GPU_ID> <hidden_activation>  <encoder_hidden_1>  <encoder_hidden_2> <decoder_hidden> <patience> <dropout rate> <penalty> <learning_rate> <epochs> <batches> <data_name> <window_size> <T> <imputation_method>`; e.g., 
+Second, run in shell with command line arguments `<GPU_ID> <hidden_activation>  <n_hidden> <patience> <dropout rate> <penalty> <learning_rate> <epochs> <batches> <data_name> <window_size> <T> <imputation_method>`; e.g., 
 ```
-python code/train_encoder_decoder.py 3 'relu' 128 64 32 15 0.5 0.2 0.0005 500 32 'educ' 22 156 'none'
-```
-For the LSTM, arguments `<GPU_ID> <hidden_activation> <n_hidden> <patience> <dropout rate> <penalty> <learning_rate> <epochs> <batches> <data_name> <window_size> <T> <imputation_method>`; e.g., 
-
-```
-python code/lstm.py 3 'relu' 64 15 0.5 0.2 0.0005 500 32 'educ' 22 156 'none'
+python3 code/train_encoder_decoder.py 3 'relu' 128 10 0.7 2.0 0.001 500 32 'educ' 28 156 'svd'
+python3 code/train_lstm.py 3 'relu' 128 10 0.7 2.0 0.001 500 32 'educ' 28 156 'svd'
 ```
 
 To plot the training and validation error, run `code/plot_history.py <file location of training log> <title>`; e.g., 
 ```
-python code/plot_history.py './results/encoder-decoder/educ/training_log_educ_locf.csv' 'Training vs. validation loss'
+python code/plot_history.py './results/encoder-decoder/educ/training_log_educ_svd_relu_128_10_0.7_2.0_32.csv' 'Training vs. validation loss'
 ```
 To plot causal estimates: `educ-plot.R`
 
-To compare estimates with alternative estimators, execute in shell `educ-comparison.R` # TODO: bootstrap CIs
+To compare estimates with different RNNs configurations, execute in shell `educ-rnns-compare.sh` 
+
+To compare estimates with alternative estimators, execute in shell `educ-benchmark-compare.sh` # TODO: bootstrap CIs

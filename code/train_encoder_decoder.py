@@ -33,7 +33,7 @@ def weighted_mse(y_true, y_pred, weights):
 
 # Select gpu
 import os
-gpu = sys.argv[-15]
+gpu = sys.argv[-13]
 if gpu < 3:
     os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
     os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
@@ -51,10 +51,8 @@ lr = float(sys.argv[-7])
 penalty = float(sys.argv[-8])
 dr = float(sys.argv[-9])
 patience = sys.argv[-10]
-decoder_hidden = int(sys.argv[-11])
-encoder_hidden_2 = int(sys.argv[-12])
-encoder_hidden_1 = int(sys.argv[-13])
-hidden_activation = sys.argv[-14]
+n_hidden = int(sys.argv[-11])
+hidden_activation = sys.argv[-12]
 
 # Create directories
 results_directory = 'results/encoder-decoder/{}'.format(dataname)
@@ -62,7 +60,7 @@ results_directory = 'results/encoder-decoder/{}'.format(dataname)
 if not os.path.exists(results_directory):
     os.makedirs(results_directory)
 
-def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr, encoder_hidden_1, encoder_hidden_2, decoder_hidden, hidden_activation):
+def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr, n_hidden, hidden_activation):
     """ 
         creates, compiles and returns a RNN model 
         @param nb_features: the number of features in the model
@@ -72,10 +70,10 @@ def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr, encode
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
     mask = Masking(mask_value=0.)(inputs)
     weights_tensor = Input(shape=(nb_features,), name="Weights")
-    lstm_1 = LSTM(encoder_hidden_1, dropout=dr, recurrent_dropout=dr, activation=hidden_activation, return_sequences=True, name='LSTM_1')(mask) # Encoder
-    lstm_2 = LSTM(encoder_hidden_2, dropout=dr, recurrent_dropout=dr, activation=hidden_activation, return_sequences=False, name='LSTM_2')(lstm_1) # Encoder
+    lstm_1 = LSTM(n_hidden, dropout=dr, recurrent_dropout=dr, activation=hidden_activation, return_sequences=True, name='LSTM_1')(mask) # Encoder
+    lstm_2 = LSTM(n_hidden, dropout=dr, recurrent_dropout=dr, activation=hidden_activation, return_sequences=False, name='LSTM_2')(lstm_1) # Encoder
     repeat = RepeatVector(n_post, name='Repeat')(lstm_2) # get the last output of the LSTM and repeats it
-    lstm_3 = LSTM(decoder_hidden, return_sequences=True, name='Decoder')(repeat)  # Decoder
+    lstm_3 = LSTM(n_hidden, return_sequences=True, name='Decoder')(repeat)  # Decoder
     attn = SeqSelfAttention(attention_activation='sigmoid')(lstm_3)
     attn = Flatten()(attn)
     output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(attn)
@@ -96,7 +94,7 @@ def train_model(model, dataX, dataY, weights, nb_epoches, nb_batches):
 
     stopping = EarlyStopping(monitor='val_loss', patience=int(patience), min_delta=0, verbose=1, mode='min', restore_best_weights=False)
 
-    csv_logger = CSVLogger('results/encoder-decoder/{}/training_log_{}_{}.csv'.format(dataname,dataname,imp), separator=',', append=False)
+    csv_logger = CSVLogger('results/encoder-decoder/{}/training_log_{}_{}_{}_{}_{}_{}_{}_{}.csv'.format(dataname,dataname,imp,hidden_activation,n_hidden,patience,dr,penalty,nb_batches), separator=',', append=False)
 
     terminate = TerminateOnNaN()
 
@@ -150,18 +148,9 @@ def test_model():
 
     # create and fit the encoder-decoder network
     print('creating model...')
-    model = create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr, encoder_hidden_1, encoder_hidden_2, decoder_hidden, hidden_activation)
-
-    # Load pre-trained weights
-    weights_path = 'results/encoder-decoder/{}'.format(dataname) +'/weights-{}-{}.h5'.format(str(n_pre), str(nb_features))
-    if path.exists(weights_path):
-        print("loading weights from", weights_path)
-        model.load_weights(weights_path)
+    model = create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr, n_hidden, hidden_activation)
 
     train_model(model, dataXC, dataYC, wXC, int(nb_epochs), int(nb_batches))
-
-    # save weights
-    model.save_weights('results/encoder-decoder/{}'.format(dataname) +'/weights-{}-{}.h5'.format(str(n_pre),str(nb_features)))
 
     # now test
 
@@ -175,9 +164,9 @@ def test_model():
 
     print('predictions shape (squeezed)=', preds_train.shape)
 
-    print('Saving to results/encoder-decoder/{}/encoder-decoder-{}-train-{}.csv'.format(dataname,dataname,imp))
+    print('Saving to results/encoder-decoder/{}/encoder-decoder-{}-train-{}-{}-{}-{}-{}-{}.csv'.format(dataname,dataname,imp,hidden_activation,n_hidden,patience,dr,penalty,nb_batches))
 
-    np.savetxt("results/encoder-decoder/{}/encoder-decoder-{}-train-{}.csv".format(dataname,dataname,imp), preds_train, delimiter=",")
+    np.savetxt("results/encoder-decoder/{}/encoder-decoder-{}-train-{}-{}-{}-{}-{}-{}.csv".format(dataname,dataname,imp,hidden_activation,n_hidden,patience,dr,penalty,nb_batches), preds_train, delimiter=",")
 
     print('Generate predictions on test set')
     
@@ -217,9 +206,9 @@ def test_model():
 
     print('predictions shape (squeezed)=', preds_test.shape)
 
-    print('Saving to results/encoder-decoder/{}/encoder-decoder-{}-test-{}.csv'.format(dataname,dataname,imp))
+    print('Saving to results/encoder-decoder/{}/encoder-decoder-{}-test-{}-{}-{}-{}-{}-{}.csv'.format(dataname,dataname,imp,hidden_activation,n_hidden,patience,dr,penalty,nb_batches))
 
-    np.savetxt("results/encoder-decoder/{}/encoder-decoder-{}-test-{}.csv".format(dataname,dataname,imp), preds_test, delimiter=",")
+    np.savetxt("results/encoder-decoder/{}/encoder-decoder-{}-test-{}-{}-{}-{}-{}-{}.csv".format(dataname,dataname,imp,hidden_activation,n_hidden,patience,dr,penalty,nb_batches), preds_test, delimiter=",")
 
 def main():
     test_model()

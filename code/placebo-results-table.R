@@ -2,11 +2,11 @@
 
 # Education spending
 
-load("results/plots/educ_pc_N_16_T_156_numruns_100_num_treated_8_simultaneuous_1.rds") # simultaneous
+load("results/plots/educ_pc_N_16_T_148_numruns_100_num_treated_8_simultaneuous_1.rds") # simultaneous
 
 educ.sim <- df1
 
-load("results/plots/educ_pc_N_16_T_156_numruns_100_num_treated_8_simultaneuous_0.rds") # staggered
+load("results/plots/educ_pc_N_16_T_148_numruns_100_num_treated_8_simultaneuous_0.rds") # staggered
 
 educ.stag <- df1
 

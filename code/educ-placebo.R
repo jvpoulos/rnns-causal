@@ -23,6 +23,10 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
   Y.missing <- outcomes[[d]]$M.missing # NxT 
   treat <- outcomes[[d]]$mask # NxT masked matrix 
   
+  Y <- Y[, - as.numeric(which(apply(Y, 2, var) == 0))] # rm col from 0 variance
+  Y.missing <- Y.missing[,colnames(Y.missing) %in% colnames(Y)]
+  treat <- treat[,colnames(treat) %in% colnames(Y)]
+  
   ## Treated 
   treat_y <- Y[rownames(Y)%in%treated.indices,] 
   
@@ -74,7 +78,16 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
       rownames(treat_mat) <- rownames(Y_sub)
       colnames(treat_mat) <- colnames(Y_sub)
       
-      Y_obs <- Y_sub * treat_mat
+      treat_NA <- treat_mat
+      treat_NA[treat_NA==0] <- NA
+      
+      Y_obs <- Y_sub * treat_NA * Y_sub_missing
+      
+      Y_obs.fits <- softImpute(Y_obs, rank.max=min(dim(Y_obs))-1, lambda=1.9, type="svd") # fit on training set
+      
+      Y_obs <- complete(Y_obs, Y_obs.fits) # complete on full matrix
+      
+      Y_obs <- Y_obs * treat_mat # treated are 0
       
       ## Estimate propensity scores
       
@@ -94,7 +107,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
       
       print("LSTM Started")
       source("code/lstm.R")
-      est_model_LSTM <- lstm(Y_obs, p.weights, treat_indices, d, t0=28, T)
+      est_model_LSTM <- lstm(Y_obs, p.weights, treat_indices, d, t0=ceiling(t0/4), T)
       est_model_LSTM_msk_err <- (est_model_LSTM - Y_sub)*(1-treat_mat)
       est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
       LSTM_RMSE_test[i,j] <- est_model_LSTM_test_RMSE
@@ -105,7 +118,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
       ## ------
       
       source("code/ed.R")
-      est_model_ED <- ed(Y_obs, p.weights, treat_indices, d, t0=28, T) 
+      est_model_ED <- ed(Y_obs, p.weights, treat_indices, d, t0=ceiling(t0/4), T) 
       est_model_ED_msk_err <- (est_model_ED - Y_sub)*(1-treat_mat)
       est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
       ED_RMSE_test[i,j] <- est_model_ED_test_RMSE
@@ -115,7 +128,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
       ## HR-EN: : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
       ## -----
       
-      est_model_EN <- en_mp_rows(Y_obs, treat_mat, num_alpha = 1, num_lam = 5, num_folds = 3)
+      est_model_EN <- en_mp_rows(Y_obs, treat_mat, num_alpha = 1, num_lam = 5, num_folds = nrow(t(Y_obs))) # avoid constant y
       est_model_EN_msk_err <- (est_model_EN - Y_sub)*(1-treat_mat)
       est_model_EN_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_EN_msk_err^2, na.rm = TRUE))
       EN_RMSE_test[i,j] <- est_model_EN_test_RMSE
@@ -168,7 +181,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
       ## VT-EN: : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
       ## -----
       
-      est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_alpha = 1, num_lam = 5, num_folds = nrow(t(Y_obs))))
+      est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_alpha = 1, num_lam = 5, num_folds = nrow(t(Y_obs)))) # avoid constant y
       est_model_ENT_msk_err <- (est_model_ENT - Y_sub)*(1-treat_mat)
       est_model_ENT_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ENT_msk_err^2, na.rm = TRUE))
       ENT_RMSE_test[i,j] <- est_model_ENT_test_RMSE
@@ -223,7 +236,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
 }
 
 # Read data
-capacity.outcomes <- readRDS("data/capacity-outcomes-median.rds")
+capacity.outcomes <- readRDS("data/capacity-outcomes-none.rds")
 capacity.covariates <- readRDS("data/capacity-covariates.rds")
 
 print(dim(capacity.outcomes$educ.pc$M))
@@ -239,6 +252,8 @@ capacity.covars <-capacity.covars[match(rownames(capacity.outcomes$educ.pc$M), r
 
 treat_indices_order <- row.names(capacity.outcomes$educ.pc$M)[row.names(capacity.outcomes$educ.pc$M)%in% c("CA", "IA", "KS", "MI", "MN", "MO", "OH", "OR", "WI", "IL", "NV", "AL", "MS", "FL", "LA", "IN")]
 
-for(sim in c(0,1)){
-  CapacitySim(outcomes=capacity.outcomes,covars.x=capacity.covars, d="educ.pc", treated.indices = treat_indices_order, N=length(treat_indices_order),sim=sim)
-}
+# for(sim in c(0,1)){
+#   CapacitySim(outcomes=capacity.outcomes,covars.x=capacity.covars, d="educ.pc", treated.indices = treat_indices_order, N=length(treat_indices_order),sim=sim)
+# }
+
+CapacitySim(outcomes=capacity.outcomes,covars.x=capacity.covars, d="educ.pc", treated.indices = treat_indices_order, N=length(treat_indices_order),sim=1)

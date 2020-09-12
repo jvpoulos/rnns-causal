@@ -19,6 +19,7 @@ registerDoParallel(cores) # register cores
 RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
 source("code/TsPlot.R")
+source("code/permutationTest.R")
 
 PlotEduc<- function(estimator,treated.indices,x,y.title,limits,breaks,t0,run.CI,imp){
   ## Create time series data
@@ -27,16 +28,21 @@ PlotEduc<- function(estimator,treated.indices,x,y.title,limits,breaks,t0,run.CI,
   observed.treated <- as.matrix(observed[,colnames(observed) %in% treated.indices][t0:nrow(observed),])
   observed.control <- as.matrix(observed[,!colnames(observed) %in% treated.indices][t0:nrow(observed),])
   
-  pred.treated <- read_csv(paste0("results/", estimator,"/educ/",estimator,"-educ-test-",imp,".csv"), col_names = FALSE)
-  pred.control <- read_csv(paste0("results/", estimator,"/educ/",estimator,"-educ-train-",imp,".csv"), col_names = FALSE)
+  weights <- t(capacity.outcomes[[x]]$M)[,!colnames(t(capacity.outcomes[[x]]$M)) %in% c("TN")]
+  weights.treated <- as.matrix(weights[,colnames(weights) %in% treated.indices][t0:nrow(weights),])
+  weights.control <- as.matrix(weights[,!colnames(weights) %in% treated.indices][t0:nrow(weights),])
+  
+  pred.treated <- read_csv(paste0("results/", estimator,"/educ/",estimator,"-educ-test-",imp,"-relu-128-10-0.7-2.0.csv"), col_names = FALSE)
+  pred.control <- read_csv(paste0("results/", estimator,"/educ/",estimator,"-educ-train-",imp,"-relu-128-10-0.7-2.0.csv"), col_names = FALSE)
   
   t.stat <- rowMeans(observed.treated - pred.treated) 
   
   if(run.CI){
-    CI.treated <- PermutationCI(pred.control, 
-                              observed.control, 
+    CI.treated <- PermutationCI(forecast=pred.control, 
+                              true=observed.control, 
                               t.stat,
-                              ncol(observed.control)-1, 
+                              n.placebo=ncol(observed.control)-1, 
+                              p.weights,
                               np=10000, 
                               l=250, 
                               prec=1e-03)
@@ -85,30 +91,23 @@ PlotEduc<- function(estimator,treated.indices,x,y.title,limits,breaks,t0,run.CI,
 
   ts.means.m$series<- factor(ts.means.m$series, levels=c("Time-series", "Per-period impact")) # reverse order
   
-  ts.plot <- TsPlot(df=ts.means.m,y.title=y.title,limits=limits, breaks=breaks)
+  ts.means.m$hline <-NA
+  ts.means.m$hline[ts.means.m$series!="Time-series"] <-0
+  
+  ts.plot <- TsPlot(df=ts.means.m,y.title=y.title,limits=limits, breaks=breaks,hline=ts.means.m$hline)
   
   return(ts.plot)
 }
 
-treated.indices <- c("CA", "CO", "IA", "KS", "MI", "MN", "MO", "NE", "OH", "OR", "SD", "WA", "WI", "IL", "NV", "ID", "MT", "ND",  "UT", "AL", "MS", "AR", "FL", "LA", "IN", "NM", "WY", "AZ", "OK", "AK")
-
 capacity.outcomes <- readRDS("data/capacity-outcomes-locf.rds")
+p.weights <- read_csv("data/educ-wx-locf.csv")
+
+treated.indices <- row.names(capacity.outcomes$educ.pc$M)[row.names(capacity.outcomes$educ.pc$M)%in% c("CA", "IA", "KS", "MI", "MN", "MO", "OH", "OR", "WI", "IL", "NV", "AL", "MS", "FL", "LA", "IN")]
+
 
 # encoder-decoder
-educ.ed.none <- PlotEduc(estimator="encoder-decoder",treated.indices,x='educ.pc',y.title="Per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")), breaks=seq(as.POSIXct("1809-1-31 00:00:00",tz="UTC"),
-                                                                                                                                                                                                                                                     as.POSIXct("1942-1-31 00:00:00",tz="UTC"), "20 years"), t0=which(colnames(capacity.outcomes[["educ.pc"]]$M)=="1869"), run.CI=TRUE,imp="none")
-ggsave("results/plots/educ-ed-none.png", educ.ed.none, width=8.5, height=11)
 
-educ.ed.median <- PlotEduc(estimator="encoder-decoder",treated.indices,x='educ.pc',y.title="Per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")), breaks=seq(as.POSIXct("1809-1-31 00:00:00",tz="UTC"),
-                                                                                                                                                                                                                                                   as.POSIXct("1942-1-31 00:00:00",tz="UTC"), "20 years"), t0=which(colnames(capacity.outcomes[["educ.pc"]]$M)=="1869"), run.CI=TRUE,imp="median")
-ggsave("results/plots/educ-ed-median.png", educ.ed.median, width=8.5, height=11)
-
-
-# LSTM
-educ.lstm.none <- PlotEduc(estimator="lstm",treated.indices,x='educ.pc',y.title="Per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")), breaks=seq(as.POSIXct("1809-1-31 00:00:00",tz="UTC"),
-                                                                                                                                                                                                                                     as.POSIXct("1942-1-31 00:00:00",tz="UTC"), "20 years"), t0=which(colnames(capacity.outcomes[["educ.pc"]]$M)=="1869"), run.CI=TRUE, imp="none") 
-ggsave("results/plots/educ-lstm-none.png", educ.lstm.none, width=8.5, height=11)
-
-educ.lstm.median <- PlotEduc(estimator="lstm",treated.indices,x='educ.pc',y.title="Per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")), breaks=seq(as.POSIXct("1809-1-31 00:00:00",tz="UTC"),
-                                                                                                                                                                                                                                          as.POSIXct("1942-1-31 00:00:00",tz="UTC"), "20 years"), t0=which(colnames(capacity.outcomes[["educ.pc"]]$M)=="1869"), run.CI=TRUE, imp="median") 
-ggsave("results/plots/educ-lstm-median.png", educ.lstm.median, width=8.5, height=11)
+educ.ed.locf <- PlotEduc(estimator="encoder-decoder",treated.indices,x='educ.pc',y.title="Per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")), 
+                        breaks=seq(as.POSIXct("1809-1-31 00:00:00",tz="UTC"), as.POSIXct("1942-1-31 00:00:00",tz="UTC"), "20 years"), 
+                        t0=28, run.CI=TRUE, imp="locf")
+ggsave("results/plots/educ-ed-locf.png", educ.ed.locf, scale=1.25)

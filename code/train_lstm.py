@@ -89,7 +89,7 @@ def train_model(model, dataX, dataY, weights, nb_epoches, nb_batches):
 
     stopping = EarlyStopping(monitor='val_loss', patience=int(patience), min_delta=0, verbose=1, mode='min', restore_best_weights=False)
 
-    csv_logger = CSVLogger('results/lstm/{}/training_log_{}_{}.csv'.format(dataname,dataname,imp), separator=',', append=False)
+    csv_logger = CSVLogger('results/lstm/{}/training_log_{}_{}_{}_{}_{}_{}_{}_{}.csv'.format(dataname,dataname,imp,hidden_activation,n_hidden,patience,dr,penalty,nb_batches), separator=',', append=False)
 
     terminate = TerminateOnNaN()
 
@@ -144,16 +144,7 @@ def test_model():
     print('creating model...')
     model = create_model(n_pre, nb_features, output_dim, lr, penalty, dr, n_hidden, hidden_activation)
 
-    # load pre-trained weights
-    weights_path = 'results/lstm/{}'.format(dataname) +'/weights-{}-{}.h5'.format(str(n_pre), str(nb_features))
-    if path.exists(weights_path):
-        print("loading weights from", weights_path)
-        model.load_weights(weights_path)    
-
     train_model(model, dataXC, dataYC, wXC, int(nb_epochs), int(nb_batches))
-
-    # save weights
-    model.save_weights('results/lstm/{}'.format(dataname) +'/weights-{}-{}.h5'.format(str(n_pre),str(nb_features)))
 
     # now test
 
@@ -163,9 +154,9 @@ def test_model():
 
     print('predictions shape =', preds_train.shape)
 
-    print('Saving to results/lstm/{}/lstm-{}-train-{}.csv'.format(dataname,dataname,imp))
+    print('Saving to results/lstm/{}/lstm-{}-train-{}-{}-{}-{}-{}-{}.csv'.format(dataname,dataname,imp,hidden_activation,n_hidden,patience,dr,penalty,nb_batches))
 
-    np.savetxt("results/lstm/{}/lstm-{}-train-{}.csv".format(dataname,dataname,imp), preds_train, delimiter=",")
+    np.savetxt("results/lstm/{}/lstm-{}-train-{}-{}-{}-{}-{}-{}.csv".format(dataname,dataname,imp,hidden_activation,n_hidden,patience,dr,penalty,nb_batches), preds_train, delimiter=",")
 
     print('Generate predictions on test set')
 
@@ -201,9 +192,9 @@ def test_model():
 
     preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
 
-    print('Saving to results/lstm/{}/lstm-{}-test-{}.csv'.format(dataname,dataname,imp))
+    print('Saving to results/lstm/{}/lstm-{}-test-{}-{}-{}-{}-{}-{}.csv'.format(dataname,dataname,imp,hidden_activation,n_hidden,patience,dr,penalty,nb_batches))
 
-    np.savetxt("results/lstm/{}/lstm-{}-test-{}.csv".format(dataname,dataname,imp), preds_test, delimiter=",")
+    np.savetxt("results/lstm/{}/lstm-{}-test-{}-{}-{}-{}-{}-{}.csv".format(dataname,dataname,imp,hidden_activation,n_hidden,patience,dr,penalty,nb_batches), preds_test, delimiter=",")
 
 def main():
     test_model()

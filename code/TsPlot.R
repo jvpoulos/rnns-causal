@@ -1,4 +1,4 @@
-TsPlot <- function(df, main = "",y.title,limits,breaks) {
+TsPlot <- function(df, main = "",y.title,limits,breaks,hline) {
   library(ggplot2)
   library(zoo)
   library(scales)
@@ -19,10 +19,10 @@ TsPlot <- function(df, main = "",y.title,limits,breaks) {
     geom_line(data = subset(df, variable == "observed.sls"), aes(y = value, colour = "observed.sls", linetype="observed.sls"), show.legend = TRUE, size=1) +
     
     # intervals
-    geom_ribbon(data = subset(df, variable == "pointwise.pls"), aes(ymin = lower, ymax=upper, colour="pointwise.pls"), alpha=.1, size=0.5, show.legend = FALSE) +
+    geom_ribbon(data = subset(df, variable == "pointwise.pls"), aes(ymin = lower, ymax=upper, colour="pointwise.pls"), alpha=.1, size=0.2, show.legend = FALSE) +
 
     # horizontal line to indicate zero values
-    geom_hline(yintercept = 0, size = 0.5, colour = "black") +
+    geom_hline(aes(yintercept = hline), size = 0.5, colour = "black") +
     
     # main y-axis title
     ylab(y.title) +
@@ -31,7 +31,7 @@ TsPlot <- function(df, main = "",y.title,limits,breaks) {
     xlab("\nTime") +
   
     # main chart title
-    ggtitle(main)
+    ggtitle(main)  
   
   # vertical line to indicate intervention
   
@@ -45,9 +45,9 @@ TsPlot <- function(df, main = "",y.title,limits,breaks) {
   
   # annotation text
   
-  ann_text <- data.frame(year = c(as.POSIXlt("1849-01-01 UTC"), as.POSIXlt("1889-01-01 UTC")), value=1,
-                         series = factor("Time-series", levels = c("Time-series", "Per-period effect")),
-                         lab = c("pre-period","post-period"))
+  # ann_text <- data.frame(year = c(as.POSIXlt("1849-01-01 UTC"), as.POSIXlt("1889-01-01 UTC")), value=1,
+  #                        series = factor("Time-series", levels = c("Time-series", "Per-period effect")),
+  #                        lab = c("pre-period","post-period"))
   
   # legend 
   
@@ -64,9 +64,9 @@ TsPlot <- function(df, main = "",y.title,limits,breaks) {
            , axis.title.y=element_text(size = 16)
            , legend.text=element_text(size=14, family = "serif")
            , legend.box = "horizontal" # not working?)
-    ) + geom_text(data = ann_text,aes(y = value, label =lab), family="serif", fontface="italic",  size=6) +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black")) + # rm background
+    ) + #geom_text(data = ann_text,aes(y = value, label =lab), family="serif", fontface="italic",  size=6) +
+ #   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+  #        panel.background = element_blank(), axis.line = element_line(colour = "black")) + # rm background
     scale_colour_manual(name="", values = c(  "observed.pls" = wes_palette("Darjeeling1")[5], 
                                               "observed.sls" = wes_palette("Darjeeling1")[1], 
                                               "predicted.pls" = wes_palette("Darjeeling1")[5],
