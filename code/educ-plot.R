@@ -32,8 +32,8 @@ PlotEduc<- function(estimator,treated.indices,x,y.title,limits,breaks,t0,run.CI,
   weights.treated <- as.matrix(weights[,colnames(weights) %in% treated.indices][t0:nrow(weights),])
   weights.control <- as.matrix(weights[,!colnames(weights) %in% treated.indices][t0:nrow(weights),])
   
-  pred.treated <- read_csv(paste0("results/", estimator,"/educ/",estimator,"-educ-test-",imp,"-relu-128-10-0.7-2.0.csv"), col_names = FALSE)
-  pred.control <- read_csv(paste0("results/", estimator,"/educ/",estimator,"-educ-train-",imp,"-relu-128-10-0.7-2.0.csv"), col_names = FALSE)
+  pred.treated <- read_csv(paste0("results/", estimator,"/educ/",estimator,"-educ-test-",imp,"-relu-128-100-0.7-2.0.csv"), col_names = FALSE)
+  pred.control <- read_csv(paste0("results/", estimator,"/educ/",estimator,"-educ-train-",imp,"-relu-128-100-0.7-2.0.csv"), col_names = FALSE)
   
   t.stat <- rowMeans(observed.treated - pred.treated) 
   
@@ -42,7 +42,6 @@ PlotEduc<- function(estimator,treated.indices,x,y.title,limits,breaks,t0,run.CI,
                               true=observed.control, 
                               t.stat,
                               n.placebo=ncol(observed.control)-1, 
-                              p.weights,
                               np=10000, 
                               l=250, 
                               prec=1e-03)
@@ -94,6 +93,14 @@ PlotEduc<- function(estimator,treated.indices,x,y.title,limits,breaks,t0,run.CI,
   ts.means.m$hline <-NA
   ts.means.m$hline[ts.means.m$series!="Time-series"] <-0
   
+  vline <- c(as.numeric(as.POSIXct("1869-1-31 00:00:00",tz="UTC")))
+  
+  ts.means.m$value[ts.means.m$year < vline & (ts.means.m$variable=="pointwise.pls" | ts.means.m$variable=="predicted.pls")] <- NA # censor 
+  
+  ts.means.m$upper[ts.means.m$year < vline & (ts.means.m$variable=="pointwise.pls" | ts.means.m$variable=="predicted.pls")] <- NA 
+  
+  ts.means.m$lower[ts.means.m$year < vline & ts.means.m$variable=="pointwise.pls"] <- NA 
+  
   ts.plot <- TsPlot(df=ts.means.m,y.title=y.title,limits=limits, breaks=breaks,hline=ts.means.m$hline)
   
   return(ts.plot)
@@ -104,10 +111,16 @@ p.weights <- read_csv("data/educ-wx-locf.csv")
 
 treated.indices <- row.names(capacity.outcomes$educ.pc$M)[row.names(capacity.outcomes$educ.pc$M)%in% c("CA", "IA", "KS", "MI", "MN", "MO", "OH", "OR", "WI", "IL", "NV", "AL", "MS", "FL", "LA", "IN")]
 
-
 # encoder-decoder
 
-educ.ed.locf <- PlotEduc(estimator="encoder-decoder",treated.indices,x='educ.pc',y.title="Per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")), 
-                        breaks=seq(as.POSIXct("1809-1-31 00:00:00",tz="UTC"), as.POSIXct("1942-1-31 00:00:00",tz="UTC"), "20 years"), 
-                        t0=28, run.CI=TRUE, imp="locf")
+educ.ed.locf <- PlotEduc(estimator="encoder-decoder",treated.indices,x='educ.pc',y.title="Per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1783-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")), 
+                        breaks=seq(as.POSIXct("1783-1-31 00:00:00",tz="UTC"), as.POSIXct("1942-1-31 00:00:00",tz="UTC"), "20 years"), 
+                        t0=22, run.CI=TRUE, imp="locf")
 ggsave("results/plots/educ-ed-locf.png", educ.ed.locf, scale=1.25)
+
+# LSTM
+
+educ.ed.locf <- PlotEduc(estimator="lstm",treated.indices,x='educ.pc',y.title="Per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1783-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")), 
+                         breaks=seq(as.POSIXct("1783-1-31 00:00:00",tz="UTC"), as.POSIXct("1942-1-31 00:00:00",tz="UTC"), "20 years"), 
+                         t0=22, run.CI=TRUE, imp="locf")
+ggsave("results/plots/educ-lstm-locf.png", educ.ed.locf, scale=1.25)

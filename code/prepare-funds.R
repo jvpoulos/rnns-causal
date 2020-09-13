@@ -4,7 +4,7 @@
 
 library(glmnet)
 
-PreProcessData <- function(imp=c('none','linear','locf','median','random','svd')){
+PreProcessData <- function(imp=c('none','linear','locf','median','random','svd'), drop.col){
   # Read data
   capacity.outcomes <- readRDS(paste0("data/capacity-outcomes-",imp,".rds"))
   capacity.covariates <- readRDS("data/capacity-covariates.rds")
@@ -16,13 +16,19 @@ PreProcessData <- function(imp=c('none','linear','locf','median','random','svd')
                                                          "track2.1851", "track2.1852", "track2.1854", "track2.1856", "track2.1857",
                                                          "track2.1858", "track2.1859", "track2.1860", "track2.1861")])
   
-  capacity.covars <-capacity.covars[match(rownames(capacity.outcomes$educ.pc$M), rownames(capacity.covars)), ] # same order
+  covars.x <-capacity.covars[match(rownames(capacity.outcomes$educ.pc$M), rownames(capacity.covars)), ] # same order
   
   # Prepare outcomes data
   educ <- capacity.outcomes$educ.pc
   treat <- educ$mask # NxT masked matrix 
   Y.missing <- educ$M.missing # NxT
-  Y <- educ$M # NxT 
+  Y <- educ$M # NxT
+
+  Y <- Y[!rownames(Y)%in%drop.col,] #rm 1 from control group for train/test parity
+  Y.missing <- educ$M.missing[!rownames(educ$M.missing)%in%drop.col,] # NxT
+  covars.x <- covars.x[!rownames(covars.x)%in%drop.col,]
+  treat <- treat[!rownames(treat)%in%drop.col,]
+  
   if(imp=='none'){
     Y <- Y[, - as.numeric(which(apply(Y, 2, var) == 0))] # rm col from 0 variance
     Y.missing <- Y.missing[,colnames(Y.missing) %in% colnames(Y)]
@@ -33,7 +39,7 @@ PreProcessData <- function(imp=c('none','linear','locf','median','random','svd')
   T <- ncol(treat)
   
   treated.indices <- row.names(capacity.outcomes$educ.pc$M)[row.names(capacity.outcomes$educ.pc$M)%in% c("CA", "IA", "KS", "MI", "MN", "MO", "OH", "OR", "WI", "IL", "NV", "AL", "MS", "FL", "LA", "IN")]
-  control.indices <-row.names(capacity.outcomes$educ.pc$M)[!row.names(capacity.outcomes$educ.pc$M)%in% c(treated.indices,"TN")] # make N_t = N_c
+  control.indices <-row.names(capacity.outcomes$educ.pc$M)[!row.names(capacity.outcomes$educ.pc$M)%in% c(treated.indices, drop.col)]
   
   t0 <- which(colnames(Y)=="1869")
   
@@ -54,8 +60,8 @@ PreProcessData <- function(imp=c('none','linear','locf','median','random','svd')
   
   ## Estimate propensity scores
   
-  p.mod <- cv.glmnet(x=capacity.covars, y=(1-treat_mat)[,t0], family="binomial")
-  W <- predict(p.mod, capacity.covars, type="response", s = "lambda.min")
+  p.mod <- cv.glmnet(x=covars.x, y=(1-treat_mat)[,T], family="binomial")
+  W <- predict(p.mod, covars.x, type="response", s = "lambda.min")
   W <- replicate(T,as.vector(W)) # assume constant across T
   
   p.weights <- matrix(NA, nrow=nrow(W), ncol=ncol(W), dimnames = list(rownames(W), colnames(W)))
@@ -75,6 +81,8 @@ PreProcessData <- function(imp=c('none','linear','locf','median','random','svd')
               "Y"=Y,"Y_imp"=Y_imp,"Y_obs"=Y_obs,"treated.indices"=treated.indices,"p.weights"=p.weights))
 }
 
+drop.col <-sample(c("VA","NY","VT","DE","NH","RI","CT","SC","PA","MD","NC","KY","ME","MA","NJ","TN","TX"),1) # randomly drop control unit for treat/control parity
+
 for(imp in c('none','linear','locf','median','random','svd')){
-  PreProcessData(imp)
+  PreProcessData(imp, drop.col)
 }

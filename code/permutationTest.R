@@ -1,7 +1,7 @@
 # Permutation test under null hypothesis 
 # Intervention year is fixed
 
-PermutationTest<-function(forecast, true, t.stat, n.placebo, p.weights, np=NULL){ 
+PermutationTest<-function(forecast, true, t.stat, n.placebo, np=NULL){ 
   # Calculate randomization test p-value.
   #
   # Args:
@@ -18,7 +18,7 @@ PermutationTest<-function(forecast, true, t.stat, n.placebo, p.weights, np=NULL)
   placebo.mean <- matrix(NA, np, nrow(forecast) )
   p.count <- matrix(NA, np, nrow(forecast) )
   for(i in 1:np){
-    treat <- sample(c(1:n.placebo),sample(c(1:(n.placebo-1)),1), prob=p.weights, replace=FALSE)
+    treat <- sample(c(1:n.placebo),sample(c(1:(n.placebo-1)),1), replace=FALSE)
     
     placebo.impacts <- true[,treat]-forecast[,treat]
     if(!is.null(nrow(placebo.impacts))){
@@ -34,7 +34,7 @@ PermutationTest<-function(forecast, true, t.stat, n.placebo, p.weights, np=NULL)
 
 # Invert for CIs
 
-PermutationCI <- function(forecast, true, t.stat, n.placebo, p.weights, np=NULL, alpha=0.025, l=100, prec=1e-05) {
+PermutationCI <- function(forecast, true, t.stat, n.placebo, np=NULL, alpha=0.025, l=100, prec=1e-05) {
   require(matrixStats)
   # Calculate randomization test confidence interval.
   #
@@ -56,7 +56,7 @@ PermutationCI <- function(forecast, true, t.stat, n.placebo, p.weights, np=NULL,
     # Subtract from t.stat
     t.stat.delta <- t.stat-delta.c
     # Run permuation test
-    results <- PermutationTest(forecast, true, t.stat=t.stat.delta, n.placebo, p.weights, np)
+    results <- PermutationTest(forecast, true, t.stat=t.stat.delta, n.placebo, np)
     # If result not significant, delta.c is in confidence interval
     CI[,i] <- ifelse(results>(2*alpha),delta.c,NA)
   }

@@ -11,8 +11,8 @@ varEst <- function(Y, treat_indices){
   # Converting the data to a floating point matrix
   data <- data.matrix(t(Y)) # (T x N)
   
-  train_data <- data[,(-treat_indices)]
   test_data <- data[,(treat_indices)]
+  train_data <- data[,!colnames(data)%in%colnames(test_data)]
   
   # Fit the model
   var.fit <- lassovar(dat=data.frame(train_data), exo=NULL, lags = 1, horizon = 1) # standardize by default

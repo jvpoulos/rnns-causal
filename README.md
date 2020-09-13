@@ -49,7 +49,7 @@ $ git clone https://github.com/jvpoulos/rnns-causal
 
 * Extract sales prices data: 
 ```
-$ tar -xzf data/sales_train_validation.tar.xz
+$ tar xf data/sales_train_validation.tar.xz -C data/
 ```
 Placebo test experiments
 ------
@@ -77,13 +77,14 @@ First, prepare public education spending data by running in **R** `prepare-funds
 
 Second, run in shell with command line arguments `<GPU_ID> <hidden_activation>  <n_hidden> <patience> <dropout rate> <penalty> <learning_rate> <epochs> <batches> <data_name> <window_size> <T> <imputation_method>`; e.g., 
 ```
-python3 code/train_encoder_decoder.py 3 'relu' 128 10 0.7 2.0 0.001 500 32 'educ' 28 156 'svd'
-python3 code/train_lstm.py 3 'relu' 128 10 0.7 2.0 0.001 500 32 'educ' 28 156 'svd'
+python3 code/train_encoder_decoder.py 3 'relu' 128 100 0.7 2.0 0.001 500 32 'educ' 22 156 'locf'
+python3 code/train_lstm.py 3 'relu' 128 100 0.7 2.0 0.001 500 32 'educ' 22 156 'locf'
 ```
 
 To plot the training and validation error, run `code/plot_history.py <file location of training log> <title>`; e.g., 
 ```
-python code/plot_history.py './results/encoder-decoder/educ/training_log_educ_svd_relu_128_10_0.7_2.0_32.csv' 'Training vs. validation loss'
+python code/plot_history.py './results/encoder-decoder/educ/training_log_educ_locf_relu_128_100_0.7_2.0_32.csv' 'Encoder-decoder'
+python code/plot_history.py './results/lstm/educ/training_log_educ_locf_relu_128_100_0.7_2.0_32.csv' 'LSTM'
 ```
 To plot causal estimates: `educ-plot.R`
 

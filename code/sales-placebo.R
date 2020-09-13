@@ -6,6 +6,7 @@
 library(MCPanel)
 library(glmnet)
 library(reshape2)
+library(caret)
 
 # Setup parallel processing 
 library(parallel)
@@ -102,7 +103,7 @@ SalesSim <- function(Y,N,T,sim,nruns){
     ## HR-EN: : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
     ## -----
     
-    est_model_EN <- en_mp_rows(Y_obs, treat_mat, num_lam = 5, num_alpha = 1, num_folds = 3)
+    est_model_EN <- en_mp_rows(Y_obs, treat_mat, num_lam = 5, num_alpha = 1, num_folds = nrow(t(Y_obs))) # avoid constant y
     est_model_EN_msk_err <- (est_model_EN - Y_sub)*(1-treat_mat)
     est_model_EN_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_EN_msk_err^2, na.rm = TRUE))
     EN_RMSE_test[i] <- est_model_EN_test_RMSE
@@ -159,7 +160,7 @@ SalesSim <- function(Y,N,T,sim,nruns){
     ## VT-EN : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
     ## -----
     
-    est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_lam = 5, num_alpha = 1, num_folds = 3))
+    est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_lam = 5, num_alpha = 1, num_folds = nrow(t(Y_obs)))) # avoid constant y
     est_model_ENT_msk_err <- (est_model_ENT - Y_sub)*(1-treat_mat)
     est_model_ENT_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ENT_msk_err^2, na.rm = TRUE))
     ENT_RMSE_test[i] <- est_model_ENT_test_RMSE
@@ -214,7 +215,12 @@ SalesSim <- function(Y,N,T,sim,nruns){
 
 # Load data
 Y <- read.csv('data/sales_train_validation.csv',header=T, stringsAsFactors = F) # N X T
-Y <- as.matrix(Y[,7:ncol(Y)])
+
+nzv_cols <- nearZeroVar(Y)
+if(length(nzv_cols) > 0) Y <- Y[, -nzv_cols]
+Y <- as.matrix(Y)
+
+rownames(Y) <- 1:nrow(Y)
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
