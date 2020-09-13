@@ -86,7 +86,7 @@ To plot the training and validation error, run `code/plot_history.py <file locat
 python code/plot_history.py './results/encoder-decoder/educ/training_log_educ_locf_relu_128_100_0.7_2.0_32.csv' 'Encoder-decoder'
 python code/plot_history.py './results/lstm/educ/training_log_educ_locf_relu_128_100_0.7_2.0_32.csv' 'LSTM'
 ```
-To plot causal estimates: `educ-plot.R`
+To estimate confidence intervals and plot causal estimates, execute in shell `educ-plot.sh` 
 
 To compare estimates with different RNNs configurations, execute in shell `educ-rnns-compare.sh` 
 
