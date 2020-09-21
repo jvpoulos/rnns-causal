@@ -42,7 +42,6 @@ RBFSim <- function(Y,N,T,sim){
   DID_RMSE_test <- matrix(0L,num_runs,length(T0))
   ADH_RMSE_test <- matrix(0L,num_runs,length(T0))
   ENT_RMSE_test <- matrix(0L,num_runs,length(T0))
-  EN_RMSE_test <- matrix(0L,num_runs,length(T0))
   
   ## Run different methods
   
@@ -65,15 +64,14 @@ RBFSim <- function(Y,N,T,sim){
       
       ## Estimate propensity scores
       
-      p.mod <- cv.glmnet(x=Y_obs, y=(1-treat_mat)[,T], family="binomial")
-      W <- predict(p.mod, Y_obs, type="response", s = "lambda.min")
-      W <- replicate(T,as.vector(W)) # assume constant across T
+      p.mod <- glmnet(x=Y_obs[,1:(t0-1)], y=(1-treat_mat), family="mgaussian", alpha=1, nlambda = 5)
+      W <- predict(p.mod, Y_obs[,1:(t0-1)])[,,1]
+      W[,1:(t0-1)] <- W[,t0] # assume pre-treatment W same as t0
+      W[W <=0.01] <- 0.01 # threshold values
+      W[W >=1] <- 1-0.01 # threshold values
       
-      rownames(W) <- rownames(Y_obs)
-      colnames(W) <- colnames(Y_obs)
-      
-      p.weights <- matrix(NA, nrow=nrow(W), ncol=ncol(W), dimnames = list(rownames(W), colnames(W)))
-      p.weights <- (1-treat_mat) + (treat_mat)*W/(1-W) # weighting by the odds
+      p.weights <- matrix(NA, nrow=nrow(treat_mat), ncol=ncol(treat_mat), dimnames = list(rownames(treat_mat), colnames(treat_mat)))
+      p.weights <- treat_mat*(W) + (1-treat_mat)*(1-W) # treated are 0
       
       ## ------
       ## LSTM
@@ -81,7 +79,7 @@ RBFSim <- function(Y,N,T,sim){
       
       print("LSTM Started")
       source("code/lstm.R")
-      est_model_LSTM <- lstm(Y_obs, p.weights, treat_indices, d, t0=28, T)
+      est_model_LSTM <- lstm(Y_obs, p.weights, treat_indices, d, t0=ceiling(T/8), T)
       est_model_LSTM_msk_err <- (est_model_LSTM - Y_sub)*(1-treat_mat)
       est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
       LSTM_RMSE_test[i,j] <- est_model_LSTM_test_RMSE
@@ -93,21 +91,11 @@ RBFSim <- function(Y,N,T,sim){
       
       print("ED Started")
       source("code/ed.R")
-      est_model_ED <- ed(Y_obs, p.weights, treat_indices, d, t0=28, T)
+      est_model_ED <- ed(Y_obs, p.weights, treat_indices, d, t0=ceiling(T/8), T)
       est_model_ED_msk_err <-  (est_model_ED - Y_sub)*(1-treat_mat)
       est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
       ED_RMSE_test[i,j] <- est_model_ED_test_RMSE
       print(paste("ED RMSE:", round(est_model_ED_test_RMSE,3),"run",i))
-      
-      ## -----
-      ## HR-EN: : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
-      ## -----
-      
-      est_model_EN <- en_mp_rows(Y_obs, treat_mat, num_lam = 5, num_alpha = 1, num_folds = 3)
-      est_model_EN_msk_err <- (est_model_EN - Y_sub)*(1-treat_mat)
-      est_model_EN_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_EN_msk_err^2, na.rm = TRUE))
-      EN_RMSE_test[i,j] <- est_model_EN_test_RMSE
-      print(paste("HR-EN RMSE:", round(est_model_EN_test_RMSE,3),"run",i))
       
       ## -----
       ## ADH
@@ -138,7 +126,7 @@ RBFSim <- function(Y,N,T,sim){
       ## ------
       
       print("MC-NNM Started")
-      est_model_MCPanel <- mcnnm(Y_obs, treat_mat, to_estimate_u = 1, to_estimate_v = 1, lambda_L = c(0.05), niter = 200, rel_tol = 1e-05)[[1]] # no CV to save computational time
+      est_model_MCPanel <- mcnnm(Y_obs, treat_mat, W= p.weights, to_estimate_u = 1, to_estimate_v = 1, lambda_L = c(0.05), niter = 200, rel_tol = 1e-05)[[1]] # no CV to save computational time
       est_model_MCPanel$Mhat <- est_model_MCPanel$L + replicate(T,est_model_MCPanel$u) + t(replicate(N,est_model_MCPanel$v))
       est_model_MCPanel$msk_err <- (est_model_MCPanel$Mhat - Y_sub)*(1-treat_mat)
       est_model_MCPanel$test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_MCPanel$msk_err^2, na.rm = TRUE))
@@ -191,22 +179,18 @@ RBFSim <- function(Y,N,T,sim){
   ENT_avg_RMSE <- apply(ENT_RMSE_test,2,mean)
   ENT_std_error <- apply(ENT_RMSE_test,2,sd)/sqrt(num_runs)
   
-  EN_avg_RMSE <- apply(EN_RMSE_test,2,mean)
-  EN_std_error <- apply(EN_RMSE_test,2,sd)/sqrt(num_runs)
-  
   ## Saving data
   
   df1 <-
     data.frame(
-      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,ADH_avg_RMSE,EN_avg_RMSE,ENT_avg_RMSE,VAR_avg_RMSE),
-      "se" = c(DID_std_error,ED_std_error,LSTM_std_error,MCPanel_std_error,ADH_std_error,EN_std_error,ENT_std_error,VAR_std_error),
+      "y" =  c(DID_avg_RMSE,ED_avg_RMSE,LSTM_avg_RMSE,MCPanel_avg_RMSE,ADH_avg_RMSE,ENT_avg_RMSE,VAR_avg_RMSE),
+      "se" = c(DID_std_error,ED_std_error,LSTM_std_error,MCPanel_std_error,ADH_std_error,ENT_std_error,VAR_std_error),
       "x" = T0/T,
       "Method" = c(replicate(length(T0),"DID"), 
                    replicate(length(T0),"Encoder-decoder"),
                    replicate(length(T0),"LSTM"),
                    replicate(length(T0),"MC-NNM"), 
                    replicate(length(T0),"SCM"),
-                   replicate(length(T0),"SCM-EN"),
                    replicate(length(T0),"SCM-ENT"),
                    replicate(length(T0),"VAR")))
   

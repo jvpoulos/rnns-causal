@@ -36,31 +36,23 @@ lstm <- function(Y,p.weights,treat_indices,d, t0, T){
   py$lr <- 0.001
   py$dr <- 0.2
   py$penalty <- 0.001
-  py$nb_batches <- 128
+  py$nb_batches <- 32
   py$n_hidden <- 128
-  py$patience <- 10
+  py$patience <- 25
   if(d=='stock'){
-    py$patience <- 5
-    py$dr <- 0
-    py$penalty <- 0
+    py$patience <- 10
     py$n_hidden <- 256
   }
-  if(d%in%c('basque','california','germany','educ.pc','covid')){
-    py$nb_batches <- 32
-    py$dr <- 0.7
-    py$penalty <- 2
-  }
   if(d=='rbf'){
+    py$patience <- 10
     py$n_hidden <- 256
   }
   if(d=='mnist'){
-    py$nb_batches <- 64
-    py$dr <- 0
+    py$patience <- 10
     py$n_hidden <- 256
   }
   if(d=='sine'){
-    py$patience <- 5
-    py$dr <- 0.5
+    py$patience <- 10
     py$n_hidden <- 256
   }
   
@@ -69,7 +61,7 @@ lstm <- function(Y,p.weights,treat_indices,d, t0, T){
   lstm.pred.test <- as.matrix(read_csv(paste0("results/lstm/",d,"/lstm-",d,"-test.csv"), col_names = FALSE))
   colnames(lstm.pred.test) <- colnames(test_data)
   
-  lstm.pred <- cbind(train_data, rbind(test_data[1:(t0-1),], lstm.pred.test))
+  lstm.pred <- cbind(train_data, rbind(test_data[1:t0,], lstm.pred.test))
   rownames(lstm.pred) <- rownames(test_data)
   
   lstm.pred <-lstm.pred[,match(colnames(data), colnames(lstm.pred))] # same order

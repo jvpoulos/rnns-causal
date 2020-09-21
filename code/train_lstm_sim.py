@@ -13,13 +13,10 @@ import tensorflow as tf
 
 from keras import backend as K
 from keras.models import Model
-from keras.layers import LSTM, Input, Masking, Dense, Flatten
-from keras.callbacks import EarlyStopping, TerminateOnNaN
+from keras.layers import LSTM, Input, Masking, Dense
+from keras.callbacks import CSVLogger, EarlyStopping, TerminateOnNaN
 from keras import regularizers
 from keras.optimizers import Adam
-
-from sklearn.preprocessing import StandardScaler
-scaler = StandardScaler()
 
 from functools import partial, update_wrapper
 
@@ -53,13 +50,13 @@ def create_model(n_pre, nb_features, output_dim, lr, penalty, dr, n_hidden):
     """
     # Define model parameters
 
-    hidden_activation = 'relu'
+    hidden_activation = 'tanh'
 
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
     mask = Masking(mask_value=0.)(inputs)
     weights_tensor = Input(shape=(nb_features,), name="Weights")
     lstm_1 = LSTM(int(n_hidden), dropout=dr, recurrent_dropout=dr, activation= hidden_activation, return_sequences=False, name="LSTM_1")(mask) 
-    output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(lstm_1)
+    output= Dense(output_dim, activation='linear', kernel_regularizer=regularizers.l2(penalty), name='Dense')(lstm_1)
 
     model = Model([inputs,weights_tensor], output) 
 
@@ -73,7 +70,7 @@ def train_model(model, dataX, dataY, weights, epoch_count, batches):
 
     # Prepare model checkpoints and callbacks
 
-    stopping = EarlyStopping(monitor='val_loss', patience=int(patience), min_delta=0, verbose=1, mode='min', restore_best_weights=False)
+    stopping = EarlyStopping(monitor='val_loss', patience=int(patience), min_delta=0, verbose=1, mode='min', restore_best_weights=True)
 
     terminate = TerminateOnNaN()
 
@@ -85,10 +82,11 @@ def train_model(model, dataX, dataY, weights, epoch_count, batches):
         verbose=1,
         epochs=epoch_count, 
         callbacks=[stopping,terminate],
-        validation_split=0.1)
+        validation_split=0.2)
 
 def test_model():
 
+    n_post = int(1)
     n_pre = int(t0)-1
     seq_len = int(T)
 
@@ -97,9 +95,9 @@ def test_model():
     print('raw wx shape', wx.shape)  
 
     wXC = []
-    for i in range(seq_len-n_pre):
+    for i in range(seq_len-n_pre-n_post):
         wXC.append(wx[i+n_pre]) # weights for outputs
-
+   
     wXC = np.array(wXC)
 
     print('wXC shape:', wXC.shape)
@@ -108,12 +106,10 @@ def test_model():
 
     print('raw x shape', x.shape)   
 
-    x_scaled = scaler.fit_transform(x)
- 
     dXC, dYC = [], []
-    for i in range(seq_len-n_pre):
-        dXC.append(x_scaled[i:i+n_pre])
-        dYC.append(x_scaled[i+n_pre])
+    for i in range(seq_len-n_pre-n_post):
+        dXC.append(x[i:i+n_pre])
+        dYC.append(x[i+n_pre])
     
     dataXC = np.array(dXC)
     dataYC = np.array(dYC)
@@ -148,7 +144,7 @@ def test_model():
     print('raw wy shape', wy.shape)  
 
     wY = []
-    for i in range(seq_len-n_pre):
+    for i in range(seq_len-n_pre-n_post):
         wY.append(wy[i+n_pre]) # weights for outputs
 
     wXT = np.array(wY)
@@ -159,11 +155,9 @@ def test_model():
      
     print('raw y shape', y.shape)  
 
-    y_scaled = scaler.transform(y)
-
     dXT = []
-    for i in range(seq_len-n_pre):
-        dXT.append(y_scaled[i:i+n_pre]) # treated is input
+    for i in range(seq_len-n_pre-n_post):
+        dXT.append(y[i:i+n_pre]) # treated is input
 
     dataXT = np.array(dXT)
 
@@ -172,8 +166,6 @@ def test_model():
     preds_test = model.predict([dataXT, wXT], batch_size=int(nb_batches), verbose=0)
 
     print('predictions shape =', preds_test.shape)
-
-    preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
 
     # Save predictions
 

@@ -12,14 +12,10 @@ import tensorflow as tf
 
 from keras import backend as K
 from keras.models import Model
-from keras.layers import LSTM, Input, Masking, Dense, RepeatVector, Flatten
+from keras.layers import LSTM, GRU, TimeDistributed, Input, Dense, RepeatVector, Masking
 from keras.callbacks import CSVLogger, EarlyStopping, TerminateOnNaN
 from keras import regularizers
 from keras.optimizers import Adam
-from keras_self_attention import SeqSelfAttention
-
-from sklearn.preprocessing import StandardScaler
-scaler = StandardScaler()
 
 from functools import partial, update_wrapper
 
@@ -69,14 +65,12 @@ def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr, n_hidd
 
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
     mask = Masking(mask_value=0.)(inputs)
-    weights_tensor = Input(shape=(nb_features,), name="Weights")
+    weights_tensor = Input(shape=(n_pre, nb_features), name="Weights")
     lstm_1 = LSTM(n_hidden, dropout=dr, recurrent_dropout=dr, activation=hidden_activation, return_sequences=True, name='LSTM_1')(mask) # Encoder
-    lstm_2 = LSTM(n_hidden, dropout=dr, recurrent_dropout=dr, activation=hidden_activation, return_sequences=False, name='LSTM_2')(lstm_1) # Encoder
+    lstm_2 = LSTM(n_hidden, activation=hidden_activation, return_sequences=False, name='LSTM_2')(lstm_1) # Encoder
     repeat = RepeatVector(n_post, name='Repeat')(lstm_2) # get the last output of the LSTM and repeats it
-    lstm_3 = LSTM(n_hidden, return_sequences=True, name='Decoder')(repeat)  # Decoder
-    attn = SeqSelfAttention(attention_activation='sigmoid')(lstm_3)
-    attn = Flatten()(attn)
-    output= Dense(output_dim, kernel_regularizer=regularizers.l2(penalty), name='Dense')(attn)
+    gru_1 = GRU(n_hidden, activation=hidden_activation, return_sequences=True, name='Decoder')(repeat)  # Decoder
+    output= TimeDistributed(Dense(output_dim, activation='linear', kernel_regularizer=regularizers.l2(penalty), name='Dense'), name='Outputs')(gru_1)
 
     model = Model([inputs, weights_tensor], output)
 
@@ -92,7 +86,7 @@ def train_model(model, dataX, dataY, weights, nb_epoches, nb_batches):
 
     # Prepare model checkpoints and callbacks
 
-    stopping = EarlyStopping(monitor='val_loss', patience=int(patience), min_delta=0, verbose=1, mode='min', restore_best_weights=False)
+    stopping = EarlyStopping(monitor='val_loss', patience=int(patience), min_delta=0, verbose=1, mode='min', restore_best_weights=True)
 
     csv_logger = CSVLogger('results/encoder-decoder/{}/training_log_{}_{}_{}_{}_{}_{}_{}_{}.csv'.format(dataname,dataname,imp,hidden_activation,n_hidden,patience,dr,penalty,nb_batches), separator=',', append=False)
 
@@ -106,7 +100,7 @@ def train_model(model, dataX, dataY, weights, nb_epoches, nb_batches):
         verbose=1,
         epochs=nb_epoches, 
         callbacks=[stopping,csv_logger,terminate],
-        validation_split=0.1)
+        validation_split=0.2)
 
 def test_model():
 
@@ -119,8 +113,8 @@ def test_model():
     print('raw wx shape', wx.shape)  
 
     wXC = []
-    for i in range(seq_len-n_pre):
-        wXC.append(wx[i+n_pre]) # weights for outputs
+    for i in range(seq_len-n_pre-n_post):
+        wXC.append(wx[i:i+n_pre]) 
    
     wXC = np.array(wXC)
 
@@ -129,13 +123,11 @@ def test_model():
     x = np.array(pd.read_csv("data/{}-x-{}.csv".format(dataname,imp)))
 
     print('raw x shape', x.shape) 
- 
-    x_scaled = scaler.fit_transform(x)
- 
+
     dXC, dYC = [], []
-    for i in range(seq_len-n_pre):
-        dXC.append(x_scaled[i:i+n_pre])
-        dYC.append(x_scaled[i+n_pre])
+    for i in range(seq_len-n_pre-n_post):
+        dXC.append(x[i:i+n_pre])
+        dYC.append(x[i+n_pre:i+n_pre+n_post])
 
     dataXC = np.array(dXC)
     dataYC = np.array(dYC)
@@ -144,7 +136,7 @@ def test_model():
     print('dataYC shape:', dataYC.shape)
 
     nb_features = dataXC.shape[2]
-    output_dim = dataYC.shape[1]
+    output_dim = dataYC.shape[2]
 
     # create and fit the encoder-decoder network
     print('creating model...')
@@ -175,8 +167,8 @@ def test_model():
     print('raw wy shape', wy.shape)  
 
     wY = []
-    for i in range(seq_len-n_pre):
-        wY.append(wy[i+n_pre]) # weights for outputs
+    for i in range(seq_len-n_pre-n_post):
+        wY.append(wy[i:i+n_pre]) # weights for outputs
     
     wXT = np.array(wY)
 
@@ -186,11 +178,9 @@ def test_model():
 
     print('raw y shape', y.shape)  
 
-    y_scaled = scaler.transform(y)
-
     dXT = []
-    for i in range(seq_len-n_pre):
-        dXT.append(y_scaled[i:i+n_pre]) # treated is input
+    for i in range(seq_len-n_pre-n_post):
+        dXT.append(y[i:i+n_pre]) # treated is input
 
     dataXT = np.array(dXT)
 
@@ -201,8 +191,6 @@ def test_model():
     print('predictions shape =', preds_test.shape)
     
     preds_test = np.squeeze(preds_test)
-
-    preds_test = scaler.inverse_transform(preds_test) # reverse scaled preds to actual values
 
     print('predictions shape (squeezed)=', preds_test.shape)
 

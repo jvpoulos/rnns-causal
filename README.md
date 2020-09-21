@@ -67,7 +67,7 @@ Make each file below executable, then execute in shell:
 * `sales-placebo.sh`: Sale prices data
 * `covid-placebo.sh`: U.S. county covid cases
 
-To extract RMSEs for table, run in **R** `placebo-results-table.R`
+To extract RMSEs for table, run in **R** `results-table.R`
 
 
 Application: counterfactual predictions
@@ -77,17 +77,19 @@ First, prepare public education spending data by running in **R** `prepare-funds
 
 Second, run in shell with command line arguments `<GPU_ID> <hidden_activation>  <n_hidden> <patience> <dropout rate> <penalty> <learning_rate> <epochs> <batches> <data_name> <window_size> <T> <imputation_method>`; e.g., 
 ```
-python3 code/train_encoder_decoder.py 3 'relu' 128 100 0.7 2.0 0.001 500 32 'educ' 22 156 'locf'
-python3 code/train_lstm.py 3 'relu' 128 100 0.7 2.0 0.001 500 32 'educ' 22 156 'locf'
+python3 code/train_encoder_decoder.py 3 'tanh' 128 25 0.2 0.001 0.001 500 32 'educ' 20 159 'locf'
+python3 code/train_lstm.py 3 'tanh' 128 25 0.2 0.001 0.001 500 32 'educ' 20 159 'locf'
 ```
 
 To plot the training and validation error, run `code/plot_history.py <file location of training log> <title>`; e.g., 
 ```
-python code/plot_history.py './results/encoder-decoder/educ/training_log_educ_locf_relu_128_100_0.7_2.0_32.csv' 'Encoder-decoder'
-python code/plot_history.py './results/lstm/educ/training_log_educ_locf_relu_128_100_0.7_2.0_32.csv' 'LSTM'
+python code/plot_history.py './results/encoder-decoder/educ/training_log_educ_locf_tanh_128_25_0.2_0.001_32.csv' 'Encoder-decoder'
+python code/plot_history.py './results/lstm/educ/training_log_educ_locf_tanh_128_25_0.2_0.001_32.csv' 'LSTM'
 ```
 To estimate confidence intervals and plot causal estimates, execute in shell `educ-plot.sh` 
 
 To compare estimates with different RNNs configurations, execute in shell `educ-rnns-compare.sh` 
 
-To compare estimates with alternative estimators, execute in shell `educ-benchmark-compare.sh` # TODO: bootstrap CIs
+To compare estimates with alternative estimators, execute in shell `educ-benchmark-compare.sh` 
+
+For RNNs placebo treatement effects estimates on pre-treatment data, execute in shell `educ-placebo-pretreatment.sh` 

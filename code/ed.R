@@ -36,38 +36,30 @@ ed <- function(Y,p.weights,treat_indices,d, t0, T){
   py$lr <- 0.001
   py$dr <- 0.2
   py$penalty <- 0.001
-  py$nb_batches <- 128
+  py$nb_batches <- 32
   py$encoder_hidden_1 <- 128
   py$encoder_hidden_2 <- 128
   py$decoder_hidden <- 128
-  py$patience <- 10
+  py$patience <- 25
   if(d=='stock'){
-    py$patience <- 5
-    py$dr <- 0
-    py$penalty <- 0
+    py$patience <- 10
     py$encoder_hidden_1 <- 256
-    py$encoder_hidden_2 <- 256
-  }
-  if(d%in%c('basque','california','germany','educ.pc','covid')){
-    py$nb_batches <- 32
-    py$dr <- 0.7
-    py$penalty <- 2
+    py$encoder_hidden_2 <- 128
   }
   if(d=='rbf'){
+    py$patience <- 10
     py$encoder_hidden_1 <- 256
-    py$encoder_hidden_2 <- 256
+    py$encoder_hidden_2 <- 128
   }
   if(d=='mnist'){
-    py$nb_batches <- 64
-    py$dr <- 0
+    py$patience <- 10
     py$encoder_hidden_1 <- 256
-    py$encoder_hidden_2 <- 256
+    py$encoder_hidden_2 <- 128
   }
   if(d=='sine'){
-    py$patience <- 5
-    py$dr <- 0.5
+    py$patience <- 10
     py$encoder_hidden_1 <- 256
-    py$encoder_hidden_2 <- 256
+    py$encoder_hidden_2 <- 128
   }
   
   source_python("code/train_encoder_decoder_sim.py")
@@ -75,7 +67,7 @@ ed <- function(Y,p.weights,treat_indices,d, t0, T){
   ed.pred.test <- as.matrix(read_csv(paste0("results/encoder-decoder/",d,"/encoder-decoder-",d,"-test.csv"), col_names = FALSE))
   colnames(ed.pred.test) <- colnames(test_data)
   
-  ed.pred <- cbind(train_data, rbind(test_data[1:(t0-1),], ed.pred.test))
+  ed.pred <- cbind(train_data, rbind(test_data[1:t0,], ed.pred.test))
   rownames(ed.pred) <- rownames(test_data)
   
   ed.pred <- ed.pred[,match(colnames(data), colnames(ed.pred))] # same order
