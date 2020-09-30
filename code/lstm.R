@@ -9,7 +9,7 @@ library(readr)
 #use_python("~/venv/bin/python") # comet
 use_python("/usr/bin/python3") # dcc
 
-lstm <- function(Y,p.weights,treat_indices,d, t0, T){
+lstm <- function(Y,p.weights,treat_indices,d, t0, T, config=NULL){
   # Converting the data to a floating point matrix
   data <- data.matrix(t(Y)) # T x N
   data_w <- data.matrix(t(p.weights)) # T x N
@@ -39,21 +39,18 @@ lstm <- function(Y,p.weights,treat_indices,d, t0, T){
   py$nb_batches <- 32
   py$n_hidden <- 128
   py$patience <- 25
-  if(d=='stock'){
+  py$activation <- 'tanh'
+  if(d%in%c('stock','stock-plot','rbf','sine')){
+    py$nb_batches <- 128
     py$patience <- 10
-    py$n_hidden <- 256
+    py$dr <- 0.5
   }
-  if(d=='rbf'){
-    py$patience <- 10
-    py$n_hidden <- 256
-  }
-  if(d=='mnist'){
-    py$patience <- 10
-    py$n_hidden <- 256
-  }
-  if(d=='sine'){
-    py$patience <- 10
-    py$n_hidden <- 256
+  if(!is.null(config)){
+    print(config)
+    py$activation <- as.character(config[[1]])
+    py$n_hidden <- as.numeric(config[2])
+    py$patience <- as.numeric(config[3])
+    py$dr <- as.numeric(config[4])
   }
   
   source_python("code/train_lstm_sim.py")

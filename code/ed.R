@@ -9,7 +9,7 @@ library(readr)
 #use_python("~/venv/bin/python") # comet
 use_python("/usr/bin/python3") # dcc
 
-ed <- function(Y,p.weights,treat_indices,d, t0, T){
+ed <- function(Y,p.weights,treat_indices,d, t0, T, config=NULL){
   # Converting the data to a floating point matrix
   data <- data.matrix(t(Y)) # T x N
   data_w <- data.matrix(t(p.weights)) # T x N
@@ -41,25 +41,20 @@ ed <- function(Y,p.weights,treat_indices,d, t0, T){
   py$encoder_hidden_2 <- 128
   py$decoder_hidden <- 128
   py$patience <- 25
-  if(d=='stock'){
+  py$activation <- 'tanh'
+  if(d%in%c('stock','stock-plot','rbf','sine')){
+    py$nb_batches <- 128
     py$patience <- 10
-    py$encoder_hidden_1 <- 256
-    py$encoder_hidden_2 <- 128
+    py$dr <- 0.5
   }
-  if(d=='rbf'){
-    py$patience <- 10
-    py$encoder_hidden_1 <- 256
-    py$encoder_hidden_2 <- 128
-  }
-  if(d=='mnist'){
-    py$patience <- 10
-    py$encoder_hidden_1 <- 256
-    py$encoder_hidden_2 <- 128
-  }
-  if(d=='sine'){
-    py$patience <- 10
-    py$encoder_hidden_1 <- 256
-    py$encoder_hidden_2 <- 128
+  if(!is.null(config)){
+    print(config)
+    py$activation <- as.character(config[[1]])
+    py$encoder_hidden_1 <-  as.numeric(config[2])
+    py$encoder_hidden_2 <-  as.numeric(config[2])
+    py$decoder_hidden <-  as.numeric(config[2])
+    py$patience <- as.numeric(config[3])
+    py$dr <- as.numeric(config[4])
   }
   
   source_python("code/train_encoder_decoder_sim.py")

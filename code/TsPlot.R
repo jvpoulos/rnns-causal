@@ -43,12 +43,6 @@ TsPlot <- function(df, main = "",y.title,limits,breaks,hline) {
                             labels=date_format("%Y"), 
                             limits=limits) 
   
-  # annotation text
-  
-  # ann_text <- data.frame(year = c(as.POSIXlt("1849-01-01 UTC"), as.POSIXlt("1889-01-01 UTC")), value=1,
-  #                        series = factor("Time-series", levels = c("Time-series", "Per-period effect")),
-  #                        lab = c("pre-period","post-period"))
-  
   # legend 
   
   gg.xts <- gg.xts +
@@ -64,9 +58,7 @@ TsPlot <- function(df, main = "",y.title,limits,breaks,hline) {
            , axis.title.y=element_text(size = 16)
            , legend.text=element_text(size=14, family = "serif")
            , legend.box = "horizontal" # not working?)
-    ) + #geom_text(data = ann_text,aes(y = value, label =lab), family="serif", fontface="italic",  size=6) +
- #   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-  #        panel.background = element_blank(), axis.line = element_line(colour = "black")) + # rm background
+    ) + 
     scale_colour_manual(name="", values = c(  "observed.pls" = wes_palette("Darjeeling1")[5], 
                                               "observed.sls" = wes_palette("Darjeeling1")[1], 
                                               "predicted.pls" = wes_palette("Darjeeling1")[5],

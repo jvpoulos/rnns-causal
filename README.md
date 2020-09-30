@@ -45,12 +45,6 @@ $ git clone https://github.com/jvpoulos/rnns-causal
 * Open `package-list.R` in a script editor
   * Verify that all required packages in `package-list.R` are installed in your **R** library
 
-* Download the [MNIST in CSV train set](https://pjreddie.com/media/files/mnist_train.csv) into data folder if running placebo tests on sequential MNIST data
-
-* Extract sales prices data: 
-```
-$ tar xf data/sales_train_validation.tar.xz -C data/
-```
 Placebo test experiments
 ------
 
@@ -58,16 +52,8 @@ Make each file below executable, then execute in shell:
 
 * `sine-placebo.sh`: generated sine waves data
 * `rbf-placebo.sh`: generated RBF data
-* `mnist-placebo.sh`: sequential MNIST data
 * `educ-placebo.sh`: U.S. state government education spending
-* `basque-placebo.sh`: Basque Country study
-* `california-placebo.sh`: California smoking study 
-* `germany-placebo.sh`: W. Germany reunification study
 * `stock-placebo.sh`: U.S. stock prices
-* `sales-placebo.sh`: Sale prices data
-* `covid-placebo.sh`: U.S. county covid cases
-
-To extract RMSEs for table, run in **R** `results-table.R`
 
 
 Application: counterfactual predictions
@@ -86,7 +72,7 @@ To plot the training and validation error, run `code/plot_history.py <file locat
 python code/plot_history.py './results/encoder-decoder/educ/training_log_educ_locf_tanh_128_25_0.2_0.001_32.csv' 'Encoder-decoder'
 python code/plot_history.py './results/lstm/educ/training_log_educ_locf_tanh_128_25_0.2_0.001_32.csv' 'LSTM'
 ```
-To estimate confidence intervals and plot causal estimates, execute in shell `educ-plot.sh` 
+To estimate randomization confidence intervals and plot causal estimates, execute in shell `educ-plot.sh` 
 
 To compare estimates with different RNNs configurations, execute in shell `educ-rnns-compare.sh` 
 

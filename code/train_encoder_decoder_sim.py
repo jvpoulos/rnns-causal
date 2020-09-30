@@ -43,14 +43,14 @@ results_directory = 'results/encoder-decoder/{}'.format(dataname)
 if not os.path.exists(results_directory):
     os.makedirs(results_directory)
 
-def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr, encoder_hidden_1, encoder_hidden_2, decoder_hidden):
+def create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr, encoder_hidden_1, encoder_hidden_2, decoder_hidden, activation):
     """ 
         creates, compiles and returns a RNN model 
         @param nb_features: the number of features in the model
     """
     # Define model parameters
 
-    hidden_activation = 'tanh'
+    hidden_activation = activation
 
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
     mask = Masking(mask_value=0.)(inputs)
@@ -125,18 +125,9 @@ def test_model():
 
     # create and fit the LSTM network
     print('creating model...')
-    model = create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr, encoder_hidden_1, encoder_hidden_2, decoder_hidden)
-
-    # Load pre-trained weights
-    weights_path = 'results/encoder-decoder/{}'.format(dataname) +'/weights-placebo-{}-{}.h5'.format(str(n_pre), str(nb_features))
-    if path.exists(weights_path):
-        print("loading weights from", weights_path)
-        model.load_weights(weights_path)
+    model = create_model(n_pre, n_post, nb_features, output_dim, lr, penalty, dr, encoder_hidden_1, encoder_hidden_2, decoder_hidden, activation)
 
     train_model(model, dataXC, dataYC, wXC, int(epochs), int(nb_batches))
-
-    # save weights
-    model.save_weights('results/encoder-decoder/{}'.format(dataname) +'/weights-placebo-{}-{}.h5'.format(str(n_pre),str(nb_features)))
 
     # now test
 

@@ -20,7 +20,7 @@ doParallel::registerDoParallel(cores) # register cores (<p)
 
 RNGkind("L'Ecuyer-CMRG") # ensure random number generation
 
-SineSim <- function(Y,N,T,sim){
+SineSim <- function(Y,N,T,sim,nruns,d='sine'){
   ## Setting up the configuration
   Nbig <- nrow(Y)
   
@@ -29,9 +29,9 @@ SineSim <- function(Y,N,T,sim){
   
   t0 <- ceiling(T*0.5) # time of initial treatment
   N_t <- ceiling(N/2)
-  num_runs <- 100
+  num_runs <- nruns
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
-  d <- 'sine'
+  d <- d
 
   ## Matrices for saving RMSE values
   
@@ -211,6 +211,4 @@ print(dim(Y))
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-for(sim in c(0,1)){
-  SineSim(Y,N=500,T=2000,sim=sim)
-}
+SineSim(Y,N=1000,T=500,sim=0,nruns=100,d='sine')

@@ -25,11 +25,11 @@ source("code/permutationTest.R")
 PlotEduc<- function(estimator,x,y.title,limits,breaks,att.label,t0,imp,config,run.CI=TRUE, plot=TRUE){
   ## Create time series data
   
-  pred.treated <- read_csv(paste0("results/", estimator,"/educ/",estimator,"-educ-test-",imp,"-",config,".csv"), col_names = FALSE)
-  pred.control <- read_csv(paste0("results/", estimator,"/educ/",estimator,"-educ-train-",imp,"-",config,".csv"), col_names = FALSE)
+  pred.treated <- read_csv(paste0("results/", estimator,"/educ/",estimator,"-educ-test-",imp,"-",config,".csv"), col_names = FALSE, col_types = cols())
+  pred.control <- read_csv(paste0("results/", estimator,"/educ/",estimator,"-educ-train-",imp,"-",config,".csv"), col_names = FALSE, col_types = cols())
   
-  train_data <- read_csv(paste0("data/educ-x-",imp,".csv"), col_names = TRUE)
-  test_data <- read_csv(paste0("data/educ-y-",imp,".csv"), col_names = TRUE)
+  train_data <- read_csv(paste0("data/educ-x-",imp,".csv"), col_names = TRUE, col_types = cols())
+  test_data <- read_csv(paste0("data/educ-y-",imp,".csv"), col_names = TRUE, col_types = cols())
   
   observed <- t(capacity.outcomes[[x]]$M)
   observed <- observed[,colnames(observed) %in% c(colnames(test_data),colnames(train_data))]
@@ -37,6 +37,7 @@ PlotEduc<- function(estimator,x,y.title,limits,breaks,att.label,t0,imp,config,ru
   observed.control <- as.matrix(observed[,colnames(observed) %in% colnames(train_data)][(t0+1):nrow(observed),])
   
   t.stat <- rowMeans(observed.treated - pred.treated) 
+  names(t.stat) <- rownames(observed.treated)
   
   if(run.CI){
     CI.treated <- PermutationCI(forecast=pred.control, 
@@ -49,7 +50,12 @@ PlotEduc<- function(estimator,x,y.title,limits,breaks,att.label,t0,imp,config,ru
     
     saveRDS(CI.treated, paste0("results/", estimator,"/educ/",estimator,"-CI-treated-",imp,"-",config,".rds"))
   } else{
-    CI.treated <- readRDS(paste0("results/", estimator,"/educ/",estimator,"-CI-treated-",imp,".rds"))
+    CI.treated <- readRDS(paste0("results/", estimator,"/educ/",estimator,"-CI-treated-",imp,"-",config,".rds"))
+    rownames(CI.treated) <- rownames(observed.treated)
+    print(paste0("Config: ", config, "Estimator: ", estimator))
+    print(paste0("ATT:", mean(t.stat[which(names(t.stat)=="1869"):which(names(t.stat)=="1942")]))) # avg over post-treatment period
+    print(paste0("CI lower:", mean(CI.treated[,1][which(rownames(CI.treated)=="1869"):which(rownames(CI.treated)=="1942")])))
+    print(paste0("CI upper:", mean(CI.treated[,2][which(rownames(CI.treated)=="1869"):which(rownames(CI.treated)=="1942")])))
   }
   
   if(plot){
@@ -79,7 +85,6 @@ PlotEduc<- function(estimator,x,y.title,limits,breaks,att.label,t0,imp,config,ru
   ts.means.m <- merge(ts.means.m, CI.treated, by=c("year","variable"), all.x=TRUE) # bind std. error
 
   # # Adjust year for plot
- # ts.means.m$year <- as.Date(as.yearmon(ts.means.m$year) + 11/12, frac = 1) # end of year
   ts.means.m$year <- as.Date(as.yearmon(ts.means.m$year)) 
   
   ts.means.m$year <- as.POSIXct(ts.means.m$year, tz="UTC")
@@ -98,12 +103,6 @@ PlotEduc<- function(estimator,x,y.title,limits,breaks,att.label,t0,imp,config,ru
   
   vline <- c(as.numeric(as.POSIXct("1869-1-31 00:00:00",tz="UTC")))
   
-  ts.means.m$value[ts.means.m$year < vline & (ts.means.m$variable=="pointwise.pls" | ts.means.m$variable=="predicted.pls")] <- NA # censor 
-  
-  ts.means.m$upper[ts.means.m$year < vline & (ts.means.m$variable=="pointwise.pls" | ts.means.m$variable=="predicted.pls")] <- NA 
-  
-  ts.means.m$lower[ts.means.m$year < vline & ts.means.m$variable=="pointwise.pls"] <- NA 
-  
   ts.plot <- TsPlot(df=ts.means.m,y.title=y.title,limits=limits, breaks=breaks,hline=ts.means.m$hline)
   
   return(ts.plot)
@@ -112,61 +111,22 @@ PlotEduc<- function(estimator,x,y.title,limits,breaks,att.label,t0,imp,config,ru
   }
 }
 
-# for(imp in c("locf","linear","random","mean","ma")){
-# 
-#   capacity.outcomes <- readRDS(paste0("data/capacity-outcomes-",imp,".rds"))
-# 
-#   # encoder-decoder
-# 
-#   educ.ed <- PlotEduc(estimator="encoder-decoder",x='educ.pc',y.title="Log per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")),
-#                            breaks=seq(as.POSIXct("1809-1-31 00:00:00",tz="UTC"), as.POSIXct("1942-1-31 00:00:00",tz="UTC"), "20 years"), att.label = "ATT",
-#                            t0=20, imp=imp,config="tanh-128-25-0.2-0.001", run.CI=FALSE, plot=TRUE)
-#   ggsave(paste0("results/plots/educ-ed-",imp,".png"), educ.ed, scale=1.25)
-# 
-#   # LSTM
-# 
-#   educ.lstm<- PlotEduc(estimator="lstm",x='educ.pc',y.title="Log per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")),
-#                            breaks=seq(as.POSIXct("1809-1-31 00:00:00",tz="UTC"), as.POSIXct("1942-1-31 00:00:00",tz="UTC"), "20 years"), att.label = "ATT",
-#                            t0=20, imp=imp,config="tanh-128-25-0.2-0.001", run.CI=FALSE, plot=TRUE)
-#   ggsave(paste0("results/plots/educ-lstm-",imp,".png"), educ.lstm, scale=1.25)
-# }
+for(imp in c("locf","linear","random","mean","ma")){
+  print(imp)
 
-# Compare different RNN configs
-imp="locf"
-capacity.outcomes <- readRDS(paste0("data/capacity-outcomes-",imp,".rds"))
+  capacity.outcomes <- readRDS(paste0("data/capacity-outcomes-",imp,".rds"))
 
-# By configuration
-# Hidden activation: relu, tanh, sigmoid
-# No. hidden: 256, 128, 64
-# Patience: 50, 25, 0
-# Dropout: 0.5, 0.2, 0
-#activation-nhidden-patience-dropout-L2
-configs <- c(#"relu-128-25-0.2-0.001","sigmoid-128-25-0.2-0.001", "tanh-128-25-0.2-0.001",
-             "tanh-256-25-0.2-0.001","relu-256-25-0.2-0.001","sigmoid-256-25-0.2-0.001",
-             "tanh-64-25-0.2-0.001","relu-64-25-0.2-0.001","sigmoid-64-25-0.2-0.001",
-             "tanh-128-50-0.2-0.001","relu-128-50-0.2-0.001","sigmoid-128-50-0.2-0.001",
-             "tanh-256-0-0.2-0.001","relu-256-0-0.2-0.001","sigmoid-256-0-0.2-0.001",
-             "tanh-128-25-0.5-0.001","relu-128-25-0.5-0.001","sigmoid-128-25-0.5-0.001",
-             "tanh-256-25-0.5-0.001","relu-256-25-0.5-0.001","sigmoid-256-25-0.5-0.001",
-             "tanh-64-25-0.5-0.001","relu-64-25-0.5-0.001","sigmoid-64-25-0.5-0.001",
-             "tanh-128-50-0.5-0.001","relu-128-50-0.5-0.001","sigmoid-128-50-0.5-0.001",
-             "tanh-256-0-0.5-0.001","relu-256-0-0.5-0.001","sigmoid-256-0-0.5-0.001",
-             "tanh-128-25-0-0.001","relu-128-25-0-0.001","sigmoid-128-25-0-0.001",
-             "tanh-256-25-0-0.001","relu-256-25-0-0.001","sigmoid-256-25-0-0.001",
-             "tanh-64-25-0-0.001","relu-64-25-0-0.001","sigmoid-64-25-0-0.001",
-             "tanh-128-50-0-0.001","relu-128-50-0-0.001","sigmoid-128-50-0-0.001",
-             "tanh-256-0-0-0.001","relu-256-0-0-0.001","sigmoid-256-0-0-0.001")
-
-for(c in configs){
   # encoder-decoder
-  
-  educ.ed.locf <- PlotEduc(estimator="encoder-decoder",x='educ.pc',y.title="Log per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")),
+
+  educ.ed <- PlotEduc(estimator="encoder-decoder",x='educ.pc',y.title="Log per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")),
                            breaks=seq(as.POSIXct("1809-1-31 00:00:00",tz="UTC"), as.POSIXct("1942-1-31 00:00:00",tz="UTC"), "20 years"), att.label = "ATT",
-                           t0=20, imp=imp,config=c, run.CI=TRUE, plot=FALSE)
-  
+                           t0=20, imp=imp,config="tanh-128-25-0.2-0.001", run.CI=FALSE, plot=TRUE)
+  ggsave(paste0("results/plots/educ-ed-",imp,".png"), educ.ed, scale=1.25)
+
   # LSTM
-  
-  educ.ed.locf <- PlotEduc(estimator="lstm",x='educ.pc',y.title="Log per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")),
+
+  educ.lstm<- PlotEduc(estimator="lstm",x='educ.pc',y.title="Log per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")),
                            breaks=seq(as.POSIXct("1809-1-31 00:00:00",tz="UTC"), as.POSIXct("1942-1-31 00:00:00",tz="UTC"), "20 years"), att.label = "ATT",
-                           t0=20, imp=imp,config=c, run.CI=TRUE, plot=FALSE) 
+                           t0=20, imp=imp,config="tanh-128-25-0.2-0.001", run.CI=FALSE, plot=TRUE)
+  ggsave(paste0("results/plots/educ-lstm-",imp,".png"), educ.lstm, scale=1.25)
 }
