@@ -1,24 +1,17 @@
 # rnns-causal
 
-This repository provides data and code for reproducing ["RNN-based counterfactual prediction"](https://arxiv.org/abs/1712.03553).
+This repository provides data and code for reproducing ["RNN-based counterfactual prediction, with an application to homestead policy and public schooling"](https://arxiv.org/abs/1712.03553).
 
 Please cite the paper if you use this code for academic research:
 
 ```
-@ARTICLE{2017arXiv171203553P,
-       author = {{Poulos}, Jason},
-        title = "{RNN-based counterfactual prediction}",
-      journal = {arXiv e-prints},
-     keywords = {Statistics - Machine Learning, Economics - Econometrics, Statistics - Applications},
-         year = "2017",
-        month = "Dec",
-          eid = {arXiv:1712.03553},
-        pages = {arXiv:1712.03553},
-archivePrefix = {arXiv},
-       eprint = {1712.03553},
- primaryClass = {stat.ML},
-       adsurl = {https://ui.adsabs.harvard.edu/abs/2017arXiv171203553P},
-      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+@misc{poulos2020rnnbased,
+      title={RNN-based counterfactual prediction, with an application to homestead policy and public schooling}, 
+      author={Jason Poulos and Shuxi Zeng},
+      year={2020},
+      eprint={1712.03553},
+      archivePrefix={arXiv},
+      primaryClass={stat.ML}
 }
 ```
 
@@ -55,6 +48,9 @@ Make each file below executable, then execute in shell:
 * `educ-placebo.sh`: U.S. state government education spending
 * `stock-placebo.sh`: U.S. stock prices
 
+`educ-placebo-plot.R`  and `rbf-placebo-plot.R` creates the plots to reproduce Figure 2 in the paper. 
+
+`stock-placebo-plot.R` creates the plot to reproduce Figure 3 in the paper. 
 
 Application: counterfactual predictions
 ------
@@ -72,10 +68,10 @@ To plot the training and validation error, run `code/plot_history.py <file locat
 python code/plot_history.py './results/encoder-decoder/educ/training_log_educ_locf_tanh_128_25_0.2_0.001_32.csv' 'Encoder-decoder'
 python code/plot_history.py './results/lstm/educ/training_log_educ_locf_tanh_128_25_0.2_0.001_32.csv' 'LSTM'
 ```
-To estimate randomization confidence intervals and plot causal estimates, execute in shell `educ-plot.sh` 
+To estimate randomization confidence intervals and plot causal estimates, execute in shell `educ-plot.sh` (Figure 4)
 
-To compare estimates with different RNNs configurations, execute in shell `educ-rnns-compare.sh` 
+To compare estimates with alternative estimators, execute in shell `educ-benchmark-compare.sh` (Tables 2 and SM-2)
 
-To compare estimates with alternative estimators, execute in shell `educ-benchmark-compare.sh` 
+To compare estimates with different RNNs configurations, execute in shell `educ-rnns-compare.sh` (Table SM-1)
 
 For RNNs placebo treatement effects estimates on pre-treatment data, execute in shell `educ-placebo-pretreatment.sh` 
