@@ -44,7 +44,7 @@ Placebo test experiments
 Make each file below executable, then execute in shell:
 
 * `sine-placebo.sh`: generated sine waves data
-* `rbf-placebo.sh`: generated RBF data
+* `rbf-placebo.sh`: generated GP data
 * `educ-placebo.sh`: U.S. state government education spending
 * `stock-placebo.sh`: U.S. stock prices
 
@@ -74,4 +74,4 @@ To compare estimates with alternative estimators, execute in shell `educ-benchma
 
 To compare estimates with different RNNs configurations, execute in shell `educ-rnns-compare.sh` (Table SM-1)
 
-For RNNs placebo treatement effects estimates on pre-treatment data, execute in shell `educ-placebo-pretreatment.sh` 
+For RNNs placebo treatement effects estimates on pre-treatment data, execute in shell `educ-placebo-pretreatment.sh`  (Table 2)
