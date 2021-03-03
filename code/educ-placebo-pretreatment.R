@@ -80,7 +80,7 @@ CapacitySim <- function(outcomes,covars.x,d,sim,imp,if.save=TRUE){
   ## ------
   
   source("code/varEst.R")
-  est_model_VAR <- varEst(Y, treat_indices=treated.indices, t0.placebo, T)
+  est_model_VAR <- varEst(Y, treat_indices, t0.placebo, T)
   if(imp=='none'){
     VAR_ATT <- colMeans(Y_imp[rownames(Y_imp)%in%treated.indices,][,t0.placebo:T] - est_model_VAR[rownames(est_model_VAR)%in%treated.indices,][,t0.placebo:T], na.rm=TRUE)
     VAR_ATT <- VAR_ATT[VAR_ATT!="NaN"]
@@ -88,7 +88,7 @@ CapacitySim <- function(outcomes,covars.x,d,sim,imp,if.save=TRUE){
     VAR_ATT <- colMeans(Y[rownames(Y)%in%treated.indices,][,t0.placebo:T] - est_model_VAR[rownames(est_model_VAR)%in%treated.indices,][,t0.placebo:T])
   }
   
-  est_model_VAR_c <- varEst(Y, treat_indices=control.indices, t0.placebo, T)
+  est_model_VAR_c <- varEst(Y, control_indices, t0.placebo, T)
   
   VAR_CI_treated <- PermutationCI(forecast=t(est_model_VAR_c[rownames(est_model_VAR_c)%in%control.indices,][,t0.placebo:T]),
                                   true=t(Y[rownames(Y)%in%control.indices,][,t0.placebo:T]),
