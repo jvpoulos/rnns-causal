@@ -9,7 +9,7 @@ TsPlot <- function(df, main = "",y.title,limits,breaks,hline) {
     # panel layout
     facet_grid(series~., scales = "free_y", space = "fixed", shrink = TRUE, drop = TRUE, labeller = label_value) + # label_value is default
     
-    theme(strip.text= element_text(size = 16, family = "serif", face='bold'), strip.background = element_blank()) +
+    theme(strip.text= element_text(size = 14, family = "serif", face='bold'), strip.background = element_blank()) +
     
     # line colours
     geom_line(data = subset(df, variable == "observed.pls"), aes(y = value, colour = "observed.pls", linetype="observed.pls"), show.legend = TRUE, size=1) +
@@ -53,9 +53,9 @@ TsPlot <- function(df, main = "",y.title,limits,breaks,hline) {
            , legend.justification = c(1,0)
             , legend.position = "none"
            , legend.background = element_rect()
-           , axis.text=element_text(size=14)
-           , axis.title.x=element_text(size = 16)
-           , axis.title.y=element_text(size = 16)
+           , axis.text=element_text(size=12)
+           , axis.title.x=element_text(size = 14)
+           , axis.title.y=element_text(size = 14)
            , legend.text=element_text(size=14, family = "serif")
            , legend.box = "horizontal" # not working?)
     ) + 

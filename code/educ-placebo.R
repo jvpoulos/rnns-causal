@@ -5,7 +5,6 @@
 ## Loading Source files
 library(MCPanel)
 library(glmnet)
-library(softImpute)
 
 # Setup parallel processing 
 library(parallel)
@@ -24,8 +23,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
   treat <- outcomes[[d]]$mask # NxT masked matrix 
   
   ## Treated 
-  drop.col <- sample(rownames(Y)[!rownames(Y)%in%treated.indices],1) 
-  treat_y <- Y[rownames(Y)%in%c(treated.indices,drop.col),] 
+  treat_y <- Y[rownames(Y)%in%c(treated.indices),] 
   
   ## Working with the rest of matrix
   treat <- treat[!rownames(treat)%in%rownames(treat_y),]
@@ -35,7 +33,13 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
   
   ## Setting up the configuration
   Nbig <- nrow(Y)
-  N <- Nbig
+  if((Nbig %% 2) == 0) {
+    print(paste(Nbig,"is Even"))
+    N <- Nbig
+  } else {
+    print(paste(Nbig,"is Odd, removing one unit for parity"))
+    N <- Nbig-1
+  }
   T <- ncol(treat)
   T0 <- ceiling(c(T*0.25, T*0.50, T*0.75))
   N_t <- ceiling(N*0.5) # no. treated units desired <=N
@@ -78,14 +82,17 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
       
       ## Estimate propensity scores
       
-      p.mod <- glmnet(x=cbind(covars_x_sub,Y_obs[,1:(t0-1)]), y=(1-treat_mat), family="mgaussian", alpha=1, nlambda = 5) # avoid CV
-      W <- predict(p.mod, cbind(covars_x_sub,Y_obs[,1:(t0-1)]))[,,1]
+      p.mod <- glmnet(x=cbind(covars_x_sub,Y_sub[,1:(t0-1)]), y=(1-treat_mat), family="mgaussian", alpha=1, nlambda = 5) # avoid CV
+      W <- predict(p.mod, cbind(covars_x_sub,Y_sub[,1:(t0-1)]))[,,1]
       W[,1:(t0-1)] <- W[,t0] # assume pre-treatment W same as t0
-      W[W <=0.01] <- 0.01 # threshold values
-      W[W >=1] <- 1-0.01 # threshold values
+      
+      if(min(W)<0 | max(W>=1)){ # threshold values
+        W[W <=0 ] <- min(W[W>0]) # replace with min. pos value
+        W[W >=1] <- 1-min(W[W>0]) 
+      }
       
       p.weights <- matrix(NA, nrow=nrow(treat_mat), ncol=ncol(treat_mat), dimnames = list(rownames(treat_mat), colnames(treat_mat)))
-      p.weights <- treat*(1-W) + (1-treat)*(W)
+      p.weights <- (1-treat_mat)*(1-W) + (treat_mat)*(W)
       
       ## ------
       ## LSTM
@@ -93,7 +100,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
       
       print("LSTM Started")
       source("code/lstm.R")
-      est_model_LSTM <- lstm(Y_obs, p.weights, treat_indices, d, t0=20, T)
+      est_model_LSTM <- lstm(Y_sub, p.weights, treat_indices, d, t0=10, T)
       est_model_LSTM_msk_err <- (est_model_LSTM - Y_sub)*(1-treat_mat)
       est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
       LSTM_RMSE_test[i,j] <- est_model_LSTM_test_RMSE
@@ -104,7 +111,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
       ## ------
       
       source("code/ed.R")
-      est_model_ED <- ed(Y_obs, p.weights, treat_indices, d, t0=20, T) 
+      est_model_ED <- ed(Y_sub, p.weights, treat_indices, d, t0=10, T) 
       est_model_ED_msk_err <- (est_model_ED - Y_sub)*(1-treat_mat)
       est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
       ED_RMSE_test[i,j] <- est_model_ED_test_RMSE
@@ -114,7 +121,6 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
       ## ADH
       ## -----
       print("ADH Started")
-      source("code/ADH.R") # clip gradients
       est_model_ADH <- adh_mp_rows(Y_obs, treat_mat, niter = 200, rel_tol = 1e-05)
       est_model_ADH_msk_err <- (est_model_ADH - Y_sub)*(1-treat_mat)
       est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
@@ -126,7 +132,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
       ## ------
       
       source("code/varEst.R")
-      est_model_VAR <- varEst(Y_obs, treat_indices)
+      est_model_VAR <- varEst(Y_sub, treat_indices, t0, T)
       est_model_VAR_msk_err <- (est_model_VAR - Y_sub)*(1-treat_mat)
       est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
       VAR_RMSE_test[i,j] <- est_model_VAR_test_RMSE
@@ -157,7 +163,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
       ## VT-EN: : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
       ## -----
       
-      est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_alpha = 1, num_lam = 5, num_folds = nrow(t(Y_obs)))) # avoid constant y
+      est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_alpha = 1, num_lam = 5, num_folds = 3))
       est_model_ENT_msk_err <- (est_model_ENT - Y_sub)*(1-treat_mat)
       est_model_ENT_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ENT_msk_err^2, na.rm = TRUE))
       ENT_RMSE_test[i,j] <- est_model_ENT_test_RMSE
@@ -209,15 +215,13 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
 
 # Read data
 capacity.outcomes <- readRDS("data/capacity-outcomes-locf.rds")
-capacity.covariates <- readRDS("data/capacity-covariates.rds")
 
-print(dim(capacity.outcomes$educ.pc$M))
+print(paste0("N X T data dimension: ", dim(capacity.outcomes$educ.pc$M)))
 
 # Transform covars to unit and time-specific inputs
-common_rows <- intersect(intersect(rownames(capacity.covariates$faval), rownames(capacity.covariates$farmsize)), rownames(capacity.covariates$access))
-capacity.covars <- cbind(capacity.covariates$faval[,c("faval.1850","faval.1860")][common_rows,], 
-                         capacity.covariates$farmsize[,c("farmsize.1790", "farmsize.1800", "farmsize.1810", "farmsize.1820", "farmsize.1830", "farmsize.1840", "farmsize.1850", "farmsize.1860")][common_rows,],
-                         capacity.covariates$access[,-c(1)][common_rows,])
+capacity.covars <- cbind(capacity.outcomes$educ.pc$faval[,c("1850","1860")], 
+                         capacity.outcomes$educ.pc$farmsize[,c("1860")],
+                         capacity.outcomes$educ.pc$access[,c("1860")])
 
 capacity.covars <-capacity.covars[match(rownames(capacity.outcomes$educ.pc$M), rownames(capacity.covars)), ] # same order
 capacity.covars[is.na(capacity.covars)] <- 0
@@ -225,4 +229,6 @@ capacity.covars[is.na(capacity.covars)] <- 0
 pub.states <- c("AK","AL","AR","AZ","CA","CO","FL","IA","ID","IL","IN","KS","LA","MI","MN","MO","MS","MT","ND","NE","NM","NV","OH","OK","OR","SD","UT","WA","WI","WY") # 30 public land states
 treat_indices_order <- row.names(capacity.outcomes$educ.pc$M)[row.names(capacity.outcomes$educ.pc$M)%in% pub.states]
 
-CapacitySim(outcomes=capacity.outcomes,covars.x=capacity.covars, d="educ.pc", treated.indices = treat_indices_order, sim=0)
+for(s in c(0,1)){
+  CapacitySim(outcomes=capacity.outcomes,covars.x=capacity.covars, d="educ.pc", treated.indices = treat_indices_order, sim=s)
+}

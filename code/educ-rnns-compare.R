@@ -21,21 +21,19 @@ doParallel::registerDoParallel(cores) # register cores (<p)
 
 source("code/permutationTest.R")
 
-CapacityCompare <- function(imp=c("none","locf","linear","random","mean","ma"), config, run.CI=TRUE, if.save=TRUE){
+CapacityCompare <- function(imp=c("none","locf","linear","ma","mean","mice","random"), config, run.CI=TRUE, if.save=TRUE){
   
   config <- hyper_grid[c,]
   
   # Read data
   capacity.outcomes <- readRDS(paste0("data/capacity-outcomes-",imp,".rds"))
-  capacity.covariates <- readRDS("data/capacity-covariates.rds")
   
   print(dim(capacity.outcomes$educ.pc$M))
   
   # Transform covars to unit and time-specific inputs
-  common_rows <- intersect(intersect(rownames(capacity.covariates$faval), rownames(capacity.covariates$farmsize)), rownames(capacity.covariates$access))
-  capacity.covars <- cbind(capacity.covariates$faval[,c("faval.1850","faval.1860")][common_rows,], 
-                           capacity.covariates$farmsize[,c("farmsize.1790", "farmsize.1800", "farmsize.1810", "farmsize.1820", "farmsize.1830", "farmsize.1840", "farmsize.1850", "farmsize.1860")][common_rows,],
-                           capacity.covariates$access[,-c(1)][common_rows,])
+  capacity.covars <- cbind(capacity.outcomes$educ.pc$faval[,c("1850","1860")], 
+                           capacity.outcomes$educ.pc$farmsize[,c("1860")],
+                           capacity.outcomes$educ.pc$access[,c("1860")])
   
   capacity.covars <-capacity.covars[match(rownames(capacity.outcomes$educ.pc$M), rownames(capacity.covars)), ] # same order
   capacity.covars[is.na(capacity.covars)] <- 0
@@ -52,18 +50,7 @@ CapacityCompare <- function(imp=c("none","locf","linear","random","mean","ma"), 
   Y.missing <- educ$M.missing # NxT
   Y <- educ$M # NxT 
   
-  # Parity
-  treat <- treat[rownames(treat)%in%c(colnames(train_data),colnames(test_data)),]
-  Y.missing <- Y.missing[rownames(Y.missing)%in%c(colnames(train_data),colnames(test_data)),]
-  Y <- Y[rownames(Y)%in%c(colnames(train_data),colnames(test_data)),]
-  capacity.covars <- capacity.covars[rownames(capacity.covars)%in%c(colnames(train_data),colnames(test_data)),]
-  
   if(imp=="none"){
-    Y <- Y[, - as.numeric(which(apply(Y, 2, var) == 0))] # rm col from 0 variance
-    Y.missing <- Y.missing[,colnames(Y.missing) %in% colnames(Y)]
-    treat <- treat[,colnames(treat) %in% colnames(Y)]
-    capacity.covars <- capacity.covars[,colnames(capacity.covars) %in% colnames(Y)]
-    
     Y_imp <- Y * Y.missing # use for calculating RMSE on non-imputed values
   }
   
@@ -76,19 +63,16 @@ CapacityCompare <- function(imp=c("none","locf","linear","random","mean","ma"), 
   
   treat_mat <- 1-treat # treated are 0
   
-  Y_obs <- Y * treat_mat # treated are 0
-  
-  # For randomization CIs
-  treat_mat_c <- simul_adapt(Y, N_t = length(control.indices), T0=t0, treat_indices = which(rownames(Y) %in% control.indices))
-  Y_obs_c <- Y * treat_mat_c
-  
   ## Estimate propensity scores
   
-  p.mod <- glmnet(x=cbind(capacity.covars,Y_obs[,1:(t0-1)]), y=(1-treat_mat), family="mgaussian", alpha=1, nlambda = 5) # avoid CV
-  W <- predict(p.mod, cbind(capacity.covars,Y_obs[,1:(t0-1)]))[,,1]
+  p.mod <- glmnet(x=cbind(capacity.covars,Y[,1:(t0-1)]), y=(1-treat_mat), family="mgaussian", alpha=1, nlambda = 5) # avoid CV
+  W <- predict(p.mod, cbind(capacity.covars,Y[,1:(t0-1)]))[,,1]
   W[,1:(t0-1)] <- W[,t0] # assume pre-treatment W same as t0
-  W[W <=0.01] <- 0.01 # threshold values
-  W[W >=1] <- 1-0.01 # threshold values
+
+  if(min(W)<0 | max(W>=1)){ # threshold values
+    W[W <=0 ] <- min(W[W>0]) # replace with min. pos value
+    W[W >=1] <- 1-min(W[W>0]) 
+  }
   
   p.weights <- matrix(NA, nrow=nrow(treat_mat), ncol=ncol(treat_mat), dimnames = list(rownames(treat_mat), colnames(treat_mat)))
   p.weights <- treat*(1-W) + (1-treat)*(W)
@@ -100,7 +84,7 @@ CapacityCompare <- function(imp=c("none","locf","linear","random","mean","ma"), 
   T.final <- which(colnames(Y)=="1942") # calc ATT from 1869-1942
   
   source("code/lstm.R")
-  est_model_LSTM <- lstm(Y_obs, p.weights, treat_indices=which(rownames(Y_obs) %in% treated.indices), d='educ_benchmark', t0=20, T, config=config)
+  est_model_LSTM <- lstm(Y, p.weights, treat_indices=which(rownames(Y) %in% treated.indices), d='educ_rnns', t0=10, T, config=config)
   if(imp=='none'){
     LSTM_ATT <- colMeans(Y_imp[rownames(Y_imp)%in%treated.indices,][,t0:T.final] - est_model_LSTM[rownames(est_model_LSTM)%in%treated.indices,][,t0:T.final], na.rm=TRUE)
     LSTM_ATT <- LSTM_ATT[LSTM_ATT!="NaN"]
@@ -109,14 +93,14 @@ CapacityCompare <- function(imp=c("none","locf","linear","random","mean","ma"), 
   }
   
   if(run.CI){
-    est_model_LSTM_c <- lstm(Y_obs_c, p.weights, treat_indices=which(rownames(Y_obs) %in% control.indices), d='educ_benchmark', t0=20, T, config=config) 
+    est_model_LSTM_c <- lstm(Y, p.weights, treat_indices=which(rownames(Y) %in% control.indices), d='educ_rnns', t0=10, T, config=config) 
     
     LSTM_CI_treated <- PermutationCI(forecast=t(est_model_LSTM_c[rownames(est_model_LSTM_c)%in%control.indices,][,t0:T]), 
                                      true=t(Y[rownames(Y)%in%control.indices,][,t0:T]), 
                                      t.stat=LSTM_ATT,
                                      n.placebo=ncol(train_data)-1, 
                                      np=10000, 
-                                     l=500, 
+                                     l=5000, 
                                      prec=1e-03)
     
     LSTM_CI_treated[is.infinite(LSTM_CI_treated)] <- NA
@@ -135,7 +119,7 @@ CapacityCompare <- function(imp=c("none","locf","linear","random","mean","ma"), 
   ## ------
   
   source("code/ed.R")
-  est_model_ED <- ed(Y_obs, p.weights, treat_indices=which(rownames(Y_obs) %in% treated.indices), d='educ_benchmark', t0=20, T, config=config)
+  est_model_ED <- ed(Y, p.weights, treat_indices=which(rownames(Y) %in% treated.indices), d='educ_rnns', t0=10, T, config=config)
   if(imp=='none'){
     ED_ATT <- colMeans(Y_imp[rownames(Y_imp)%in%treated.indices,][,t0:T.final] - est_model_ED[rownames(est_model_ED)%in%treated.indices,][,t0:T.final], na.rm=TRUE)
     ED_ATT <- ED_ATT[ED_ATT!="NaN"]
@@ -144,14 +128,14 @@ CapacityCompare <- function(imp=c("none","locf","linear","random","mean","ma"), 
   }
   
   if(run.CI){
-    est_model_ED_c <- lstm(Y_obs_c, p.weights, treat_indices=which(rownames(Y_obs) %in% control.indices), d='educ_benchmark', t0=20, T, config=config) 
+    est_model_ED_c <- lstm(Y, p.weights, treat_indices=which(rownames(Y) %in% control.indices), d='educ_rnns', t0=10, T, config=config) 
     
     ED_CI_treated <- PermutationCI(forecast=t(est_model_ED_c[rownames(est_model_ED_c)%in%control.indices,][,t0:T]), 
                                    true=t(Y[rownames(Y)%in%control.indices,][,t0:T]), 
                                    t.stat=ED_ATT,
                                    n.placebo=ncol(train_data)-1, 
                                    np=10000, 
-                                   l=500, 
+                                   l=5000, 
                                    prec=1e-03)
     
     ED_CI_treated[is.infinite(ED_CI_treated)] <- NA

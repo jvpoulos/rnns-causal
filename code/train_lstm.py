@@ -12,7 +12,7 @@ import tensorflow as tf
 
 from keras import backend as K
 from keras.models import Model
-from keras.layers import LSTM, Input, Masking, Dense
+from keras.layers import LSTM, Input, Dense
 from keras.callbacks import CSVLogger, EarlyStopping, TerminateOnNaN
 from keras import regularizers
 from keras.optimizers import Adam
@@ -29,7 +29,7 @@ def weighted_mse(y_true, y_pred, weights):
 
 # Select gpu
 import os
-gpu = sys.argv[-13]
+gpu = int(sys.argv[-13])
 if gpu < 3:
     os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
     os.environ["CUDA_VISIBLE_DEVICES"]= "{}".format(gpu)
@@ -65,9 +65,8 @@ def create_model(n_pre, nb_features, output_dim, lr, penalty, dr, n_hidden, hidd
     # Define model parameters
 
     inputs = Input(shape=(n_pre, nb_features), name="Inputs")
-    mask = Masking(mask_value=0.)(inputs)
     weights_tensor = Input(shape=(nb_features,), name="Weights")
-    lstm_1 = LSTM(n_hidden, dropout=dr, recurrent_dropout=dr, activation= hidden_activation, return_sequences=False, name="LSTM_1")(mask) 
+    lstm_1 = LSTM(n_hidden, dropout=dr, recurrent_dropout=dr, activation= hidden_activation, return_sequences=False, name="LSTM_1")(inputs) 
     output= Dense(output_dim, activation='linear', kernel_regularizer=regularizers.l2(penalty), name='Dense')(lstm_1)
 
     model = Model([inputs,weights_tensor],output) 

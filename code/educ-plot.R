@@ -6,8 +6,10 @@ require(zoo)
 require(matrixStats)
 require(tseries)
 require(ggplot2)
+options(bitmapType='cairo')
 require(readr)
 library(latex2exp)
+library(wesanderson)
 
 # Setup parallel processing 
 require(parallel)
@@ -45,34 +47,29 @@ PlotEduc<- function(estimator,x,y.title,limits,breaks,att.label,t0,imp,config,ru
                                 t.stat,
                                 n.placebo=ncol(observed.control)-1, 
                                 np=10000, 
-                                l=500, 
+                                l=5000, 
                                 prec=1e-03)
     
     saveRDS(CI.treated, paste0("results/", estimator,"/educ/",estimator,"-CI-treated-",imp,"-",config,".rds"))
   } else{
     CI.treated <- readRDS(paste0("results/", estimator,"/educ/",estimator,"-CI-treated-",imp,"-",config,".rds"))
-    rownames(CI.treated) <- rownames(observed.treated)
-    print(paste0("Config: ", config, "Estimator: ", estimator))
-    print(paste0("ATT:", mean(t.stat[which(names(t.stat)=="1869"):which(names(t.stat)=="1942")]))) # avg over post-treatment period
-    print(paste0("CI lower:", mean(CI.treated[,1][which(rownames(CI.treated)=="1869"):which(rownames(CI.treated)=="1942")])))
-    print(paste0("CI upper:", mean(CI.treated[,2][which(rownames(CI.treated)=="1869"):which(rownames(CI.treated)=="1942")])))
   }
+  
+  rownames(CI.treated) <- rownames(observed.treated)
+  
+  print(paste0("Config: ", config, "; Estimator: ", estimator))
+  print(paste0("ATT:", mean(t.stat[which(names(t.stat)=="1869"):which(names(t.stat)=="1942")]))) # avg over post-treatment period
+  print(paste0("CI lower:", mean(CI.treated[,1][which(rownames(CI.treated)=="1869"):which(rownames(CI.treated)=="1942")])))
+  print(paste0("CI upper:", mean(CI.treated[,2][which(rownames(CI.treated)=="1869"):which(rownames(CI.treated)=="1942")])))
   
   if(plot){
   ## Plot time series 
   
-  treat.status <- matrix(colnames(observed), 
-                         nrow=length(c(colnames(train_data),colnames(test_data))), ncol=1)
-  treat.status[treat.status %in% colnames(test_data)] <- "Treated"
-  treat.status[treat.status %in% colnames(train_data)] <- "Control"
-  treat.status <- matrix(treat.status, dimnames=list(NULL, "status"))
+  observed.mean <- rbind(rowMeans(observed[,colnames(observed) %in% colnames(train_data)]), rowMeans(observed[,colnames(observed) %in% colnames(test_data)]))
+  predicted.mean <-  rbind(rowMeans(pred.control),rowMeans(pred.treated))
+  pointwise.mean <- rbind( rowMeans(observed.control - pred.control), rowMeans(observed.treated - pred.treated))
   
-  observed.mean <-  aggregate(t(observed), list(treat.status), mean)[-1]
-  predicted.mean <-  aggregate(rbind(t(pred.control),t(pred.treated)), list(treat.status), mean)[-1]
-  pointwise.mean <- aggregate(rbind(t(observed.control),t(observed.treated))-rbind(t(pred.control),t(pred.treated)), 
-                              list(treat.status), mean, na.rm=TRUE)[-1]
-  
-  ts.means <- cbind(t(observed.mean), rbind(matrix(NA, t0,2), t(predicted.mean)), rbind(matrix(NA, t0,2), t(pointwise.mean))) 
+  ts.means <- cbind(t(observed.mean), rbind(matrix(NA, (t0),2), t(predicted.mean)), rbind(matrix(NA, (t0),2), t(pointwise.mean))) 
   colnames(ts.means) <- c("observed.sls","observed.pls","predicted.sls","predicted.pls","pointwise.sls","pointwise.pls")
   ts.means <- cbind(ts.means, "year"=as.numeric(rownames(ts.means)))
   ts.means.m <- melt(data.frame(ts.means), id.var=c("year"))
@@ -111,7 +108,7 @@ PlotEduc<- function(estimator,x,y.title,limits,breaks,att.label,t0,imp,config,ru
   }
 }
 
-for(imp in c("locf","linear","random","mean","ma")){
+for(imp in c("locf","linear","ma","mean","random")){
   print(imp)
 
   capacity.outcomes <- readRDS(paste0("data/capacity-outcomes-",imp,".rds"))
@@ -120,13 +117,13 @@ for(imp in c("locf","linear","random","mean","ma")){
 
   educ.ed <- PlotEduc(estimator="encoder-decoder",x='educ.pc',y.title="Log per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")),
                            breaks=seq(as.POSIXct("1809-1-31 00:00:00",tz="UTC"), as.POSIXct("1942-1-31 00:00:00",tz="UTC"), "20 years"), att.label = "ATT",
-                           t0=20, imp=imp,config="tanh-128-25-0.2-0.001", run.CI=FALSE, plot=TRUE)
+                           t0=10, imp=imp,config="tanh-128-25-0.5-0.01", run.CI=TRUE, plot=TRUE) # hidden_activation,n_hidden,patience,dr,penalty
   ggsave(paste0("results/plots/educ-ed-",imp,".png"), educ.ed, scale=1.25)
 
   # LSTM
 
   educ.lstm<- PlotEduc(estimator="lstm",x='educ.pc',y.title="Log per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")),
                            breaks=seq(as.POSIXct("1809-1-31 00:00:00",tz="UTC"), as.POSIXct("1942-1-31 00:00:00",tz="UTC"), "20 years"), att.label = "ATT",
-                           t0=20, imp=imp,config="tanh-128-25-0.2-0.001", run.CI=FALSE, plot=TRUE)
+                           t0=10, imp=imp,config="tanh-128-25-0.5-0.01", run.CI=TRUE, plot=TRUE) # hidden_activation,n_hidden,patience,dr,penalty
   ggsave(paste0("results/plots/educ-lstm-",imp,".png"), educ.lstm, scale=1.25)
 }

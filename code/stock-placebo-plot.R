@@ -2,28 +2,28 @@ library(ggplot2)
 library(latex2exp)
 library(dplyr)
 
-sim.label <- c("stag")
-for(sim in c(0)){
+sim.label <- c("stag","sim")
+for(sim in c(0,1)){
   # Fixed dimensions: NxT=400,000
-  load(paste0("results/stock2_N_200_T_2000_numruns_10_num_treated_100_simultaneuous_",sim,".rds"))
+  load(paste0("results/stock_N_200_T_2000_numruns_10_num_treated_100_simultaneuous_",sim,".rds"))
   stockn200t2000 <- df1
-  load(paste0("results/stock2_N_400_T_1000_numruns_10_num_treated_200_simultaneuous_",sim,".rds"))
+  load(paste0("results/stock_N_400_T_1000_numruns_10_num_treated_200_simultaneuous_",sim,".rds"))
   stockn400t1000 <- df1
-  load(paste0("results/stock2_N_600_T_667_numruns_10_num_treated_300_simultaneuous_",sim,".rds"))
+  load(paste0("results/stock_N_600_T_667_numruns_10_num_treated_300_simultaneuous_",sim,".rds"))
   stockn600t667 <- df1
-  load(paste0("results/stock2_N_800_T_500_numruns_10_num_treated_400_simultaneuous_",sim,".rds"))
+  load(paste0("results/stock_N_800_T_500_numruns_10_num_treated_400_simultaneuous_",sim,".rds"))
   stockn800t500 <- df1
-  load(paste0("results/stock2_N_1000_T_400_numruns_10_num_treated_500_simultaneuous_",sim,".rds"))
+  load(paste0("results/stock_N_1000_T_400_numruns_10_num_treated_500_simultaneuous_",sim,".rds"))
   stockn1000t400 <- df1
-  load(paste0("results/stock2_N_1200_T_333_numruns_10_num_treated_600_simultaneuous_",sim,".rds"))
+  load(paste0("results/stock_N_1200_T_333_numruns_10_num_treated_600_simultaneuous_",sim,".rds"))
   stockn1200t333 <- df1
-  load(paste0("results/stock2_N_1400_T_286_numruns_10_num_treated_700_simultaneuous_",sim,".rds"))
+  load(paste0("results/stock_N_1400_T_286_numruns_10_num_treated_700_simultaneuous_",sim,".rds"))
   stockn1400t286 <- df1
-  load(paste0("results/stock2_N_1600_T_250_numruns_10_num_treated_800_simultaneuous_",sim,".rds"))
+  load(paste0("results/stock_N_1600_T_250_numruns_10_num_treated_800_simultaneuous_",sim,".rds"))
   stockn1600t250 <- df1
-  load(paste0("results/stock2_N_1800_T_222_numruns_10_num_treated_900_simultaneuous_",sim,".rds"))
+  load(paste0("results/stock_N_1800_T_222_numruns_10_num_treated_900_simultaneuous_",sim,".rds"))
   stockn1800t222 <- df1
-  load(paste0("results/stock2_N_2000_T_200_numruns_10_num_treated_1000_simultaneuous_",sim,".rds"))
+  load(paste0("results/stock_N_2000_T_200_numruns_10_num_treated_1000_simultaneuous_",sim,".rds"))
   stockn2000t200 <- df1
   
   df1 <-rbind(stockn200t2000, stockn400t1000, stockn600t667, stockn800t500, stockn1000t400, stockn1200t333, stockn1400t286, stockn1600t250, stockn1800t222, stockn2000t200)

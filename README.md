@@ -19,7 +19,6 @@ Prerequsites
 ------
 
 * Python 3 (tested on Python 3.6.8)
-  * keras-self-attention (tested on 0.47.0)
   * scikit-learn (tested on 0.23.2)
   * numpy (tested on 1.19.1)
   * pandas (tested on 1.0.3)
@@ -35,43 +34,51 @@ Set up
 ```
 $ git clone https://github.com/jvpoulos/rnns-causal
 ```
-* Open `package-list.R` in a script editor
-  * Verify that all required packages in `package-list.R` are installed in your **R** library
+* Open `code/package-list.R` in a script editor
+  * Verify that all required packages are installed in your **R** library
 
 Placebo test experiments
 ------
 
-Make each file below executable, then execute in shell:
+Make each file below executable, then execute in shell (within the home dir.):
 
-* `sine-placebo.sh`: generated sine waves data
-* `rbf-placebo.sh`: generated GP data
-* `educ-placebo.sh`: U.S. state government education spending
-* `stock-placebo.sh`: U.S. stock prices
+* `code/sine-placebo.sh`: sine waves data
+* `code/rbf-placebo.sh`: GP data
+* `code/educ-placebo.sh`: education spending data
+* `code/stock-placebo.sh`: stock market data
 
-`educ-placebo-plot.R`  and `rbf-placebo-plot.R` creates the plots to reproduce Figure 2 in the paper. 
+The results reproduce Tables 1 (staggered treatment) and SM-1 (simultaneous treatment). 
 
-`stock-placebo-plot.R` creates the plot to reproduce Figure 3 in the paper. 
+`code/educ-placebo-plot.R`  and `code/rbf-placebo-plot.R` creates the plots to reproduce Figures 2 (staggered) and SM-1 (simultaneous).
+
+`code/stock-placebo-plot.R` creates the plot to reproduce Figures 3 (staggered) and SM-2 (simultaneous). 
 
 Application: counterfactual predictions
 ------
 
-First, prepare public education spending data by running in **R** `prepare-funds.R`
+1. First, prepare public education spending data by running in **R** `code/prepare-funds.R`
 
-Second, run in shell with command line arguments `<GPU_ID> <hidden_activation>  <n_hidden> <patience> <dropout rate> <penalty> <learning_rate> <epochs> <batches> <data_name> <window_size> <T> <imputation_method>`; e.g., 
+2. Second, run in shell with command line arguments `<GPU_ID> <hidden_activation>  <n_hidden> <patience> <dropout rate> <penalty> <learning_rate> <epochs> <batches> <data_name> <window_size> <T> <imputation_method>`; e.g., 
 ```
-python3 code/train_encoder_decoder.py 3 'tanh' 128 25 0.2 0.001 0.001 500 32 'educ' 20 159 'locf'
-python3 code/train_lstm.py 3 'tanh' 128 25 0.2 0.001 0.001 500 32 'educ' 20 159 'locf'
+python3 code/train_encoder_decoder.py 3 'tanh' 128 25 0.5 0.01 0.001 500 32 'educ' 10 203 'locf'
+python3 code/train_lstm.py 3 'tanh' 128 25 0.5 0.01 0.001 500 32 'educ' 10 203 'locf'
 ```
 
-To plot the training and validation error, run `code/plot_history.py <file location of training log> <title>`; e.g., 
-```
-python code/plot_history.py './results/encoder-decoder/educ/training_log_educ_locf_tanh_128_25_0.2_0.001_32.csv' 'Encoder-decoder'
-python code/plot_history.py './results/lstm/educ/training_log_educ_locf_tanh_128_25_0.2_0.001_32.csv' 'LSTM'
-```
-To estimate randomization confidence intervals and plot causal estimates, execute in shell `educ-plot.sh` (Figure 4)
+The batch script `code/educ-plot-prep.sb` runs the code for differently imputed datasets. 
 
-To compare estimates with alternative estimators, execute in shell `educ-benchmark-compare.sh` (Tables 2 and SM-2)
+  * To plot the training and validation error, run `code/plot_history.py <file location of training log> <title>`; e.g., 
+  ```
+  python3 code/plot_history.py './results/encoder-decoder/educ/training_log_educ_locf_tanh_128_25_0.2_0.01_32.csv' 'Encoder-decoder loss'
+  python3 code/plot_history.py './results/lstm/educ/training_log_educ_locf_tanh_128_25_0.2_0.01_32.csv' 'LSTM loss'
+  ```
+  * To estimate randomization confidence intervals and plot causal estimates, execute in shell `code/educ-plot.sh` (Figure 4)
 
-To compare estimates with different RNNs configurations, execute in shell `educ-rnns-compare.sh` (Table SM-1)
+3. To compare estimates with alternative estimators and imputation methods, execute in shell `code/educ-benchmark-compare.sh` (Tables 2 and SM-3)
 
-For RNNs placebo treatement effects estimates on pre-treatment data, execute in shell `educ-placebo-pretreatment.sh`  (Table 2)
+4. To compare estimates with different RNNs configurations, execute in shell `code/educ-rnns-compare.sh` (Table SM-2)
+
+5. For RNNs placebo treatement effects estimates on pre-treatment data, execute in shell `code/educ-placebo-pretreatment.sh`, which produces results for second column of Table 2. 
+
+6. To plot autocorrelation function for the placebo test datasets (Figure 1), run `code/autocorrelation-plot.R`
+
+7. For figures summarizing non-response (SM-3) and treatment status (SM-4) in education spending data, run `code/non-response-plot.R` 

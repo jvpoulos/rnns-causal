@@ -64,11 +64,14 @@ RBFSim <- function(Y,N,T,sim){
       
       ## Estimate propensity scores
       
-      p.mod <- glmnet(x=Y_obs[,1:(t0-1)], y=(1-treat_mat), family="mgaussian", alpha=1, nlambda = 5)
-      W <- predict(p.mod, Y_obs[,1:(t0-1)])[,,1]
+      p.mod <- glmnet(x=Y_sub[,1:(t0-1)], y=(1-treat_mat), family="mgaussian", alpha=1, nlambda = 5)
+      W <- predict(p.mod, Y_sub[,1:(t0-1)])[,,1]
       W[,1:(t0-1)] <- W[,t0] # assume pre-treatment W same as t0
-      W[W <=0.01] <- 0.01 # threshold values
-      W[W >=1] <- 1-0.01 # threshold values
+      
+      if(min(W)<0 | max(W>=1)){ # threshold values
+        W[W <=0 ] <- min(W[W>0]) # replace with min. pos value
+        W[W >=1] <- 1-min(W[W>0]) 
+      }
       
       p.weights <- matrix(NA, nrow=nrow(treat_mat), ncol=ncol(treat_mat), dimnames = list(rownames(treat_mat), colnames(treat_mat)))
       p.weights <- treat_mat*(W) + (1-treat_mat)*(1-W) # treated are 0
@@ -79,7 +82,7 @@ RBFSim <- function(Y,N,T,sim){
       
       print("LSTM Started")
       source("code/lstm.R")
-      est_model_LSTM <- lstm(Y_obs, p.weights, treat_indices, d, t0=ceiling(T/8), T)
+      est_model_LSTM <- lstm(Y_sub, p.weights, treat_indices, d, t0=10, T)
       est_model_LSTM_msk_err <- (est_model_LSTM - Y_sub)*(1-treat_mat)
       est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
       LSTM_RMSE_test[i,j] <- est_model_LSTM_test_RMSE
@@ -91,7 +94,7 @@ RBFSim <- function(Y,N,T,sim){
       
       print("ED Started")
       source("code/ed.R")
-      est_model_ED <- ed(Y_obs, p.weights, treat_indices, d, t0=ceiling(T/8), T)
+      est_model_ED <- ed(Y_sub, p.weights, treat_indices, d, t0=10, T)
       est_model_ED_msk_err <-  (est_model_ED - Y_sub)*(1-treat_mat)
       est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
       ED_RMSE_test[i,j] <- est_model_ED_test_RMSE
@@ -102,7 +105,6 @@ RBFSim <- function(Y,N,T,sim){
       ## -----
       
       print("ADH Started")
-      source("code/ADH.R")
       est_model_ADH <- adh_mp_rows(Y_obs, treat_mat, niter = 200, rel_tol = 1e-05)
       est_model_ADH_msk_err <- (est_model_ADH - Y_sub)*(1-treat_mat)
       est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
@@ -115,7 +117,7 @@ RBFSim <- function(Y,N,T,sim){
       
       print("VAR Started")
       source("code/varEst.R")
-      est_model_VAR <- varEst(Y=Y_obs, treat_indices)
+      est_model_VAR <- varEst(Y_sub, treat_indices, t0, T)
       est_model_VAR_msk_err <- (est_model_VAR - Y_sub)*(1-treat_mat)
       est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
       VAR_RMSE_test[i,j] <- est_model_VAR_test_RMSE
@@ -212,4 +214,6 @@ print(dim(Y))
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-RBFSim(Y,N=1000,T=500,sim=0)
+for(s in c(0,1)){
+  RBFSim(Y,N=1000,T=500,sim=s)
+}

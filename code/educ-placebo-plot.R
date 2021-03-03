@@ -2,10 +2,10 @@ library(ggplot2)
 library(latex2exp)
 library(dplyr)
 
-sim.label <- c("stag")
-for(sim in c(0)){
+sim.label <- c("stag","sim")
+for(sim in c(0,1)){
   
-  load(paste0("results/educ_pc_N_18_T_159_numruns_100_num_treated_9_simultaneuous_",sim,".rds"))
+  load(paste0("results/educ_pc_N_18_T_203_numruns_100_num_treated_9_simultaneuous_",sim,".rds"))
   
   df1 <- df1 %>% group_by(x) %>% mutate(y = y,
                                         lb= y-1.96*se,

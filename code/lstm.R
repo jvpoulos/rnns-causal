@@ -33,16 +33,20 @@ lstm <- function(Y,p.weights,treat_indices,d, t0, T, config=NULL){
   py$T <- T
   py$gpu <- 3
   py$epochs <- 500
-  py$lr <- 0.001
-  py$dr <- 0.2
-  py$penalty <- 0.001
-  py$nb_batches <- 32
   py$n_hidden <- 128
-  py$patience <- 25
   py$activation <- 'tanh'
-  if(d%in%c('stock','stock-plot','rbf','sine')){
-    py$nb_batches <- 128
-    py$patience <- 10
+  if(d%in%c('educ','educ.pc','educ_benchmark','educ_placebo_pre','educ_rnns')){
+    py$lr <- 0.001
+    py$dr <- 0.5
+    py$penalty <- 0.01
+    py$nb_batches <- 32
+    py$patience <- 25
+  }
+  if(d%in%c('stock','rbf','sine')){
+    py$lr <- 0.001
+    py$penalty <- 0.01
+    py$patience <- 25
+    py$nb_batches <- 32
     py$dr <- 0.5
   }
   if(!is.null(config)){

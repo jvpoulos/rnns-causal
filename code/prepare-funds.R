@@ -1,25 +1,22 @@
 ###################################
-# Prepare education spending data for RNNs#
+# Prepare education spending data #
 ###################################
 
 library(glmnet)
 
-PreProcessData <- function(imp=c("locf","linear","random","mean","ma")){
+PreProcessData <- function(imp=c("none","locf","linear","ma","mean","random")){
   # Read data
   capacity.outcomes <- readRDS(paste0("data/capacity-outcomes-",imp,".rds"))
-  capacity.covariates <- readRDS("data/capacity-covariates.rds")
   
+  faval <- capacity.outcomes$educ.pc$faval
+  farmsize <- capacity.outcomes$educ.pc$farmsize
+  access <- capacity.outcomes$educ.pc$access
+
   # Prepare outcomes data
   educ <- capacity.outcomes$educ.pc
   treat <- educ$mask # NxT masked matrix 
   Y.missing <- educ$M.missing # NxT
-  Y <- educ$M # NxT
-  
-  if(imp=='none'){
-    Y <- Y[, - as.numeric(which(apply(Y, 2, var) == 0))] # rm cols with 0 variance
-    Y.missing <- Y.missing[,colnames(Y.missing) %in% colnames(Y)]
-    treat <- treat[,colnames(treat) %in% colnames(Y)]
-  }
+  Y <- educ$M # (NxT) = (38x203)
   
   N <- nrow(treat)
   T <- ncol(treat)
@@ -31,10 +28,9 @@ PreProcessData <- function(imp=c("locf","linear","random","mean","ma")){
   t0 <- which(colnames(Y)=="1869")
   
   # Transform covars to unit and time-specific inputs
-  common_rows <- intersect(intersect(rownames(capacity.covariates$faval), rownames(capacity.covariates$farmsize)), rownames(capacity.covariates$access))
-  capacity.covars <- cbind(capacity.covariates$faval[,c("faval.1850","faval.1860")][common_rows,], 
-                           capacity.covariates$farmsize[,c("farmsize.1790", "farmsize.1800", "farmsize.1810", "farmsize.1820", "farmsize.1830", "farmsize.1840", "farmsize.1850", "farmsize.1860")][common_rows,],
-                           capacity.covariates$access[,-c(1)][common_rows,])
+  capacity.covars <- cbind(faval[,c("1850","1860")], 
+                           farmsize[,c("1860")],
+                           access[,c("1860")])
   
   covars.x <-capacity.covars[match(rownames(capacity.outcomes$educ.pc$M), rownames(capacity.covars)), ] # same order
   covars.x[is.na(covars.x)] <- 0
@@ -47,30 +43,24 @@ PreProcessData <- function(imp=c("locf","linear","random","mean","ma")){
   Y_imp <- Y * Y.missing # use for calculating RMSE on non-imputed values
   
   # converting the data to a floating point matrix
-  data <- data.matrix(t(Y_obs)) # T x N
-  
+  data <- data.matrix(t(Y)) # T x N
+
   # # Splits
   train_data <- data[,!colnames(data)%in% treated.indices] # train on control units
   
   test_data <- data[,colnames(data)%in% treated.indices]  # treated units
-  test_data <- test_data[,! colnames(test_data) %in% setdiff(colnames(test_data),rownames(covars.x))] # drop treated without covariates
- 
-  set.seed(1280)
-  test_data <- test_data[, sample(1:ncol(test_data), ncol(train_data))] # dimensional parity with train set
-  treated.indices <- colnames(test_data)
-  
-  treat_mat <- treat_mat[rownames(treat_mat) %in% c(colnames(train_data),colnames(test_data)),]
-  covars.x <- covars.x[rownames(covars.x) %in% c(colnames(train_data),colnames(test_data)),]
-  Y_obs <- Y_obs[rownames(Y_obs) %in% c(colnames(train_data),colnames(test_data)),]
-  treat <- treat[rownames(treat) %in% c(colnames(train_data),colnames(test_data)),]
+  stopifnot(setdiff(colnames(test_data),rownames(covars.x))==0)
   
   ## Estimate propensity scores
   
-  p.mod <- cv.glmnet(x=cbind(covars.x,Y_obs[,1:(t0-1)]), y=(1-treat_mat), family="mgaussian")
-  W <- predict(p.mod, cbind(covars.x,Y_obs[,1:(t0-1)]), s = "lambda.min")[,,1]
+  p.mod <- cv.glmnet(x=cbind(covars.x,Y[,1:(t0-1)]), y=(1-treat_mat), family="mgaussian")
+  W <- predict(p.mod, cbind(covars.x,Y[,1:(t0-1)]), s = "lambda.min")[,,1]
   W[,1:(t0-1)] <- W[,t0] # assume pre-treatment W same as t0
-  W[W <=0.01] <- 0.01 # threshold values
-  W[W >=1] <- 1-0.01 # threshold values
+  
+  if(min(W)<0 | max(W>=1)){ # threshold values
+    W[W <=0 ] <- min(W[W>0]) # replace with min. pos value
+    W[W >=1] <- 1-min(W[W>0]) 
+  }
   
   p.weights <- matrix(NA, nrow=nrow(treat_mat), ncol=ncol(treat_mat), dimnames = list(rownames(treat_mat), colnames(treat_mat)))
   p.weights <- treat*(1-W) + (1-treat)*(W)
@@ -90,7 +80,7 @@ PreProcessData <- function(imp=c("locf","linear","random","mean","ma")){
               "Y"=Y,"Y_imp"=Y_imp,"Y_obs"=Y_obs,"treated.indices"=treated.indices,"p.weights"=p.weights))
 }
 
-for(imp in c("locf","linear","random","mean","ma")){
+for(imp in c("none","locf","linear","ma","mean","random")){
   print(imp)
   PreProcessData(imp)
 }

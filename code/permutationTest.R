@@ -47,7 +47,7 @@ PermutationCI <- function(forecast, true, t.stat, n.placebo, np=NULL, alpha=0.02
   # Returns:
   #   Vector of per-time-step randomization confidence interval
   # Create vector to store CIs
-  c.range <- round(range(t.stat),abs(log10(prec)))*1.96
+  c.range <- round(round(range(t.stat),abs(log10(prec)))*2,abs(log10(prec)))
   
   CI <- matrix(NA, nrow(forecast), l)
   for(i in 1:l){

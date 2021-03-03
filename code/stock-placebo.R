@@ -62,11 +62,14 @@ StockSim <- function(Y,N,T,sim,nruns,d="stock"){
 
     ## Estimate propensity scores
 
-    p.mod <- glmnet(x=Y_obs[,1:(t0-1)], y=(1-treat_mat), family="mgaussian", alpha=1, nlambda = 5) # avoid cv
-    W <- predict(p.mod, Y_obs[,1:(t0-1)])[,,1]
+    p.mod <- glmnet(x=Y_sub[,1:(t0-1)], y=(1-treat_mat), family="mgaussian", alpha=1, nlambda = 5) # avoid cv
+    W <- predict(p.mod, Y_sub[,1:(t0-1)])[,,1]
     W[,1:(t0-1)] <- W[,t0] # assume pre-treatment W same as t0
-    W[W <=0.01] <- 0.01 # threshold values
-    W[W >=1] <- 1-0.01 # threshold values
+    
+    if(min(W)<0 | max(W>=1)){ # threshold values
+      W[W <=0 ] <- min(W[W>0]) # replace with min. pos value
+      W[W >=1] <- 1-min(W[W>0]) 
+    }
     
     p.weights <- matrix(NA, nrow=nrow(treat_mat), ncol=ncol(treat_mat), dimnames = list(rownames(treat_mat), colnames(treat_mat)))
     p.weights <- treat_mat*(W) + (1-treat_mat)*(1-W) # treated are 0
@@ -77,7 +80,7 @@ StockSim <- function(Y,N,T,sim,nruns,d="stock"){
     
     print("LSTM Started")
     source("code/lstm.R")
-    est_model_LSTM <- lstm(Y_obs, p.weights, treat_indices, d, t0=ceiling(T/8), T)
+    est_model_LSTM <- lstm(Y_sub, p.weights, treat_indices, d, t0=10, T)
     est_model_LSTM_msk_err <- (est_model_LSTM - Y_sub)*(1-treat_mat)
     est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
     LSTM_RMSE_test[i] <- est_model_LSTM_test_RMSE
@@ -89,7 +92,7 @@ StockSim <- function(Y,N,T,sim,nruns,d="stock"){
     
     print("ED Started")
     source("code/ed.R")
-    est_model_ED <- ed(Y_obs, p.weights, treat_indices, d, t0=ceiling(T/8), T)
+    est_model_ED <- ed(Y_sub, p.weights, treat_indices, d, t0=10, T)
     est_model_ED_msk_err <- (est_model_ED - Y_sub)*(1-treat_mat)
     est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
     ED_RMSE_test[i] <- est_model_ED_test_RMSE
@@ -100,7 +103,6 @@ StockSim <- function(Y,N,T,sim,nruns,d="stock"){
     ## -----
     
     print("ADH Started")
-    source("code/ADH.R")
     est_model_ADH <- adh_mp_rows(Y_obs, treat_mat, niter = 200, rel_tol = 1e-05)
     est_model_ADH_msk_err <- (est_model_ADH - Y_sub)*(1-treat_mat)
     est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
@@ -113,7 +115,7 @@ StockSim <- function(Y,N,T,sim,nruns,d="stock"){
     
     print("VAR Started")
     source("code/varEst.R")
-    est_model_VAR <- varEst(Y=Y_obs, treat_indices)
+    est_model_VAR <- varEst(Y_sub, treat_indices, t0, T)
     est_model_VAR_msk_err <- (est_model_VAR - Y_sub)*(1-treat_mat)
     est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
     VAR_RMSE_test[i] <- est_model_VAR_test_RMSE
@@ -204,8 +206,10 @@ print(paste0("N X T data dimension: ", dim(Y)))
 N.seq <- seq(200,2000, by=200)
 T.seq <- round(200*2000/N.seq)
 
-for(n in 1:length(N.seq)){
-  StockSim(Y,N=N.seq[n],T=T.seq[n],sim=0,nruns=10,d='stock_plot') # results for figure
+for(s in c(0,1)){
+  for(n in 1:length(N.seq)){
+    StockSim(Y,N=N.seq[n],T=T.seq[n],sim=s,nruns=10,d='stock') # results for figure
+  }
+  
+  StockSim(Y,N=1000,T=500,sim=s,nruns=100,d='stock') # results for table
 }
-
-StockSim(Y,N=1000,T=500,sim=0,nruns=100,d='stock') # results for table

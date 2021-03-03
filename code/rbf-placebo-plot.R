@@ -2,8 +2,8 @@ library(ggplot2)
 library(latex2exp)
 library(dplyr)
 
-sim.label <- c("stag")
-for(sim in c(0)){
+sim.label <- c("stag","sim")
+for(sim in c(0,1)){
   
   load(paste0("results/rbf_N_1000_T_500_numruns_100_num_treated_500_simultaneuous_",sim,".rds"))
   
