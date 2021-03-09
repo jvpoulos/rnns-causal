@@ -108,22 +108,42 @@ PlotEduc<- function(estimator,x,y.title,limits,breaks,att.label,t0,imp,config,ru
   }
 }
 
+activation <- c("sigmoid","tanh")
+hidden <- c(256,128)
+patience <- c(50,25)
+dropout <- c(0.5,0.2)
+
+# Create a data frame containing all combinations 
+hyper_grid <- expand.grid(activation, hidden, patience,dropout)
+colnames(hyper_grid) <- c('activation','hidden','patience','dropout')
+
+hyper_grid$name <- paste(hyper_grid$activation, hyper_grid$hidden, hyper_grid$patience, hyper_grid$dropout, "0.01", sep="-")
+
 for(imp in c("locf","linear","ma","mean","random")){
   print(imp)
-
+  
   capacity.outcomes <- readRDS(paste0("data/capacity-outcomes-",imp,".rds"))
-
-  # encoder-decoder
-
-  educ.ed <- PlotEduc(estimator="encoder-decoder",x='educ.pc',y.title="Log per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")),
+  
+  if(imp!="locf"){
+    config<-"tanh-128-25-0.5-0.01"
+  }else{
+    for(c in 1:nrow(hyper_grid)){
+      
+      config <- hyper_grid$name[c]
+      
+      # encoder-decoder
+      
+      educ.ed <- PlotEduc(estimator="encoder-decoder",x='educ.pc',y.title="Log per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")),
+                          breaks=seq(as.POSIXct("1809-1-31 00:00:00",tz="UTC"), as.POSIXct("1942-1-31 00:00:00",tz="UTC"), "20 years"), att.label = "ATT",
+                          t0=10, imp=imp,config=config, run.CI=TRUE, plot=TRUE) # hidden_activation,n_hidden,patience,dr,penalty
+      ggsave(paste0("results/plots/educ-ed-",imp,".png"), educ.ed, scale=1.25)
+      
+      # LSTM
+      
+      educ.lstm<- PlotEduc(estimator="lstm",x='educ.pc',y.title="Log per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")),
                            breaks=seq(as.POSIXct("1809-1-31 00:00:00",tz="UTC"), as.POSIXct("1942-1-31 00:00:00",tz="UTC"), "20 years"), att.label = "ATT",
-                           t0=10, imp=imp,config="tanh-128-25-0.5-0.01", run.CI=TRUE, plot=TRUE) # hidden_activation,n_hidden,patience,dr,penalty
-  ggsave(paste0("results/plots/educ-ed-",imp,".png"), educ.ed, scale=1.25)
-
-  # LSTM
-
-  educ.lstm<- PlotEduc(estimator="lstm",x='educ.pc',y.title="Log per-capita state government education spending (1942$)\n",limits=c(as.POSIXct("1809-01-01 01:00:00"), as.POSIXct("1942-01-01 01:00:00")),
-                           breaks=seq(as.POSIXct("1809-1-31 00:00:00",tz="UTC"), as.POSIXct("1942-1-31 00:00:00",tz="UTC"), "20 years"), att.label = "ATT",
-                           t0=10, imp=imp,config="tanh-128-25-0.5-0.01", run.CI=TRUE, plot=TRUE) # hidden_activation,n_hidden,patience,dr,penalty
-  ggsave(paste0("results/plots/educ-lstm-",imp,".png"), educ.lstm, scale=1.25)
+                           t0=10, imp=imp,config=config, run.CI=TRUE, plot=TRUE) # hidden_activation,n_hidden,patience,dr,penalty
+      ggsave(paste0("results/plots/educ-lstm-",imp,".png"), educ.lstm, scale=1.25)
+    }
+  }
 }

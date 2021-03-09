@@ -43,7 +43,7 @@ CapacitySim <- function(outcomes,covars.x,d,sim,imp,if.save=TRUE){
   N <- nrow(Y)
   
   # Random staggered adoption among actual treated 
-  t0.placebo <- round(c(ncol(treat)*(2/3)))
+  t0.placebo <- round(ncol(treat)/2) 
   treat_indices <- which(rownames(Y)%in%treated.indices) # keep treated fixed to actual treated
   control_indices <- which(!rownames(Y)%in%treated.indices)
   if(sim==1){
@@ -80,7 +80,7 @@ CapacitySim <- function(outcomes,covars.x,d,sim,imp,if.save=TRUE){
   ## ------
   
   source("code/varEst.R")
-  est_model_VAR <- varEst(Y, treat_indices, t0.placebo, T)
+  est_model_VAR <- varEst(Y, treat_indices, t0.placebo)
   if(imp=='none'){
     VAR_ATT <- colMeans(Y_imp[rownames(Y_imp)%in%treated.indices,][,t0.placebo:T] - est_model_VAR[rownames(est_model_VAR)%in%treated.indices,][,t0.placebo:T], na.rm=TRUE)
     VAR_ATT <- VAR_ATT[VAR_ATT!="NaN"]
@@ -253,16 +253,17 @@ CapacitySim <- function(outcomes,covars.x,d,sim,imp,if.save=TRUE){
   if(if.save){
     df1 <-
       data.frame(
-        "y" =  c(mean(DID_ATT),mean(ED_ATT),mean(LSTM_ATT),mean(MCPanel_ATT),mean(ADH_ATT),mean(ENT_ATT)),
-        "CI.lower" = c(mean(DID_CI_treated[,1], na.rm=TRUE),mean(ED_CI_treated[,1], na.rm=TRUE),mean(LSTM_CI_treated[,1], na.rm=TRUE),mean(MCPanel_CI_treated[,1], na.rm=TRUE),mean(ADH_CI_treated[,1], na.rm=TRUE),mean(ENT_CI_treated[,1], na.rm=TRUE)),
-        "CI.upper" = c(mean(DID_CI_treated[,2], na.rm=TRUE),mean(ED_CI_treated[,2], na.rm=TRUE),mean(LSTM_CI_treated[,2], na.rm=TRUE),mean(MCPanel_CI_treated[,2], na.rm=TRUE),mean(ADH_CI_treated[,2], na.rm=TRUE),mean(ENT_CI_treated[,2], na.rm=TRUE)),
-        "x" = rep(t0.placebo, 6),
+        "y" =  c(mean(DID_ATT),mean(ED_ATT),mean(LSTM_ATT),mean(MCPanel_ATT),mean(ADH_ATT),mean(ENT_ATT),mean(VAR_ATT)),
+        "CI.lower" = c(mean(DID_CI_treated[,1], na.rm=TRUE),mean(ED_CI_treated[,1], na.rm=TRUE),mean(LSTM_CI_treated[,1], na.rm=TRUE),mean(MCPanel_CI_treated[,1], na.rm=TRUE),mean(ADH_CI_treated[,1], na.rm=TRUE),mean(ENT_CI_treated[,1], na.rm=TRUE),mean(VAR_CI_treated[,1], na.rm=TRUE)),
+        "CI.upper" = c(mean(DID_CI_treated[,2], na.rm=TRUE),mean(ED_CI_treated[,2], na.rm=TRUE),mean(LSTM_CI_treated[,2], na.rm=TRUE),mean(MCPanel_CI_treated[,2], na.rm=TRUE),mean(ADH_CI_treated[,2], na.rm=TRUE),mean(ENT_CI_treated[,2], na.rm=TRUE),mean(VAR_CI_treated[,2], na.rm=TRUE)),
+        "x" = rep(t0.placebo, 7),
         "Method" = c("DID", 
                      "Encoder-decoder",
                      "LSTM",
                      "MC-NNM", 
                      "SCM",
-                     "SCM-L1"))
+                     "SCM-L1",
+                     "VAR"))
     
     filename <- paste0("educ-placebo-",imp,t0.placebo,sim,".rds")
     print(filename)

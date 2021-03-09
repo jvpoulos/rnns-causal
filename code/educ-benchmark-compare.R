@@ -189,11 +189,11 @@ CapacityCompare <- function(imp=c("none","locf","linear","ma","mean","random"), 
     ## ------
     
     source("code/varEst.R")
-    est_model_VAR <- varEst(Y, treat_indices=treated.indices, t0, T)
+    est_model_VAR <- varEst(Y, treat_indices=which(rownames(Y) %in% treated.indices), t0)
     VAR_ATT <- colMeans(Y[rownames(Y)%in%treated.indices,][,t0:T.final] - est_model_VAR[rownames(est_model_VAR)%in%treated.indices,][,t0:T.final])
     
     if(run.CI){
-      est_model_VAR_c <- varEst(Y, treat_indices=control.indices, t0, T) 
+      est_model_VAR_c <- varEst(Y, treat_indices=which(rownames(Y) %in% control.indices), t0, T) 
       
       VAR_CI_treated <- PermutationCI(forecast=t(est_model_VAR_c[rownames(est_model_VAR_c)%in%control.indices,][,t0:T]), 
                                       true=t(Y[rownames(Y)%in%control.indices,][,t0:T]), 

@@ -75,6 +75,18 @@ StockSim <- function(Y,N,T,sim,nruns,d="stock"){
     p.weights <- treat_mat*(W) + (1-treat_mat)*(1-W) # treated are 0
     
     ## ------
+    ## VAR
+    ## ------
+    
+    print("VAR Started")
+    source("code/varEst.R")
+    est_model_VAR <- varEst(Y_sub, treat_indices, t0, dfmax=5, nlambda = 5)
+    est_model_VAR_msk_err <- (est_model_VAR - Y_sub)*(1-treat_mat)
+    est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
+    VAR_RMSE_test[i] <- est_model_VAR_test_RMSE
+    print(paste("VAR RMSE:", round(est_model_VAR_test_RMSE,3),"run",i))
+    
+    ## ------
     ## LSTM
     ## ------
     
@@ -108,18 +120,6 @@ StockSim <- function(Y,N,T,sim,nruns,d="stock"){
     est_model_ADH_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ADH_msk_err^2, na.rm = TRUE))
     ADH_RMSE_test[i] <- est_model_ADH_test_RMSE
     print(paste("ADH RMSE:", round(est_model_ADH_test_RMSE,3),"run",i))
-    
-    ## ------
-    ## VAR
-    ## ------
-    
-    print("VAR Started")
-    source("code/varEst.R")
-    est_model_VAR <- varEst(Y_sub, treat_indices, t0, T)
-    est_model_VAR_msk_err <- (est_model_VAR - Y_sub)*(1-treat_mat)
-    est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
-    VAR_RMSE_test[i] <- est_model_VAR_test_RMSE
-    print(paste("VAR RMSE:", round(est_model_VAR_test_RMSE,3),"run",i))
     
     ## ------
     ## MC-NNM
@@ -206,10 +206,10 @@ print(paste0("N X T data dimension: ", dim(Y)))
 N.seq <- seq(200,2000, by=200)
 T.seq <- round(200*2000/N.seq)
 
+for(n in 1:length(N.seq)){
+  StockSim(Y,N=N.seq[n],T=T.seq[n],sim=0,nruns=10,d='stock_plot') # results for figure
+}
+
 for(s in c(0,1)){
-  for(n in 1:length(N.seq)){
-    StockSim(Y,N=N.seq[n],T=T.seq[n],sim=s,nruns=10,d='stock') # results for figure
-  }
-  
   StockSim(Y,N=1000,T=500,sim=s,nruns=100,d='stock') # results for table
 }

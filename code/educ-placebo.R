@@ -132,7 +132,7 @@ CapacitySim <- function(outcomes,covars.x,d,treated.indices,N,sim){
       ## ------
       
       source("code/varEst.R")
-      est_model_VAR <- varEst(Y_sub, treat_indices, t0, T)
+      est_model_VAR <- varEst(Y_sub, treat_indices, t0)
       est_model_VAR_msk_err <- (est_model_VAR - Y_sub)*(1-treat_mat)
       est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
       VAR_RMSE_test[i,j] <- est_model_VAR_test_RMSE

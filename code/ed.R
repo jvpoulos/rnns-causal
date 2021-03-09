@@ -44,7 +44,7 @@ ed <- function(Y,p.weights,treat_indices,d, t0, T, config=NULL){
     py$nb_batches <- 32
     py$patience <- 25
   }
-  if(d%in%c('stock','rbf','sine')){
+  if(d%in%c('stock','stock_plot','rbf','sine')){
     py$lr <- 0.001
     py$penalty <- 0.01
     py$patience <- 25
