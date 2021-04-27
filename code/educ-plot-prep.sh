@@ -18,6 +18,15 @@ python3 code/train_lstm.py 3 'tanh' 128 25 0.5 0.01 0.001 500 32 'educ' 10 203 '
 python3 code/train_encoder_decoder.py 3 'tanh' 128 25 0.5 0.01 0.001 500 32 'educ' 10 203 'random'
 python3 code/train_lstm.py 3 'tanh' 128 25 0.5 0.01 0.001 500 32 'educ' 10 203 'random'
 
+python3 code/train_encoder_decoder.py 3 'tanh' 128 25 0.5 0.01 0.001 500 32 'educ' 10 203 'rf'
+python3 code/train_lstm.py 3 'tanh' 128 25 0.5 0.01 0.001 500 32 'educ' 10 203 'rf'
+
+python3 code/train_encoder_decoder.py 3 'tanh' 128 25 0.5 0.01 0.001 500 32 'educ' 10 203 'mice'
+python3 code/train_lstm.py 3 'tanh' 128 25 0.5 0.01 0.001 500 32 'educ' 10 203 'mice'
+
+python3 code/train_encoder_decoder.py 3 'tanh' 128 25 0.5 0.01 0.001 500 32 'educ' 10 203 'knn'
+python3 code/train_lstm.py 3 'tanh' 128 25 0.5 0.01 0.001 500 32 'educ' 10 203 'knn'
+
 # RNN configuration sensitivity
 
 python3 code/train_encoder_decoder.py 3 'sigmoid' 256 50 0.5 0.01 0.001 500 32 'educ' 10 203 'locf' #1

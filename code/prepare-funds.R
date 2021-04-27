@@ -4,7 +4,7 @@
 
 library(glmnet)
 
-PreProcessData <- function(imp=c("none","locf","linear","ma","mean","random")){
+PreProcessData <- function(imp=c("none","knn","locf","linear","ma","mean","mice","random","rf")){
   # Read data
   capacity.outcomes <- readRDS(paste0("data/capacity-outcomes-",imp,".rds"))
   
@@ -80,7 +80,7 @@ PreProcessData <- function(imp=c("none","locf","linear","ma","mean","random")){
               "Y"=Y,"Y_imp"=Y_imp,"Y_obs"=Y_obs,"treated.indices"=treated.indices,"p.weights"=p.weights))
 }
 
-for(imp in c("none","locf","linear","ma","mean","random")){
+for(imp in c("none","knn","locf","linear","ma","mean","mice","random","rf")){
   print(imp)
   PreProcessData(imp)
 }

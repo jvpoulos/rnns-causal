@@ -32,7 +32,7 @@ SineSim <- function(Y,N,T,sim,nruns,d='sine'){
   num_runs <- nruns
   is_simul <- sim ## Whether to simulate Simultaneus Adoption or Staggered Adoption
   d <- d
-
+  
   ## Matrices for saving RMSE values
   
   MCPanel_RMSE_test <- matrix(0L,num_runs)
@@ -59,7 +59,7 @@ SineSim <- function(Y,N,T,sim,nruns,d='sine'){
     }
     
     Y_obs <- Y_sub * treat_mat
-
+    
     ## Estimate propensity scores
     
     p.mod <- glmnet(x=Y_sub[,1:(t0-1)], y=(1-treat_mat), family="mgaussian", alpha=1, nlambda = 5)

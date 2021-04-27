@@ -49,7 +49,7 @@ Make each file below executable, then execute in shell (within the home dir.):
 
 The results reproduce Table 1 (staggered treatment) and Table SM-1 (simultaneous treatment). 
 
-`code/educ-placebo-plot.R`  and `code/rbf-placebo-plot.R` creates the plots to reproduce Figure 2.
+`code/educ-placebo-plot.R`  and `code/sine-placebo-plot.R` creates the plots to reproduce Figure 2.
 
 `code/stock-placebo-plot.R` creates the plot to reproduce Figure 3. 
 
@@ -71,9 +71,9 @@ The script `code/educ-plot-prep.sh` trains RNNs on differently imputed datasets 
   python3 code/plot_history.py './results/encoder-decoder/educ/training_log_educ_locf_tanh_128_25_0.2_0.01_32.csv' 'Encoder-decoder loss'
   python3 code/plot_history.py './results/lstm/educ/training_log_educ_locf_tanh_128_25_0.2_0.01_32.csv' 'LSTM loss'
   ```
-  * To estimate and plot causal estimates and randomization confidence intervals for RNNs trained on differently imputed datasets and different configurations, execute in shell `code/educ-plot.sh` (Figure 4 and Table SM-2)
+  * To estimate and plot causal estimates and randomization confidence intervals for RNNs trained on differently imputed datasets and different configurations, execute in shell `code/educ-plot.sh` (Figure 4, first column of Table 2, Table SM-2, and Table SM-3)
 
-3. To compare estimates with alternative estimators and imputation methods, execute in shell `code/educ-benchmark-compare.sh` (Table 2 and Table SM-3)
+3. To compare RNNs estimates with alternative estimators and imputation methods, execute in shell `code/educ-benchmark-compare.sh` (Table 2 and Table SM-3)
 
 4. For RNNs placebo treatement effects estimates on pre-treatment data, execute in shell `code/educ-placebo-pretreatment.sh`, which produces results for second column of Table 2. 
 

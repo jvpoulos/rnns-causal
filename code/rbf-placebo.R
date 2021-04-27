@@ -82,7 +82,7 @@ RBFSim <- function(Y,N,T,sim){
       
       print("VAR Started")
       source("code/varEst.R")
-      est_model_VAR <- varEst(Y_sub, treat_indices, t0, dfmax=5, nlambda = 5)
+      est_model_VAR <- varEst(Y_sub, treat_indices, t0, dfmax=3, nlambda = 1)
       est_model_VAR_msk_err <- (est_model_VAR - Y_sub)*(1-treat_mat)
       est_model_VAR_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_VAR_msk_err^2, na.rm = TRUE))
       VAR_RMSE_test[i,j] <- est_model_VAR_test_RMSE
@@ -147,10 +147,10 @@ RBFSim <- function(Y,N,T,sim){
       print(paste("DID RMSE:", round(est_model_DID_test_RMSE,3),"run",i))
       
       ## -----
-      ## VT-EN : It does Not cross validate on alpha (only on lambda) and keep alpha = 1 (LASSO).
+      ## VT-EN : It does Not cross validate
       ## -----
       
-      est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_alpha = 1, num_lam = 5, num_folds = 3)) 
+      est_model_ENT <- t(en_mp_rows(t(Y_obs), t(treat_mat), num_alpha = 1, num_lam = 1, num_folds = 3)) 
       est_model_ENT_msk_err <- (est_model_ENT - Y_sub)*(1-treat_mat)
       est_model_ENT_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ENT_msk_err^2, na.rm = TRUE))
       ENT_RMSE_test[i,j] <- est_model_ENT_test_RMSE
