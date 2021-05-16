@@ -94,7 +94,7 @@ RBFSim <- function(Y,N,T,sim){
       
       print("LSTM Started")
       source("code/lstm.R")
-      est_model_LSTM <- lstm(Y_sub, p.weights, treat_indices, d, t0=10, T)
+      est_model_LSTM <- lstm(Y_sub, p.weights, treat_indices, d, t0=25, T)
       est_model_LSTM_msk_err <- (est_model_LSTM - Y_sub)*(1-treat_mat)
       est_model_LSTM_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_LSTM_msk_err^2, na.rm = TRUE))
       LSTM_RMSE_test[i,j] <- est_model_LSTM_test_RMSE
@@ -106,7 +106,7 @@ RBFSim <- function(Y,N,T,sim){
       
       print("ED Started")
       source("code/ed.R")
-      est_model_ED <- ed(Y_sub, p.weights, treat_indices, d, t0=10, T)
+      est_model_ED <- ed(Y_sub, p.weights, treat_indices, d, t0=25, T)
       est_model_ED_msk_err <-  (est_model_ED - Y_sub)*(1-treat_mat)
       est_model_ED_test_RMSE <- sqrt((1/sum(1-treat_mat)) * sum(est_model_ED_msk_err^2, na.rm = TRUE))
       ED_RMSE_test[i,j] <- est_model_ED_test_RMSE
@@ -214,6 +214,4 @@ print(dim(Y))
 
 print(paste0("N X T data dimension: ", dim(Y)))
 
-for(s in c(0,1)){
-  RBFSim(Y,N=1000,T=500,sim=s)
-}
+RBFSim(Y,N=1000,T=500,sim=0)

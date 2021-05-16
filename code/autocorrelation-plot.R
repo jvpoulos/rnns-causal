@@ -73,10 +73,10 @@ random.id.educ <- sample(1:nrow(capacity.outcomes$educ.pc$M),1)
 random.id.stock <- sample(1:nrow(stock.market),1)
 random.id.synth <- sample(1:nrow(sine.waves),1)
 
-acf_order <- grid.arrange(ggacf(t(capacity.outcomes$educ.pc$M)[,random.id.educ], lag.max = 50, main="Education spending",xlab="", ylab=""), 
-             ggacf(t(stock.market)[1:500,][,random.id.stock], lag.max = 50, main="Stock prices",xlab="", ylab=""),
-             ggacf(t(sine.waves)[1:500,][,random.id.synth], lag.max = 50, main="Sine waves",xlab="", ylab=""),
-             ggacf(t(gp)[1:500,][,random.id.synth], lag.max = 50, main="Gaussian processes",xlab="", ylab=""),
+acf_order <- grid.arrange(ggacf(t(capacity.outcomes$educ.pc$M)[,random.id.educ], lag.max = 60, main="Education spending",xlab="", ylab=""), 
+             ggacf(t(stock.market)[1:500,][,random.id.stock], lag.max = 60, main="Stock prices",xlab="", ylab=""),
+             ggacf(t(sine.waves)[1:500,][,random.id.synth], lag.max = 60, main="Sine waves",xlab="", ylab=""),
+             ggacf(t(gp)[1:500,][,random.id.synth], lag.max = 60, main="Gaussian processes",xlab="", ylab=""),
              ncol=4, respect=TRUE, bottom="Lag", left="Autocorrelation function")  # textGrob(parse(text = ' "Lag (" * italic("k") * ")" '))
 
 ggsave("results/plots/acf-placebo-plots.png", acf_order, scale=1.5)

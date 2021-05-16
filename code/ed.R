@@ -37,14 +37,28 @@ ed <- function(Y,p.weights,treat_indices,d, t0, T, config=NULL){
   py$decoder_hidden <- 128
   py$activation <- 'tanh'
   py$epochs <- 500
-  if(d%in%c('educ','educ.pc','educ_benchmark','educ_placebo_pre','educ_rnns')){
+  if(d%in%c('educ.pc')){
+    py$lr <- 0.1
+    py$dr <- 0.5
+    py$penalty <- 0.01
+    py$nb_batches <- 32
+    py$patience <- 25
+  }
+  if(d%in%c('educ','educ_benchmark','educ_placebo_pre','educ_rnns')){
     py$lr <- 0.001
     py$dr <- 0.5
     py$penalty <- 0.01
     py$nb_batches <- 32
     py$patience <- 25
   }
-  if(d%in%c('stock','stock_plot','rbf','sine')){
+  if(d%in%c('rbf')){
+    py$lr <- 0.001
+    py$penalty <- 0.001
+    py$patience <- 50
+    py$nb_batches <- 32
+    py$dr <- 0.2
+  }
+  if(d%in%c('stock','stock_plot','sine')){
     py$lr <- 0.001
     py$penalty <- 0.01
     py$patience <- 25
