@@ -1,17 +1,19 @@
 # rnns-causal
 
-This repository provides data and code for reproducing ["RNN-based counterfactual prediction, with an application to homestead policy and public schooling"](https://arxiv.org/abs/1712.03553).
+This repository provides data and code for reproducing ["RNN-based counterfactual prediction, with an application to homestead policy and public schooling"](https://academic.oup.com/jrsssc/article/70/4/1124/7034010).
 
 Please cite the paper if you use this code for academic research:
 
 ```
-@misc{poulos2020rnnbased,
-      title={RNN-based counterfactual prediction, with an application to homestead policy and public schooling}, 
-      author={Jason Poulos and Shuxi Zeng},
-      year={2020},
-      eprint={1712.03553},
-      archivePrefix={arXiv},
-      primaryClass={stat.ML}
+@article{poulos2021rnn,
+  title={RNN-based counterfactual prediction, with an application to homestead policy and public schooling},
+  author={Poulos, Jason and Zeng, Shuxi},
+  journal={Journal of the Royal Statistical Society Series C: Applied Statistics},
+  volume={70},
+  number={4},
+  pages={1124--1139},
+  year={2021},
+  publisher={Oxford University Press}
 }
 ```
 

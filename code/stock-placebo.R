@@ -64,7 +64,7 @@ StockSim <- function(Y,N,T,sim,nruns,d="stock"){
 
     p.mod <- glmnet(x=Y_sub[,1:(t0-1)], y=(1-treat_mat), family="mgaussian", alpha=1, nlambda = 5) # avoid cv
     W <- predict(p.mod, Y_sub[,1:(t0-1)])[,,1]
-    W[,1:(t0-1)] <- W[,t0] # assume pre-treatment W same as t0
+    W[,1:(t0-1)] <- W[,t0] # assume pre-treatment W same as t0 because we are limited to pre-treatment data
     
     if(min(W)<0 | max(W>=1)){ # threshold values
       W[W <=0 ] <- min(W[W>0]) # replace with min. pos value
